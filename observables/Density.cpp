@@ -68,9 +68,9 @@ void Density<T>::gather(void* p)
 }
 
 template <class T>
-Observable<T>* Density<T>::duplicate()
+Observable<T>* Density<T>::duplicate(core::WalkerState<T>& ws)
 {
-	Density<T>* newo = new Density<T>(this->processId,this->procCount,*this->state.duplicate(),this->baseFileName,this->log);
+	Density<T>* newo = new Density<T>(this->processId,this->procCount,ws,this->baseFileName,this->log);
 	newo->Zcount = this->Zcount;
 
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)
@@ -179,7 +179,7 @@ template void Density<int>::measure();
 template void Density<int>::writeViaIndex(int idx);
 template void Density<int>::clear();
 template void Density<int>::gather(void* p);
-template Observable<int>* Density<int>::duplicate();
+template Observable<int>* Density<int>::duplicate(core::WalkerState<int>&);
 template int Density<int>::parallelSend();
 template int Density<int>::parallelReceive();
 

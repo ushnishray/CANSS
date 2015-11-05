@@ -38,7 +38,7 @@ public:
 
 	virtual void display() {}
 
-	virtual Observable* duplicate() = 0; //So that walkers can self copy
+	virtual Observable* duplicate(core::WalkerState<T>& ws) = 0; //So that walkers can self copy
 };
 
 }

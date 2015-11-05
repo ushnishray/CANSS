@@ -25,10 +25,12 @@ Walker<T>* Walker<T>::duplicate()
 {
 	vector<measures::Observable<T>*>* newob = new vector<measures::Observable<T>*>;
 
+	WalkerState<T>* ws = state.duplicate();
+	//All observables needs to point to the walker state
 	for(int i=0;i<observablesCollection.size();i++)
-		newob->push_back(observablesCollection[i]->duplicate());
+		newob->push_back(observablesCollection[i]->duplicate(*ws));
 
-	return (new Walker<T>(id,seed,*state.duplicate(),*newob));
+	return (new Walker<T>(rgenref,*ws,*newob));
 }
 
 //////////////////////////////////////////////////////////////////////

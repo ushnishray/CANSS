@@ -92,6 +92,9 @@ using vectorMap2d = map<vect<T>,vectToValue<T>,vectComp<T>>;
 template <class T>
 using PtclMap = map<vect<T>,int,vectComp<T>>;
 
+template <class T>
+using NumMap = unordered_map<int,T*,hash<int>,eqnum>;
+
 /*
 struct ival
 {

@@ -28,34 +28,32 @@ namespace core
 	{
 	public:
 
-		int id;
-		int seed;
 		gsl_rng* rgenref;
 
 		WalkerState<T>& state;
 		vector<measures::Observable<T>*>& observablesCollection;
 
-		Walker(int _id, int _seed, WalkerState<T>& _state, vector<measures::Observable<T>*>& _obc):
-			id(_id),seed(_seed),state(_state),observablesCollection(_obc)
-		{
-			rgenref = gsl_rng_alloc(gsl_rng_mt19937);
-			gsl_rng_set(rgenref,seed);
-		}
+		Walker(gsl_rng* r, WalkerState<T>& _state, vector<measures::Observable<T>*>& _obc):
+			rgenref(r),state(_state),observablesCollection(_obc)
+		{ }
 
 		//Copy Constructor
 		Walker(Walker& w):
-			id(w.id),seed(w.seed),
 			state(*(w.state.duplicate())),observablesCollection(*(new vector<measures::Observable<T>*>))
 		{
-			rgenref = gsl_rng_alloc(gsl_rng_mt19937);
-			gsl_rng_set(rgenref,seed);
+			rgenref = w.rgenref;
 
 			for(int i=0;i<w.observablesCollection.size();i++)
 				observablesCollection.push_back(w.observablesCollection[i]->duplicate());
 		}
 
-		virtual Walker* duplicate();
+		~Walker()
+		{
+			delete &state;
+			delete &observablesCollection;
+		}
 
+		virtual Walker* duplicate();
 		virtual void measure();
 
 	};

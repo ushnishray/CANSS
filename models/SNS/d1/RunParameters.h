@@ -60,8 +60,8 @@ struct RunParameters
 		cout<<"Walker Count: "<<walkerCount<<endl;
 		cout<<"Max. Walker Count: "<<maxWalkerCount<<endl;
 		cout<<"Divisor: "<<divisor<<endl;
-		cout<<"Min. Branch Weight: "<<minBranchWeight<<endl;
-		cout<<"Max. Branch Weight: "<<maxBranchWeight<<endl;
+		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
+		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Random Seed: "<<rinitseed<<endl;
 		cout<<"-----------------------------------------------------------\n";
@@ -113,8 +113,8 @@ struct RunParameters
 		bf>>walkerCount;
 		bf>>maxWalkerCount;
 		bf>>divisor;
-		bf>>minBranchWeight;
-		bf>>maxBranchWeight;
+		bf>>minBranchWeight; minBranchWeight = log(minBranchWeight);
+		bf>>maxBranchWeight; maxBranchWeight = log(maxBranchWeight);
 
 		bf>>rinitseed;
 		bf>>logFile;
@@ -126,8 +126,9 @@ struct RunParameters
 			bf>>observableType[i]>>observableName[i];
 
 		bf>>bins;
-		bf>>nSteps; nSteps *= (L+2); //So that time is nSteps rather than sweeps
+		bf>>nSteps;
 
+		nSteps *= (L+2); //So that nSteps provided is time rather than sweeps
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;
 		bf>>trans.linsert;

@@ -55,12 +55,13 @@ void MPIBasicRunner<T>::run()
 
 	for(int m=0;m<this->runParams.bins;m++)
 	{
-		fprintf(this->log,"Bin: %d\n",m);
-		fflush(this->log);
+		walkers.resetWalkers();
 
+		fprintf(this->log,"Starting Bin: %d with %d walkers\n",m,walkers.walkerCount);
+		fflush(this->log);
 		//Initalize walkers
-		for(int t=0;t<this->walkers.walkerCount;t++)
-			mover->initialize(this->walkers[t]);
+		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			mover->initialize(it->second);
 
 		//Propagate in time
 		for(int i=0;i<this->runParams.nsteps;i++)
@@ -69,12 +70,12 @@ void MPIBasicRunner<T>::run()
 			fprintf(this->log,"Step: %d\n",i);
 			fflush(this->log);
 #endif
-			for(int t=0;t<this->walkers.walkerCount;t++)
-				mover->move(this->walkers[t]);
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				mover->move(it->second);
 
 			//Now do measure for each walker
-			for(int t=0;t<this->walkers.walkerCount;t++)
-				this->walkers[t]->measure();
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				it->second->measure();
 
 			//Compact
 			branch();
@@ -88,12 +89,8 @@ void MPIBasicRunner<T>::run()
 		for(int o=0;o<this->observablesCollection.size();o++)
 		{
 			//Trace over all walkers and accumulate required observable
-			for(int t=0;t<this->walkers.walkerCount;t++)
-			{
-				//fprintf(log,"%d %d\n",o,t);
-				//fflush(log);
-				this->walkers[t]->observablesCollection[o]->gather((void *) this->observablesCollection[o]);
-			}
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				it->second->observablesCollection[o]->gather((void *) this->observablesCollection[o]);
 		}
 
 		fprintf(this->log,"Local gather done\n");
@@ -106,20 +103,9 @@ void MPIBasicRunner<T>::run()
 		fprintf(this->log,"Parallel gather done\n");
 		fflush(this->log);
 
-		//Acceptance Ratios
-//		double accept = mover->getAccept();
-//		fprintf(this->log,"------------------------------------------------------\n");
-//		fprintf(this->log,"Acceptance Ratio for Current Bin: %10.6e\n",accept*divisor);
-//		fprintf(this->log,"------------------------------------------------------\n");
-//		fflush(this->log);
-//		gaccept += accept;
+		fprintf(this->log,"Ending Bin: %d with %d walkers\n",m,walkers.walkerCount);
+		fflush(this->log);
 	}
-
-//	fprintf(this->log,"------------------------------------------------------\n");
-//	fprintf(this->log,"Global Acceptance Ratio: %10.6e\n",gaccept*divisor/this->runParams.bins);
-//	fprintf(this->log,"------------------------------------------------------\n");
-//	fflush(this->log);
-
 }
 
 template <class T>
@@ -143,7 +129,38 @@ void MPIBasicRunner<T>::masterFinalize()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
+	vector<int> ridx;
 
+	int count = walkers.walkerCount, i = 0;
+	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end() && i<walkers.walkerCount;++it)
+	{
+		if(it->second->state.weight.logValue() >= walkers.maxValue && count<walkers.maxWalkerCount)
+		{
+			it->second->state.weight.update(0.5);
+
+			Walker<T>* wcpy = it->second->duplicate();
+			(*walkers.walkerCollection)[walkers.lastIndex++] = wcpy;
+			wcpy->state.weight.update(0.5);
+
+			i++;
+			count++;
+		}
+		else if(it->second->state.weight.logValue() <= walkers.minValue)
+			ridx.push_back(it->first);
+	}
+
+	for(int t=0;t<ridx.size();t+=2)
+	{
+		double w1 = walkers[ridx[t]]->state.weight.logValue();
+		double w2 = 0.0;
+		if(t+1<ridx.size())
+			w2 = walkers[ridx[t+1]]->state.weight.logValue();
+
+		if(gsl_rng_uniform(walkers[ridx[t]]->rgenref)<w1/(w1+w2))
+			walkers.walkerCollection->erase(ridx[t]);
+	}
+
+	walkers.walkerCount = walkers.walkerCollection->size();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

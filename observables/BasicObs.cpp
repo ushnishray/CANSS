@@ -87,12 +87,14 @@ void BasicObs<T>::gather(void* p)
 	Q2.x = Q2.y = Q2.z = 0;
 	ltime = 0;
 	freeEnergy.setValue(0.0,0);
+
+	fflush(this->log);
 }
 
 template <class T>
-Observable<T>* BasicObs<T>::duplicate()
+Observable<T>* BasicObs<T>::duplicate(core::WalkerState<T>& ws)
 {
-	BasicObs<T>* newo = new BasicObs<T>(this->processId,this->procCount,*this->state.duplicate(),
+	BasicObs<T>* newo = new BasicObs<T>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Zcount = this->Zcount;
@@ -211,7 +213,7 @@ template void BasicObs<int>::measure();
 template void BasicObs<int>::writeViaIndex(int idx);
 template void BasicObs<int>::clear();
 template void BasicObs<int>::gather(void* p);
-template Observable<int>* BasicObs<int>::duplicate();
+template Observable<int>* BasicObs<int>::duplicate(core::WalkerState<int>&);
 template int BasicObs<int>::parallelSend();
 template int BasicObs<int>::parallelReceive();
 

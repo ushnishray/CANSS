@@ -54,7 +54,7 @@ public:
 	void writeViaIndex(int idx);
 	void gather(void*);
 	void clear();
-	Observable<T>* duplicate();
+	Observable<T>* duplicate(core::WalkerState<T>&);
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//MPI Comm

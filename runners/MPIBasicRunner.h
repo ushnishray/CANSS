@@ -23,25 +23,70 @@ struct MPIBRParams
 
 template <class T>
 struct Walkers {
-	vector<core::Walker<T>*>* walkerCollection;
+	//vector<core::Walker<T>*>* walkerCollection;
+	NumMap<Walker<T>>* walkerCollection;
 
 	double maxValue;
 	double minValue;
 
-	int nextid;
 	int walkerCount;
+	int maxWalkerCount;
+
+	/////////////////////////////
+	int initWalkerCount;
+	long lastIndex;
 
 	Walkers()
 	{
 		maxValue = minValue = 0.0;
-		nextid = walkerCount = 0;
+		lastIndex = initWalkerCount = walkerCount = maxWalkerCount = 0;
 		walkerCollection = NULL;
 	}
 
-	Walkers(vector<core::Walker<T>*>* _wc, double maxv, double minv):walkerCollection(_wc),maxValue(maxv),minValue(minv)
+	Walkers(NumMap<Walker<T>>* _wc, int _maxWalkerCount, double maxv, double minv):walkerCollection(_wc),maxValue(maxv),minValue(minv)
 	{
-		nextid = 0;
-		walkerCount = walkerCollection->size();
+		maxWalkerCount = _maxWalkerCount;
+		lastIndex = initWalkerCount = walkerCount = walkerCollection->size();
+	}
+
+	void resetWalkers()
+	{
+#ifndef REINDEX
+		//Not re-indexing: Faster but for very large walker populations lastIndex will be an issue
+		//Need to do this if branching happened
+		if(walkerCount == initWalkerCount)
+			return;
+
+		if(walkerCount > initWalkerCount)
+		{
+			int sizeToTrim = walkerCount - initWalkerCount;
+			int i = 0;
+			for(typename NumMap<Walker<T>>::iterator it = walkerCollection->begin();it!=walkerCollection->end() && i<sizeToTrim;++it)
+			{
+				walkerCollection->erase(it);
+				i++;
+			}
+		}
+		else
+		{
+			int sizeToAdd = initWalkerCount - walkerCount;
+			Walker<T>* wadd = walkerCollection->begin()->second->duplicate();
+
+			for(int i=0;i<sizeToAdd;i++)
+				(*walkerCollection)[lastIndex++] = wadd->duplicate();
+
+			delete wadd;
+		}
+#else
+		//Reindex - slower but is suited for possibly very large number of walkers
+		Walker<T>* wadd = walkerCollection->begin()->second->duplicate();
+		lastIndex = 0;
+		walkerCollection->clear();
+		for(int i=0;i<initWalkerCount;i++)
+			(*walkerCollection)[i] = wadd->duplicate();
+		delete wadd;
+#endif
+		walkerCount = initWalkerCount;
 	}
 
 	core::Walker<T>* operator[](std::size_t idx) { return (*walkerCollection)[idx];}
@@ -87,12 +132,12 @@ public:
 	//For slaves
 	MPIBasicRunner(FILE* _log, int _pcount, Mover<T>* _mover,
 			int _bins, int _nsteps,
-			double maxv,double minv,vector<core::Walker<T>*>* _wc,
+			int maxwc, double maxv,double minv,NumMap<Walker<T>>* _wc,
 			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(_mover),
 		runParams(*(new MPIBRParams(_bins,_nsteps))),
-		walkers(*(new Walkers<T>(_wc,maxv,minv))),
+		walkers(*(new Walkers<T>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{ }
 

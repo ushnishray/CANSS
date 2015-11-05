@@ -76,7 +76,7 @@ int setup(int rank, string baseSpecFile)
 	fflush(log);
 
 	//Other observables
-	vector<core::Walker<int>*> walkerCollection;
+	NumMap<Walker<int>> walkerCollection;
 
 	//Setup MPI Runner
 	MPIBasicRunner<int> *brunner;
@@ -91,14 +91,16 @@ int setup(int rank, string baseSpecFile)
 	}
 	else
 	{
-		//Setup Random Seed
+		//Setup Random Seed for process
 		gsl_rng_env_setup();
 		int procSeed;
 		if(runParams.rinitseed == -1)
 			runParams.rinitseed = (int) time(NULL);
 
-		int localWalkerCount = runParams.walkerCount;
-		fprintf(log,"Number of walkers for current process: %d\n",localWalkerCount);
+		gsl_rng* rgenref = gsl_rng_alloc(gsl_rng_mt19937);
+		gsl_rng_set(rgenref,runParams.rinitseed + rank);
+		fprintf(log,"Seed: %d\n",runParams.rinitseed + rank);
+		fprintf(log,"Number of walkers for current process: %d\n",runParams.walkerCount);
 		fflush(log);
 
 		//Setup Mover
@@ -113,7 +115,7 @@ int setup(int rank, string baseSpecFile)
 		double initweight = 1.0/totalnwalkers;
 
 		//setup walker threads
-		for(int w=0;w<localWalkerCount;w++)
+		for(int w=0;w<runParams.walkerCount;w++)
 		{
 			//////////////////////////////////////////////////////////////////////////////////////////
 			//Prepare Walker State Objects
@@ -133,19 +135,13 @@ int setup(int rank, string baseSpecFile)
 					localObs->push_back(new Density<int>(*wstate,runParams.observableName[i],log));
 			}
 
-			//Figure out seed
-			//Total no. of possible walkers = totalProcs*maxWalkerCount
-			int localSeed = runParams.maxWalkerCount*rank + w + runParams.rinitseed;
-			fprintf(log,"Seed: %d\n",localSeed);
-			fflush(log);
-
-			Walker<int>* lwalker = new Walker<int>(w,localSeed,*wstate,*localObs);
-			walkerCollection.push_back(lwalker);
+			Walker<int>* lwalker = new Walker<int>(rgenref,*wstate,*localObs);
+			walkerCollection[w] = lwalker;
 			//////////////////////////////////////////////////////////////////////////////////////////
 		}
 
-		brunner = new MPIBasicRunner<int>(log,totalProcs,mov,runParams.bins,runParams.nSteps,
-				runParams.minBranchWeight,runParams.maxBranchWeight,&walkerCollection,globalObs,mpiGlobalObs);
+		brunner = new MPIBasicRunner<int>(log,totalProcs,mov,runParams.bins,runParams.nSteps,runParams.maxWalkerCount,
+				runParams.maxBranchWeight,runParams.minBranchWeight,&walkerCollection,globalObs,mpiGlobalObs);
 		fprintf(log,"Starting spawn runs.\n");
 
 		//Now run
