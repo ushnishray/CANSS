@@ -91,20 +91,13 @@ int setup(int rank, string baseSpecFile)
 	}
 	else
 	{
-
+		//Setup Random Seed
 		gsl_rng_env_setup();
-		gsl_rng* rgenref = gsl_rng_alloc(gsl_rng_mt19937);
 		int procSeed;
 		if(runParams.rinitseed == -1)
-			procSeed = (int) time(NULL) + totalProcs*rank;
-		else
-			procSeed = (int) totalProcs*rank + runParams.rinitseed;
-		gsl_rng_set(rgenref,procSeed);
-
-		fprintf(log,"Randomized offset for seed: %d\n",procSeed);
+			runParams.rinitseed = (int) time(NULL);
 
 		int localWalkerCount = runParams.walkerCount;
-
 		fprintf(log,"Number of walkers for current process: %d\n",localWalkerCount);
 		fflush(log);
 
@@ -141,11 +134,10 @@ int setup(int rank, string baseSpecFile)
 			}
 
 			//Figure out seed
-			//Total no. of samplers = totalProcs*maxWalkerCount
-			int localSeed = runParams.maxWalkerCount*rank + w + procSeed;
+			//Total no. of possible walkers = totalProcs*maxWalkerCount
+			int localSeed = runParams.maxWalkerCount*rank + w + runParams.rinitseed;
 			fprintf(log,"Seed: %d\n",localSeed);
 			fflush(log);
-
 
 			Walker<int>* lwalker = new Walker<int>(w,localSeed,*wstate,*localObs);
 			walkerCollection.push_back(lwalker);
