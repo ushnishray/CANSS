@@ -105,7 +105,7 @@ void SNSMover<T>::move(Walker<T>* w)
 		double lweight = 0.0;
 		int lhop = 0;
 		PtclMap<int>::iterator itl = w->state.Rcurr->find(vect<int>(siteloc.x-1,0,0));
-		if(itl!=w->state.Rcurr->end()) //Particle found at x-1
+		if(itl!=w->state.Rcurr->end() || siteloc.x == 0) //Particle found at x-1 or at left edge
 			lweight = rp.trans.lmove;
 		else
 		{
@@ -116,7 +116,7 @@ void SNSMover<T>::move(Walker<T>* w)
 		double rweight = 0.0;
 		int rhop = 0;
 		PtclMap<int>::iterator itr = w->state.Rcurr->find(vect<int>(siteloc.x+1,0,0));
-		if(itr!=w->state.Rcurr->end()) //Particle found at x+1
+		if(itr!=w->state.Rcurr->end() || siteloc.x == rp.L-1) //Particle found at x+1 or at right edge
 			rweight = rp.trans.rmove;
 		else
 		{
