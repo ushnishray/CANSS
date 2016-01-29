@@ -76,9 +76,10 @@ void MPIBasicRunner<T>::run()
 			//Now do measure for each walker
 			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				it->second->measure();
-
+#ifndef NOBRANCH
 			//Compact
 			branch();
+#endif
 		}
 
 		fprintf(this->log,"Performing local gather\n");

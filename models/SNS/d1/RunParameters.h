@@ -57,8 +57,8 @@ struct RunParameters
 		cout<<"Dimesion: "<<dimension<<endl;
 		cout<<"beta: "<<beta<<endl;
 		cout<<"-----------------------------------------------------------\n";
-		cout<<"Walker Count: "<<walkerCount<<endl;
-		cout<<"Max. Walker Count: "<<maxWalkerCount<<endl;
+		cout<<"Walker Count (per process): "<<walkerCount<<endl;
+		cout<<"Max. Walker Count (per process): "<<maxWalkerCount<<endl;
 		cout<<"Divisor: "<<divisor<<endl;
 		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
 		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
