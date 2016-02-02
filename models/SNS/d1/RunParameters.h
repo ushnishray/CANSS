@@ -72,7 +72,7 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"Steps: "<<nSteps<<endl;
+		cout<<"Steps (sweeps) (max time): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
 		cout<<"===========================================================\n\n";
 
 		cout<<"===========================================================\n";

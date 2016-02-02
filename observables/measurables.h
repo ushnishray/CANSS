@@ -18,6 +18,8 @@
 
 #include "BasicObs.h"
 #include "Density.h"
+#include "Qhistogram.h"
+#include "Whistogram.h"
 
 using namespace measures;
 

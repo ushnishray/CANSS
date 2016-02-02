@@ -20,7 +20,7 @@ int main(int argc,char* argv[])
 #ifdef MPI
 	if(argc<2)
 	{
-		cout<<"Format is: <Run mode> <filenamelist> [<prefix file>]"<<endl;
+		cout<<"Format is: <filenamelist>"<<endl;
 		return -1;
 	}
 

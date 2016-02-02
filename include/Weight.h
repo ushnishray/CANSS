@@ -141,7 +141,7 @@ public:
 	void update(double a)
 	{
 		val *= a;
-		if(fabs(val)>ZEROTOL)
+		if(fabs(val)>DBL_EPSILON)
 		{
 			while(fabs(val)>maxvalue)
 			{
@@ -149,7 +149,7 @@ public:
 				exponent++;
 			}
 
-			while(fabs(a)<minvalue)
+			while(fabs(val)<minvalue)
 			{
 				val *= divisor;
 				exponent--;
@@ -160,7 +160,7 @@ public:
 	double logValue()
 	{
 		return log(val) + exponent*log(divisor);
-	}
+	}	
 
 	void  add(const Weight& w)
 	{
@@ -168,7 +168,7 @@ public:
 		val = val*pow(divisor,exponent-maxe) + w.val*pow(divisor,w.exponent-maxe);
 		exponent = maxe;
 
-		if(fabs(val)>ZEROTOL)
+		if(fabs(val)>DBL_EPSILON)
 		{
 			while(fabs(val)>maxvalue)
 			{

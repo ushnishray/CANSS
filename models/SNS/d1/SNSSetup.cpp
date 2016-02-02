@@ -70,6 +70,18 @@ int setup(int rank, string baseSpecFile)
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
+		else if(runParams.observableType[i].compare("Qhistogram")==0)
+		{
+			Qhistogram<int>* oo = new Qhistogram<int>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
+		else if(runParams.observableType[i].compare("Whistogram")==0)
+		{
+			Whistogram<int>* oo = new Whistogram<int>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
 	}
 
 	fprintf(log,"Observables setup.\n");
@@ -131,8 +143,12 @@ int setup(int rank, string baseSpecFile)
 			{
 				if(runParams.observableType[i].compare("Basic")==0)
 					localObs->push_back(new BasicObs<int>(*wstate,runParams.observableName[i],log,dt));
-				if(runParams.observableType[i].compare("Density")==0)
+				else if(runParams.observableType[i].compare("Density")==0)
 					localObs->push_back(new Density<int>(*wstate,runParams.observableName[i],log));
+				else if(runParams.observableType[i].compare("Qhistogram")==0)
+					localObs->push_back(new Qhistogram<int>(*wstate,runParams.observableName[i],log,dt));
+				else if(runParams.observableType[i].compare("Whistogram")==0)
+					localObs->push_back(new Whistogram<int>(*wstate,runParams.observableName[i],log,dt));
 			}
 
 			Walker<int>* lwalker = new Walker<int>(rgenref,*wstate,*localObs);

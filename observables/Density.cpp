@@ -15,7 +15,8 @@ namespace measures {
 template <class T>
 void Density<T>::measure() {
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)
-		rho[it->first] = 1.0;
+		rho[it->first] += 1.0;
+	Zcount++;
 }
 
 template <class T>
@@ -57,7 +58,7 @@ void Density<T>::gather(void* p)
 	Density<T>* obj = (Density<T>*)p;
 	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
 		obj->rho[itr->first] = obj->rho[itr->first] + itr->second;
-	obj->Zcount++;
+	obj->Zcount+=Zcount;
 
 	Zcount = 0;
 	rho.clear();
