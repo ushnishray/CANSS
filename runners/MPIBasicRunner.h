@@ -15,10 +15,12 @@ namespace runners {
 
 struct MPIBRParams
 {
+	int eSteps;
+
 	int bins;
 	int nsteps;
 
-	MPIBRParams(int _bins, int _nsteps):bins(_bins),nsteps(_nsteps) {}
+	MPIBRParams(int _eSteps, int _bins, int _nsteps):eSteps(_eSteps),bins(_bins),nsteps(_nsteps) {}
 };
 
 template <class T>
@@ -120,23 +122,23 @@ public:
 
 	//For master
 	MPIBasicRunner(FILE* _log, int _pcount,
-			int _bins, int _nsteps,
+			int _esteps, int _bins, int _nsteps,
 			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(NULL),
-		runParams(*(new MPIBRParams(_bins,_nsteps))),
+		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
 		walkers(*(new Walkers<T>)),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{ }
 
 	//For slaves
 	MPIBasicRunner(FILE* _log, int _pcount, Mover<T>* _mover,
-			int _bins, int _nsteps,
+			int _esteps, int _bins, int _nsteps,
 			int maxwc, double maxv,double minv,NumMap<Walker<T>>* _wc,
 			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(_mover),
-		runParams(*(new MPIBRParams(_bins,_nsteps))),
+		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
 		walkers(*(new Walkers<T>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{ }

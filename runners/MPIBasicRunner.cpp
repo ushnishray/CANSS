@@ -62,6 +62,17 @@ void MPIBasicRunner<T>::run()
 		//Initalize walkers
 		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			mover->initialize(it->second);
+			
+		//Do equilibration
+		for(int i=0;i<this->runParams.eSteps;i++)
+		{
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				mover->move(it->second);
+		}	
+
+		//Reset walker 
+		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			it->second->reset();	
 
 		//Propagate in time
 		for(int i=0;i<this->runParams.nsteps;i++)

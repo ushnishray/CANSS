@@ -52,7 +52,12 @@ namespace core
 			delete &state;
 			delete &observablesCollection;
 		}
-
+		
+		void reset()
+		{
+			state.reset();		
+		}
+		
 		virtual Walker* duplicate();
 		virtual void measure();
 

@@ -42,6 +42,7 @@ struct RunParameters
 	string* observableName;
 	/////////////////////////////////////////
 	int bins;
+	int eSteps;
 	int nSteps;
 	/////////////////////////////////////////
 	TransWeight trans;
@@ -72,7 +73,8 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"Steps (sweeps) (max time): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"D-Steps (max time) (sweeps): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
 		cout<<"===========================================================\n\n";
 
 		cout<<"===========================================================\n";
@@ -126,8 +128,9 @@ struct RunParameters
 			bf>>observableType[i]>>observableName[i];
 
 		bf>>bins;
+		bf>>eSteps;
 		bf>>nSteps;
-
+		eSteps *= (L+2); 
 		nSteps *= (L+2); //So that nSteps provided is time rather than sweeps
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;

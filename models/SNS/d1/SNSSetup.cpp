@@ -98,7 +98,7 @@ int setup(int rank, string baseSpecFile)
 		fprintf(log,"Starting master run.\n");
 		fflush(log);
 
-		brunner = new MPIBasicRunner<int>(log,totalProcs,runParams.bins,runParams.nSteps,globalObs,mpiGlobalObs);
+		brunner = new MPIBasicRunner<int>(log,totalProcs,runParams.eSteps,runParams.bins,runParams.nSteps,globalObs,mpiGlobalObs);
 		brunner->masterRun();
 	}
 	else
@@ -156,7 +156,7 @@ int setup(int rank, string baseSpecFile)
 			//////////////////////////////////////////////////////////////////////////////////////////
 		}
 
-		brunner = new MPIBasicRunner<int>(log,totalProcs,mov,runParams.bins,runParams.nSteps,runParams.maxWalkerCount,
+		brunner = new MPIBasicRunner<int>(log,totalProcs,mov,runParams.eSteps,runParams.bins,runParams.nSteps,runParams.maxWalkerCount,
 				runParams.maxBranchWeight,runParams.minBranchWeight,&walkerCollection,globalObs,mpiGlobalObs);
 		fprintf(log,"Starting spawn runs.\n");
 

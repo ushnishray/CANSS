@@ -107,6 +107,15 @@ public:
 		fprintf(out,"---------------------------------------------------\n");
 		fflush(out);
 	}
+
+	void reset()
+	{
+		dQ.x = (T) 0.0;
+		dQ.y = (T) 0.0;
+		dQ.z = (T) 0.0;
+		ltime = 0;
+		weight.resetValue();	
+	}
 };
 
 }
