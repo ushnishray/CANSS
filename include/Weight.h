@@ -18,6 +18,7 @@ private:
 	double val;
 	int exponent;
 
+	double initval;
 public:
 
 	Weight(const Weight& w)
@@ -28,10 +29,12 @@ public:
 
 		val = w.val;
 		exponent = w.exponent;
+		initval = w.initval;
 	}
 
 	Weight(long double maxv, long double minv)
 	{
+		initval = 0.0;
 		val = 0.0;
 		exponent = 0;
 		divisor = DIVISOR;
@@ -42,7 +45,7 @@ public:
 
 	Weight(long double maxv, long double minv, int _divisor)
 	{
-		val = 0.0;
+		initval = val = 0.0;
 		exponent = 0;
 		divisor = _divisor;
 
@@ -50,8 +53,9 @@ public:
 		minvalue = minv;
 	}
 
-	Weight(long double a, int _divisor, long double maxv, long double minv)
+	Weight(double a, int _divisor, long double maxv, long double minv)
 	{
+		initval = a;
 		maxvalue = maxv;
 		minvalue = minv;
 		divisor = _divisor;
@@ -81,7 +85,8 @@ public:
 	{
 		maxvalue = maxv;
 		minvalue = minv;
-
+		
+		initval = _val;
 		val = _val;
 		divisor = _divisor;
 		exponent = _exponent;
@@ -90,6 +95,36 @@ public:
 	long double value()
 	{
 		return (val*pow(divisor,exponent));
+	}
+
+	void resetValue()
+	{		
+		double a = initval;
+		exponent = 0;
+
+		if(fabs(a)>ZEROTOL)
+		{
+			while(fabs(a)>maxvalue)
+			{
+				a /= divisor;
+				exponent++;
+			}
+
+			while(fabs(a)<minvalue)
+			{
+				a *= divisor;
+				exponent--;
+			}
+		}
+		else
+			a = 0.0;
+
+		val = a;
+	}
+
+	void setInitValue(double v)
+	{
+		initval = v;
 	}
 
 	void setValue(double v,int e)
@@ -106,6 +141,7 @@ public:
 
 	Weight& operator =(const Weight& a)
 	{
+		initval = a.initval;
 		val = a.val;
 		divisor = a.divisor;
 		exponent = a.exponent;
@@ -211,7 +247,7 @@ public:
 
 	void display(FILE* out)
 	{
-		fprintf(out,"%lf %d %d",val,divisor,exponent);
+		fprintf(out,"%lf %d %d\n",val,divisor,exponent);
 	}
 };
 

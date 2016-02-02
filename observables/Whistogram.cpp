@@ -48,7 +48,7 @@ template <class T>
 void Whistogram<T>::clear()
 {
 	ltime = 0;
-	localWeight.setValue(0.0,0);
+	localWeight.resetValue();
 }
 
 template <class T>
@@ -59,7 +59,7 @@ void Whistogram<T>::gather(void* p)
 	double it = 1.0/(ltime*dt);
 	obj->Wcollection.push_back(localWeight.logValue());
 
-	localWeight.setValue(0.0,0);	
+	localWeight.resetValue();	
 	ltime = 0;
 }
 
@@ -101,7 +101,7 @@ int Whistogram<T>::parallelSend()
 	MPI_Send(&this->Wcollection.front(),this->Wcollection.size(),MPI_DOUBLE,0,tag,MPI_COMM_WORLD);	
 
 	ltime = 0;
-	localWeight.setValue(0.0,0);
+	localWeight.resetValue();
 	Wcollection.clear();
 	return SUCCESS;
 }

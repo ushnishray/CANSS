@@ -123,7 +123,7 @@ int setup(int rank, string baseSpecFile)
 			return FAIL;
 
 		//Total number of walkers
-		long totalnwalkers = totalProcs*runParams.walkerCount;
+		long totalnwalkers = (totalProcs-1)*runParams.walkerCount;
 		double initweight = 1.0/totalnwalkers;
 
 		//setup walker threads

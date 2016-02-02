@@ -63,7 +63,7 @@ void BasicObs<T>::clear()
 	Q2.y = Q.y = 0.0;
 	Q2.z = Q.z = 0.0;
 	ltime = 0;
-	freeEnergy.setValue(0.0,0);
+	freeEnergy.resetValue();
 }
 
 template <class T>
@@ -80,13 +80,17 @@ void BasicObs<T>::gather(void* p)
 	obj->Q2.x += Q.x*Q.x*it*it;
 	obj->Q2.y += Q.y*Q.y*it*it;
 	obj->Q2.z += Q.z*Q.z*it*it;
+	
+//	obj->freeEnergy.display(this->log);
 	obj->freeEnergy.add(freeEnergy);
+//	freeEnergy.display(this->log);
+//	fprintf(this->log,"FE Check %10.6e %10.6e\n",obj->freeEnergy.logValue(),freeEnergy.logValue());
 
 	Zcount = 0;
 	Q.x = Q.y = Q.z = 0;
 	Q2.x = Q2.y = Q2.z = 0;
 	ltime = 0;
-	freeEnergy.setValue(0.0,0);
+	freeEnergy.resetValue();
 
 	fflush(this->log);
 }
@@ -152,7 +156,7 @@ int BasicObs<T>::parallelSend()
 	ltime = 0;
 	Q.x = Q.y = Q.z = 0;
 	Q2.x = Q2.y = Q2.z = 0;
-	freeEnergy.setValue(0.0,0);
+	freeEnergy.resetValue();
 
 	return SUCCESS;
 }
