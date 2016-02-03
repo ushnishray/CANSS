@@ -186,11 +186,11 @@ void SNSMover<T>::move(Walker<T>* w)
 	w->state.dQ.x = newhop;
 	w->state.ltime++;
 
-//	fprintf(this->debugLog,"%d ================================\n",w->state.ltime);	
+//	fprintf(this->debugLog,"%d ================================\n",w->state.ltime);
 //	w->state.weight.display(this->debugLog);
 	w->state.weight.update(tweight);
 //	w->state.weight.display(this->debugLog);
-//	fprintf(this->debugLog,"=================================\n");	
+//	fprintf(this->debugLog,"=================================\n");
 }
 
 /////////////////////////////////////////////////

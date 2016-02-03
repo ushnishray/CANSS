@@ -29,7 +29,6 @@ struct RunParameters
 	/////////////////////////////////////////
 	int walkerCount;
 	int maxWalkerCount;
-	int divisor;
 	long double minBranchWeight;
 	long double maxBranchWeight;
 	/////////////////////////////////////////
@@ -60,7 +59,6 @@ struct RunParameters
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Walker Count (per process): "<<walkerCount<<endl;
 		cout<<"Max. Walker Count (per process): "<<maxWalkerCount<<endl;
-		cout<<"Divisor: "<<divisor<<endl;
 		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
 		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
 		cout<<"-----------------------------------------------------------\n";
@@ -114,7 +112,6 @@ struct RunParameters
 
 		bf>>walkerCount;
 		bf>>maxWalkerCount;
-		bf>>divisor;
 		bf>>minBranchWeight; minBranchWeight = log(minBranchWeight);
 		bf>>maxBranchWeight; maxBranchWeight = log(maxBranchWeight);
 

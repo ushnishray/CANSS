@@ -144,13 +144,22 @@ void MPIBasicRunner<T>::masterFinalize()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
-	vector<int> ridx;
+	vector<pair<int,double>> widx;
 
-	int count = walkers.walkerCount, i = 0;
-	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end() && i<walkers.walkerCount;++it)
+	int scount = 0, ccount = 0;
+	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
-		if(it->second->state.weight.logValue() >= walkers.maxValue && count<walkers.maxWalkerCount)
+		widx.push_back(pair<int,double>(it->first,it->second->state.weight.logValue()));
+
+		if(it->second->state.weight.logValue() >= walkers.maxValue)
+			scount++;
+		else if(it->second->state.weight.logValue() <= walkers.minValue)
+			ccount++;
+
+		/*
+		if(it->second->state.weight.logValue() >= walkers.maxValue)
 		{
+			cidx.push_back(it->first);
 			it->second->state.weight.update(0.5);
 
 			Walker<T>* wcpy = it->second->duplicate();
@@ -162,8 +171,25 @@ void MPIBasicRunner<T>::branch()
 		}
 		else if(it->second->state.weight.logValue() <= walkers.minValue)
 			ridx.push_back(it->first);
+		*/
 	}
 
+	sort(widx.begin(),widx.end(),pcmprobj);
+	int netsplit = scount - ccount;
+	if(netsplit>0)
+	{
+		//Means we need to split the netsplit largest walkers
+		//and merge netsplit smallest walkers
+		int i = 0;
+		for(typename NumMap<Walker<T>>::iterator it = widx.end();it!=walkers.walkerCollection->begin && i<netsplit;--it,i++)
+
+	}
+	else if(netsplit<0)
+	{
+
+	}
+
+	/*
 	for(int t=0;t<ridx.size();t+=2)
 	{
 		double w1 = walkers[ridx[t]]->state.weight.logValue();
@@ -173,7 +199,9 @@ void MPIBasicRunner<T>::branch()
 
 		if(gsl_rng_uniform(walkers[ridx[t]]->rgenref)<w1/(w1+w2))
 			walkers.walkerCollection->erase(ridx[t]);
-	}
+	}*/
+
+
 
 	walkers.walkerCount = walkers.walkerCollection->size();
 }

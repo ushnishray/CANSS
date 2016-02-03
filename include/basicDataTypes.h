@@ -25,17 +25,24 @@ struct eqnum{
 	}
 };
 
+template <class T>
 struct gcmpr{
-	bool operator()(const int a, const int b)
+	bool operator()(const T a, const T b)
 	{
 		return a<b;
 	}
 };
 
-typedef unordered_map<int,double,hash<int>,eqnum> Row;
-typedef map<long,double,gcmpr> sortedRow;
-typedef map<int,int,gcmpr> IntMap;
+struct pcmpr{
+	bool operator()(const pair<int,double> a, const pair<int,double> b)
+	{
+		return a.second<b.second;
+	}
+} pcmprobj;
 
+typedef unordered_map<int,double,hash<int>,eqnum> Row;
+typedef map<long,double,gcmpr<long>> sortedRow;
+typedef map<int,int,gcmpr<int>> IntMap;
 
 typedef unordered_map<int,sortedRow,hash<int>,eqnum> orderedMap2d;
 typedef unordered_map<int,Row,hash<int>,eqnum> hashmap2d;

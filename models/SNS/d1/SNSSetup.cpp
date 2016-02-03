@@ -47,7 +47,7 @@ int setup(int rank, string baseSpecFile)
 	// For rank 0 the global collector and the mpi collector are used exclusively to receive
 	// For slave ranks, global collector and mpi-collector are used for local assembly (i.e. per node)
 
-	Weight* freeEnergy = new Weight(0.0,runParams.divisor,runParams.maxBranchWeight,runParams.minBranchWeight);
+	Weight* freeEnergy = new Weight(0.0);
 	WalkerState<int>* gwstate = new WalkerState<int>(runParams.dimension,*freeEnergy,log);
 	vector<Observable<int>*> globalObs;
 	//Parallel Observables
@@ -134,7 +134,7 @@ int setup(int rank, string baseSpecFile)
 			//////////////////////////////////////////////////////////////////////////////////////////
 
 			//State File
-			Weight* wt = new Weight(initweight,runParams.divisor,runParams.maxBranchWeight,runParams.minBranchWeight);
+			Weight* wt = new Weight(initweight);
 			WalkerState<int>* wstate = new WalkerState<int>(runParams.dimension,*wt,log);
 
 			//Observable Files

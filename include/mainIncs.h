@@ -25,6 +25,7 @@
 #include <sstream>
 
 //Advanced Data Structures
+#include <algorithm>
 #include <set>
 #include <vector>
 #include <unordered_map>

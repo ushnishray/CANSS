@@ -13,7 +13,6 @@
 
 #define DIMENSION 1
 
-#define DIVISOR 1e5
 #define ZEROTOL 1.0e-9
 
 typedef double Real;

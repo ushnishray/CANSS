@@ -58,8 +58,14 @@ namespace core
 			state.reset();		
 		}
 		
+		bool operator() (Walker& a, Walker& b)
+		{
+			return (a.state.weight.logValue()<b.state.weight.logValue());
+		}
+
 		virtual Walker* duplicate();
 		virtual void measure();
+
 
 	};
 }

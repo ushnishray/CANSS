@@ -8,6 +8,9 @@
 #ifndef INCLUDE_WEIGHT_H_
 #define INCLUDE_WEIGHT_H_
 
+const double MAXV = 1.0e10;
+const double MINV = 1.0e-10;
+const int DIVISOR = 1e5;
 
 class Weight
 {
@@ -30,6 +33,34 @@ public:
 		val = w.val;
 		exponent = w.exponent;
 		initval = w.initval;
+	}
+
+	Weight(double a)
+	{
+		initval = a;
+		maxvalue = MAXV;
+		minvalue = MINV;
+		divisor = DIVISOR;
+		exponent = 0;
+
+		if(fabs(a)>DBL_EPSILON)
+		{
+			while(fabs(a)>maxvalue)
+			{
+				a /= divisor;
+				exponent++;
+			}
+
+			while(fabs(a)<minvalue)
+			{
+				a *= divisor;
+				exponent--;
+			}
+		}
+		else
+			a = 0.0;
+
+		val = a;
 	}
 
 	Weight(long double maxv, long double minv)
@@ -61,7 +92,7 @@ public:
 		divisor = _divisor;
 		exponent = 0;
 
-		if(fabs(a)>ZEROTOL)
+		if(fabs(a)>DBL_EPSILON)
 		{
 			while(fabs(a)>maxv)
 			{
@@ -102,7 +133,7 @@ public:
 		double a = initval;
 		exponent = 0;
 
-		if(fabs(a)>ZEROTOL)
+		if(fabs(a)>DBL_EPSILON)
 		{
 			while(fabs(a)>maxvalue)
 			{
@@ -179,6 +210,7 @@ public:
 		val *= a;
 		if(fabs(val)>DBL_EPSILON)
 		{
+			//printf("%10.6e %10.6Le %10.6Le %10.6e\n",DBL_EPSILON,minvalue,maxvalue,val);
 			while(fabs(val)>maxvalue)
 			{
 				val /= divisor;
@@ -198,24 +230,38 @@ public:
 		return log(val) + exponent*log(divisor);
 	}	
 
+	bool zerovalued()
+	{
+		return (exponent == 0 && fabs(val)<DBL_EPSILON);
+	}
+
 	void  add(const Weight& w)
 	{
-		int maxe = (exponent<w.exponent) ? w.exponent : exponent;
-		val = val*pow(divisor,exponent-maxe) + w.val*pow(divisor,w.exponent-maxe);
-		exponent = maxe;
-
-		if(fabs(val)>DBL_EPSILON)
+		if(zerovalued())
 		{
-			while(fabs(val)>maxvalue)
-			{
-				val /= divisor;
-				exponent++;
-			}
+			val = w.val;
+			divisor = w.divisor;
+			exponent = w.exponent;
+		}
+		else
+		{
+			int maxe = (exponent<w.exponent) ? w.exponent : exponent;
+			val = val*pow(divisor,exponent-maxe) + w.val*pow(divisor,w.exponent-maxe);
+			exponent = maxe;
 
-			while(fabs(val)<minvalue)
+			if(fabs(val)>DBL_EPSILON)
 			{
-				val *= divisor;
-				exponent--;
+				while(fabs(val)>maxvalue)
+				{
+					val /= divisor;
+					exponent++;
+				}
+
+				while(fabs(val)<minvalue)
+				{
+					val *= divisor;
+					exponent--;
+				}
 			}
 		}
 	}
@@ -247,7 +293,7 @@ public:
 
 	void display(FILE* out)
 	{
-		fprintf(out,"%lf %d %d\n",val,divisor,exponent);
+		fprintf(out,"%10.6e %d %d\n",val,divisor,exponent);
 	}
 };
 
