@@ -23,6 +23,7 @@ public:
 	int Zcount;
 	long ltime;
 	Weight& freeEnergy;
+	Weight Qx,Qy,Qz;
 
 	BasicObs(core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : Observable<T>(_state,bsf,log),freeEnergy(*(new Weight(_state.weight)))
 	{
