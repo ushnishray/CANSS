@@ -35,7 +35,7 @@ public:
 		initval = w.initval;
 	}
 
-	Weight(double a)
+	Weight(double a = 0.0)
 	{
 		initval = a;
 		maxvalue = MAXV;
