@@ -144,6 +144,7 @@ void MPIBasicRunner<T>::masterFinalize()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
+#if 0
 	vector<pair<int,double>> widx;
 
 	int scount = 0, ccount = 0;
@@ -156,7 +157,7 @@ void MPIBasicRunner<T>::branch()
 		else if(it->second->state.weight.logValue() <= walkers.minValue)
 			ccount++;
 
-		/*
+		/*	
 		if(it->second->state.weight.logValue() >= walkers.maxValue)
 		{
 			cidx.push_back(it->first);
@@ -201,9 +202,8 @@ void MPIBasicRunner<T>::branch()
 			walkers.walkerCollection->erase(ridx[t]);
 	}*/
 
-
-
 	walkers.walkerCount = walkers.walkerCollection->size();
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

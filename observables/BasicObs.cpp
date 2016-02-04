@@ -20,6 +20,8 @@ void BasicObs<T>::measure() {
 
 	ltime = this->state.ltime;
 	freeEnergy = this->state.weight;
+//	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
+
 }
 
 template <class T>
@@ -80,11 +82,13 @@ void BasicObs<T>::gather(void* p)
 	obj->Q2.x += Q.x*Q.x*it*it;
 	obj->Q2.y += Q.y*Q.y*it*it;
 	obj->Q2.z += Q.z*Q.z*it*it;
-	
-//	obj->freeEnergy.display(this->log);
+
+	fprintf(this->log,"%d\n", obj->Zcount);	
+	obj->freeEnergy.display(this->log);
 	obj->freeEnergy.add(freeEnergy);
-//	freeEnergy.display(this->log);
-//	fprintf(this->log,"FE Check %10.6e %10.6e\n",obj->freeEnergy.logValue(),freeEnergy.logValue());
+	freeEnergy.display(this->log);
+	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
+
 
 	Zcount = 0;
 	Q.x = Q.y = Q.z = 0;

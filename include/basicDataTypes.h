@@ -38,7 +38,7 @@ struct pcmpr{
 	{
 		return a.second<b.second;
 	}
-} pcmprobj;
+};
 
 typedef unordered_map<int,double,hash<int>,eqnum> Row;
 typedef map<long,double,gcmpr<long>> sortedRow;
