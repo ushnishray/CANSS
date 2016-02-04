@@ -40,18 +40,24 @@ void BasicObs<T>::writeViaIndex(int idx) {
 	wif.setf(FIELDFORMAT);
 	wif.fill(' ');
 
+	Qx = Qx/freeEnergy;
+	Q2x = Q2x/freeEnergy;
+	Qy = Qy/freeEnergy;
+	Q2y = Q2y/freeEnergy;
+	Qz = Qz/freeEnergy;
+	Q2z = Q2z/freeEnergy;
+
 	Q.x *= iZ;
 	Q.y *= iZ;
 	Q.z *= iZ;
-	Q2.x *= iZ;
-	Q2.y *= iZ;
-	Q2.z *= iZ;
-	Q2.x -= (Q.x*Q.x);
-	Q2.y -= (Q.y*Q.y);
-	Q2.z -= (Q.z*Q.z);
 
-	wif<<t<<" "<<(freeEnergy.logValue()*it)<<" "<<setfill(' ')<<Q.x<<" "<<setfill(' ')<<Q.y<<" "<<setfill(' ')
-			<<Q.z<<" "<<Q2.x*t<<" "<<Q2.y*t<<" "<<Q2.z*t<<endl;
+	vect<double> Q2;
+	Q2.x = t*(Q2x.value() - Qx.value()*Qx.value());
+	Q2.y = t*(Q2y.value() - Qy.value()*Qy.value());
+	Q2.z = t*(Q2z.value() - Qz.value()*Qz.value());
+
+	wif<<t<<" "<<(freeEnergy.logValue()*it)<<" "<<setfill(' ')<<Qx.value()<<" "<<setfill(' ')<<Qy.value()<<" "<<setfill(' ')
+			<<Qz.value()<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z<<" "<<Q.x<<" "<<Q.y<<" "<<Q.z<<endl;
 	wif.close();
 
 	clear();
@@ -61,40 +67,70 @@ template <class T>
 void BasicObs<T>::clear()
 {
 	Zcount = 0;
-	Q2.x = Q.x = 0.0;
-	Q2.y = Q.y = 0.0;
-	Q2.z = Q.z = 0.0;
+	Q.x = 0.0;
+	Q.y = 0.0;
+	Q.z = 0.0;
 	ltime = 0;
 	freeEnergy.resetValue();
+	Qx.resetValue();
+	Qy.resetValue();
+	Qz.resetValue();
+	Q2x.resetValue();
+	Q2y.resetValue();
+	Q2z.resetValue();
 }
 
 template <class T>
 void BasicObs<T>::gather(void* p)
 {
+	double it = 1.0/(ltime*dt);
+
 	BasicObs<T>* obj = (BasicObs<T>*)p;
 	obj->ltime = ltime;
 	obj->Zcount += 1;
 
-	double it = 1.0/(ltime*dt);
+//	fprintf(this->log,"%d\n", obj->Zcount);
+	Qx = freeEnergy;
+//	Qx.display(this->log);
+	Qx.update(Q.x*it);
+//	Qx.display(this->log);
+	obj->Qx.add(Qx);
+//	obj->Qx.display(this->log);
+	Q2x = freeEnergy;
+	Q2x.update(Q.x*Q.x*it*it);
+	obj->Q2x.add(Q2x);
+
+	Qy = freeEnergy;
+	Qy.update(Q.y*it);
+	obj->Qy.add(Qy);
+	Q2y = freeEnergy;
+	Q2y.update(Q.y*Q.y*it*it);
+	obj->Q2y.add(Q2y);
+
+	Qz = freeEnergy;
+	Qz.update(Q.z*it);
+	obj->Qz.add(Qz);
+	Q2z = freeEnergy;
+	Q2z.update(Q.z*Q.z*it*it);
+	obj->Q2z.add(Q2z);
+
 	obj->Q.x += Q.x*it;
 	obj->Q.y += Q.y*it;
 	obj->Q.z += Q.z*it;
-	obj->Q2.x += Q.x*Q.x*it*it;
-	obj->Q2.y += Q.y*Q.y*it*it;
-	obj->Q2.z += Q.z*Q.z*it*it;
 
-	fprintf(this->log,"%d\n", obj->Zcount);	
-	obj->freeEnergy.display(this->log);
+//	fprintf(this->log,"%d\n", obj->Zcount);
+//	obj->freeEnergy.display(this->log);
 	obj->freeEnergy.add(freeEnergy);
-	freeEnergy.display(this->log);
-	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
-
+//	freeEnergy.display(this->log);
+//	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
 
 	Zcount = 0;
 	Q.x = Q.y = Q.z = 0;
-	Q2.x = Q2.y = Q2.z = 0;
 	ltime = 0;
 	freeEnergy.resetValue();
+	Qx.resetValue();
+	Qy.resetValue();
+	Qz.resetValue();
 
 	fflush(this->log);
 }
@@ -109,10 +145,15 @@ Observable<T>* BasicObs<T>::duplicate(core::WalkerState<T>& ws)
 	newo->Q.x = this->Q.x;
 	newo->Q.y = this->Q.y;
 	newo->Q.z = this->Q.z;
-	newo->Q2.x = this->Q2.x;
-	newo->Q2.y = this->Q2.y;
-	newo->Q2.z = this->Q2.z;
+
 	newo->freeEnergy = this->freeEnergy;
+	newo->Qx = this->Qx;
+	newo->Qy = this->Qy;
+	newo->Qz = this->Qz;
+	newo->Q2x = this->Q2x;
+	newo->Q2y = this->Q2y;
+	newo->Q2z = this->Q2z;
+
 	return newo;
 }
 
@@ -145,13 +186,16 @@ int BasicObs<T>::parallelSend()
 	MPI_Send(&this->Q.y,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 	MPI_Send(&this->Q.z,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 
-	//Q2
-	MPI_Send(&this->Q2.x,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q2.y,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q2.z,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-
 	//FreeEnergy
 	this->freeEnergy.mpiSend(0);
+
+	//Large
+	this->Qx.mpiSend(0);
+	this->Qy.mpiSend(0);
+	this->Qz.mpiSend(0);
+	this->Q2x.mpiSend(0);
+	this->Q2y.mpiSend(0);
+	this->Q2z.mpiSend(0);
 
 	fprintf(this->log,"BasicObs Transfer Complete\n");
 	fflush(this->log);
@@ -159,8 +203,9 @@ int BasicObs<T>::parallelSend()
 	Zcount = 0;
 	ltime = 0;
 	Q.x = Q.y = Q.z = 0;
-	Q2.x = Q2.y = Q2.z = 0;
 	freeEnergy.resetValue();
+	Qx.resetValue();
+	Q2x.resetValue();
 
 	return SUCCESS;
 }
@@ -199,16 +244,15 @@ int BasicObs<T>::parallelReceive()
 		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		this->Q.z += temp;
 
-		//Receive Q2
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.x += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.y += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.z += temp;
-
 		//FreeEnergy
 		this->freeEnergy.mpiReceive(procId);
+
+		this->Qx.mpiReceive(procId);
+		this->Qy.mpiReceive(procId);
+		this->Qz.mpiReceive(procId);
+		this->Q2x.mpiReceive(procId);
+		this->Q2y.mpiReceive(procId);
+		this->Q2z.mpiReceive(procId);
 
 		fprintf(this->log,"BasicObs Finished receiving from process:%d\n",procId);
 		fflush(this->log);

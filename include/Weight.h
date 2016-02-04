@@ -205,6 +205,30 @@ public:
 		return nw;
 	}
 
+	Weight operator /(const Weight& a)
+	{
+		double nv = val/a.val*pow((divisor/a.divisor),a.exponent);
+		int e = exponent - a.exponent;
+
+		if(fabs(val)>DBL_EPSILON)
+		{
+			while(fabs(nv)>maxvalue)
+			{
+				nv /= divisor;
+				e++;
+			}
+
+			while(fabs(nv)<minvalue)
+			{
+				nv *= divisor;
+				e--;
+			}
+		}
+
+		Weight nw = Weight(nv,divisor,e,maxvalue,minvalue);
+		return nw;
+	}
+
 	void update(double a)
 	{
 		val *= a;

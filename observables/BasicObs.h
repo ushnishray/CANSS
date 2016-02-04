@@ -19,20 +19,21 @@ template <class T>
 class BasicObs: public measures::Observable<T>, public measures::MPIObservable {
 public:
 	double dt;
-	vect<double> Q, Q2;
+	vect<double> Q;
 	int Zcount;
 	long ltime;
 	Weight& freeEnergy;
 	Weight Qx,Qy,Qz;
+	Weight Q2x,Q2y,Q2z;
 
 	BasicObs(core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : Observable<T>(_state,bsf,log),freeEnergy(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
-		Q2.x = Q.x = 0.0;
-		Q2.y = Q.y = 0.0;
-		Q2.z = Q.z = 0.0;
+		Q.x = 0.0;
+		Q.y = 0.0;
+		Q.z = 0.0;
 	}
 
 	BasicObs(int pId,int nprocs, core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T>(_state,bsf,log),
@@ -41,9 +42,9 @@ public:
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
-		Q2.x = Q.x = 0.0;
-		Q2.y = Q.y = 0.0;
-		Q2.z = Q.z = 0.0;
+		Q.x = 0.0;
+		Q.y = 0.0;
+		Q.z = 0.0;
 	}
 
 	~BasicObs()
