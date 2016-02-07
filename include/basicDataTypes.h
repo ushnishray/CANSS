@@ -40,6 +40,14 @@ struct pcmpr{
 	}
 };
 
+struct paircomp
+{
+	bool operator()(std::pair<int,double> p1, pair<int,double> p2)
+	{
+		return p1.second>p2.second;
+	}
+};
+
 typedef unordered_map<int,double,hash<int>,eqnum> Row;
 typedef map<long,double,gcmpr<long>> sortedRow;
 typedef map<int,int,gcmpr<int>> IntMap;

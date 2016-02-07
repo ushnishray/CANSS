@@ -17,11 +17,14 @@ using namespace std;
 using namespace __gnu_cxx;
 
 
-int setup(int rank, string baseSpecFile)
+int setup(int rank, string baseSpecFile, int argc, char* argv[])
 {
 	RunParameters runParams;
 
 	int status = runParams.loadFile(baseSpecFile);
+	if(argc>3)
+		runParams.beta = atof(argv[2]);
+
 	if(status == FILENOTFOUND)
 		return FAIL;
 	else if(status == DIMERROR)

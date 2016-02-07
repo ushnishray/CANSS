@@ -45,7 +45,7 @@ int main(int argc,char* argv[])
 
 	string bfile(argv[1]);
 	int status;
-	status = setup(rank,bfile);
+	status = setup(rank,bfile, argc, argv);
 
 	MPI_Finalize();
 #else

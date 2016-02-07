@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////
 
 //Turnoff Branching - on by default
-#define NOBRANCH
+//#define NOBRANCH
 
 //Reindex - off by default
 //#define REINDEX

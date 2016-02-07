@@ -144,7 +144,7 @@ void MPIBasicRunner<T>::masterFinalize()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
-#if 0
+	paircomp paircompobj;
 	vector<pair<int,double>> widx;
 
 	int scount = 0, ccount = 0;
@@ -156,54 +156,43 @@ void MPIBasicRunner<T>::branch()
 			scount++;
 		else if(it->second->state.weight.logValue() <= walkers.minValue)
 			ccount++;
-
-		/*	
-		if(it->second->state.weight.logValue() >= walkers.maxValue)
-		{
-			cidx.push_back(it->first);
-			it->second->state.weight.update(0.5);
-
-			Walker<T>* wcpy = it->second->duplicate();
-			(*walkers.walkerCollection)[walkers.lastIndex++] = wcpy;
-			wcpy->state.weight.update(0.5);
-
-			i++;
-			count++;
-		}
-		else if(it->second->state.weight.logValue() <= walkers.minValue)
-			ridx.push_back(it->first);
-		*/
 	}
 
-	sort(widx.begin(),widx.end(),pcmprobj);
-	int netsplit = scount - ccount;
-	if(netsplit>0)
-	{
-		//Means we need to split the netsplit largest walkers
-		//and merge netsplit smallest walkers
-		int i = 0;
-		for(typename NumMap<Walker<T>>::iterator it = widx.end();it!=walkers.walkerCollection->begin && i<netsplit;--it,i++)
+	//Merging involves 2 files so round up to an even number
+	ccount = int(ccount/2+0.5)*2;
 
+	//walkers to keep untouched
+	int kcount = walkers.walkerCount - scount - ccount;
+	int dpop = kcount + 2*scount + int(ccount/2+0.5) - walkers.walkerCount;
+
+	sort(widx.begin(),widx.end(),paircompobj);
+
+	//if dpop>0 then there are more splits than merges so we need to remove low weights
+	//if dpop<0 then there are more merges than splits so we need to split large weights
+	if(dpop>0)
+		ccount = 2*scount;
+	else
+		scount = ccount/2;
+
+	//Now merge and split. For every 2 merged we can do 1 split
+	int p = 0;
+	for(int i = widx.size()-ccount;i<widx.size();i+=2)
+	{
+		walkers[widx[p].first]->state.weight.update(0.5);
+		Walker<T>* wcpy = walkers[widx[p].first]->duplicate();
+
+		double w1 = walkers[widx[i].first]->state.weight.logValue();
+		double w2 = walkers[widx[i+1].first]->state.weight.logValue();
+		int idx = 0;
+		if(gsl_rng_uniform(walkers[i]->rgenref)<w1/(w1+w2))
+			idx = widx[i].first;
+		else
+			idx = widx[i+1].first;
+
+		walkers.walkerCollection->erase(idx);
+		(*walkers.walkerCollection)[idx] = wcpy;
+		p++;
 	}
-	else if(netsplit<0)
-	{
-
-	}
-
-	/*
-	for(int t=0;t<ridx.size();t+=2)
-	{
-		double w1 = walkers[ridx[t]]->state.weight.logValue();
-		double w2 = 0.0;
-		if(t+1<ridx.size())
-			w2 = walkers[ridx[t+1]]->state.weight.logValue();
-
-		if(gsl_rng_uniform(walkers[ridx[t]]->rgenref)<w1/(w1+w2))
-			walkers.walkerCollection->erase(ridx[t]);
-	}*/
-
-	walkers.walkerCount = walkers.walkerCollection->size();
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
