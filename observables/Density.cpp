@@ -76,6 +76,15 @@ Observable<T>* Density<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
+template <class T>
+void Density<T>::copy(void* p)
+{
+	Density<T>* w = (Density<T>*)p;
+	this->Zcount = w->Zcount;
+	this->rho.clear();
+	for(typename PtclMap<T>::iterator it = w->state.Rcurr->begin(); it!=w->state.Rcurr->end();++it)
+		this->rho[it->first] = it->second;
+}
 
 template <class T>
 int Density<T>::parallelSend()
@@ -177,6 +186,7 @@ template void Density<int>::writeViaIndex(int idx);
 template void Density<int>::clear();
 template void Density<int>::gather(void* p);
 template Observable<int>* Density<int>::duplicate(core::WalkerState<int>&);
+template void Density<int>::copy(void* p);
 template int Density<int>::parallelSend();
 template int Density<int>::parallelReceive();
 

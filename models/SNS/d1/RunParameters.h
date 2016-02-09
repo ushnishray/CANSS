@@ -71,7 +71,7 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<eSteps<<endl;
 		cout<<"D-Steps (max time) (sweeps): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
 		cout<<"===========================================================\n\n";
 
@@ -143,6 +143,8 @@ struct RunParameters
 		trans.rmc = exp(-beta);
 		return SUCCESS;
 	}
+
+
 
 };
 

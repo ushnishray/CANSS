@@ -64,13 +64,31 @@ void MPIBasicRunner<T>::run()
 			mover->initialize(it->second);
 			
 		//Do equilibration
+#if defined CONSTPOPBRANCH
+		//Spend 10% of time getting to steady state
+		for(int i=0;i<this->runParams.eSteps*0.10;i++)
+		{
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				mover->move(it->second);
+		}
+
+		//Spend 90% of time getting to weighted distribution
+		for(int i=0;i<this->runParams.eSteps*0.90;i++)
+		{
+			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				mover->move(it->second);
+			branch();
+		}
+
+#else
 		for(int i=0;i<this->runParams.eSteps;i++)
 		{
 			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
-		}	
+		}
+#endif
 
-		//Reset walker 
+		//Reset walker times
 		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			it->second->reset();	
 
@@ -90,6 +108,7 @@ void MPIBasicRunner<T>::run()
 //				fprintf(this->log,"Step: %d\n",i); 
 				it->second->measure();
 			}
+
 #ifndef NOBRANCH
 			//Compact
 			branch();
@@ -144,6 +163,7 @@ void MPIBasicRunner<T>::masterFinalize()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
+#if defined CONSTPOPBRANCH
 	paircomp paircompobj;
 	vector<pair<int,double>> widx;
 
@@ -174,10 +194,15 @@ void MPIBasicRunner<T>::branch()
 	else
 		scount = ccount/2;
 
+//	fprintf(this->log,"Branching Stat: [split] %d [merge] %d\n",scount,ccount);
+
 	//Now merge and split. For every 2 merged we can do 1 split
 	int p = 0;
 	for(int i = widx.size()-ccount;i<widx.size();i+=2)
 	{
+#if 0
+		//This SHOULD WORK but unfortunately c++ garbage collection is hideously bad
+		//Ends in memory over-allocation :(
 		walkers[widx[p].first]->state.weight.update(0.5);
 		Walker<T>* wcpy = walkers[widx[p].first]->duplicate();
 
@@ -188,11 +213,26 @@ void MPIBasicRunner<T>::branch()
 			idx = widx[i].first;
 		else
 			idx = widx[i+1].first;
-
 		walkers.walkerCollection->erase(idx);
 		(*walkers.walkerCollection)[idx] = wcpy;
+#else
+		walkers[widx[p].first]->state.weight.update(0.5);
+		double w1 = walkers[widx[i].first]->state.weight.logValue();
+		double w2 = walkers[widx[i+1].first]->state.weight.logValue();
+		int idx = 0;
+		if(gsl_rng_uniform(walkers[i]->rgenref)<w1/(w1+w2))
+			idx = widx[i].first;
+		else
+			idx = widx[i+1].first;
+
+		(*walkers.walkerCollection)[idx]->copy(*walkers[widx[p].first]);
+#endif
 		p++;
 	}
+
+	widx.clear();
+	//walkers.displayWalkers(this->log);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

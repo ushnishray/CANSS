@@ -15,6 +15,9 @@
 //branching options
 ///////////////////////////////////////////////////////
 
+//Constant Population Branching
+#define CONSTPOPBRANCH
+
 //Turnoff Branching - on by default
 //#define NOBRANCH
 

@@ -83,6 +83,18 @@ Observable<T>* Qhistogram<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
+template <class T>
+void Qhistogram<T>::copy(void* p)
+{
+	Qhistogram<T>* obj = (Qhistogram<T>*) p;
+	this->Qcollection.clear();
+
+	this->ltime = obj->ltime;
+	this->Q.x = obj->Q.x;
+	this->Q.y = obj->Q.y;
+	this->Q.z = obj->Q.z;
+	this->Qcollection = obj->Qcollection;
+}
 
 template <class T>
 int Qhistogram<T>::parallelSend()
@@ -166,6 +178,7 @@ template void Qhistogram<int>::writeViaIndex(int idx);
 template void Qhistogram<int>::clear();
 template void Qhistogram<int>::gather(void* p);
 template Observable<int>* Qhistogram<int>::duplicate(core::WalkerState<int>&);
+template void Qhistogram<int>::copy(void* p);
 template int Qhistogram<int>::parallelSend();
 template int Qhistogram<int>::parallelReceive();
 

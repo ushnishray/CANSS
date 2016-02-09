@@ -19,7 +19,7 @@ void BasicObs<T>::measure() {
 	Q.z += this->state.dQ.z;
 
 	ltime = this->state.ltime;
-	freeEnergy = this->state.weight;
+	freeEnergy.copy(this->state.weight);
 //	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
 
 }
@@ -122,7 +122,7 @@ void BasicObs<T>::gather(void* p)
 //	obj->freeEnergy.display(this->log);
 	obj->freeEnergy.add(freeEnergy);
 //	freeEnergy.display(this->log);
-//	fprintf(this->log,"FE Check %10.6e %10.6e\n",freeEnergy.logValue(),Q.x);
+//	fprintf(this->log,"FE Check %10.6e %10.6e # %10.6e %10.6e\n",obj->Qx.value(),obj->Q.x,Qx.value(),Q.x);
 
 	Zcount = 0;
 	Q.x = Q.y = Q.z = 0;
@@ -131,8 +131,30 @@ void BasicObs<T>::gather(void* p)
 	Qx.resetValue();
 	Qy.resetValue();
 	Qz.resetValue();
+	Q2x.resetValue();
+	Q2y.resetValue();
+	Q2z.resetValue();
 
 	fflush(this->log);
+}
+
+template <class T>
+void BasicObs<T>::copy(void* p)
+{
+	BasicObs<T>* obj = (BasicObs<T>*)p;
+	this->ltime = obj->ltime;
+	this->Zcount = obj->Zcount;
+	this->Q.x = obj->Q.x;
+	this->Q.y = obj->Q.y;
+	this->Q.z = obj->Q.z;
+
+	this->freeEnergy.copy(obj->freeEnergy);
+	this->Qx.copy(obj->Qx);
+	this->Qy.copy(obj->Qy);
+	this->Qz.copy(obj->Qz);
+	this->Q2x.copy(obj->Q2x);
+	this->Q2y.copy(obj->Q2y);
+	this->Q2z.copy(obj->Q2z);
 }
 
 template <class T>
@@ -146,17 +168,31 @@ Observable<T>* BasicObs<T>::duplicate(core::WalkerState<T>& ws)
 	newo->Q.y = this->Q.y;
 	newo->Q.z = this->Q.z;
 
-	newo->freeEnergy = this->freeEnergy;
-	newo->Qx = this->Qx;
-	newo->Qy = this->Qy;
-	newo->Qz = this->Qz;
-	newo->Q2x = this->Q2x;
-	newo->Q2y = this->Q2y;
-	newo->Q2z = this->Q2z;
+	newo->freeEnergy.copy(this->freeEnergy);
+	newo->Qx.copy(this->Qx);
+	newo->Qy.copy(this->Qy);
+	newo->Qz.copy(this->Qz);
+	newo->Q2x.copy(this->Q2x);
+	newo->Q2y.copy(this->Q2y);
+	newo->Q2z.copy(this->Q2z);
 
 	return newo;
 }
 
+template <class T>
+void BasicObs<T>::display()
+{
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"Basic Observable\n");
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"dt: %f\n",dt);
+	fprintf(this->log,"Zcount: %d\n",Zcount);
+	fprintf(this->log,"Bias Free Q.x: %9.6e\tQ.y: %9.6e\tQ.z: %9.6e\n",Q.x,Q.y,Q.z);
+	fprintf(this->log,"With Bias Q.x: %9.6e\tQ.y: %9.6e\tQ.z: %9.6e\n",Qx.logValue(),Qy.logValue(),Qz.logValue());
+	fprintf(this->log,"With Bias Q2.x: %9.6e\tQ2.y: %9.6e\tQ2.z: %9.6e\n",Q2x.logValue(),Q2y.logValue(),Q2z.logValue());
+	fprintf(this->log,"Free Energy: %9.6e\n",freeEnergy.logValue());
+	fprintf(this->log,"==============================================\n");
+}
 
 template <class T>
 int BasicObs<T>::parallelSend()
@@ -245,6 +281,7 @@ int BasicObs<T>::parallelReceive()
 		this->Q.z += temp;
 
 		//FreeEnergy
+		//fprintf(this->log,"MPI Check %10.6Le %10.6Le %10.6Le\n",freeEnergy.value(),Qx.value(),Q2x.value());
 		this->freeEnergy.mpiReceive(procId);
 
 		this->Qx.mpiReceive(procId);
@@ -253,6 +290,7 @@ int BasicObs<T>::parallelReceive()
 		this->Q2x.mpiReceive(procId);
 		this->Q2y.mpiReceive(procId);
 		this->Q2z.mpiReceive(procId);
+		//fprintf(this->log,"MPI Check %10.6Le %10.6Le %10.6Le\n",freeEnergy.value(),Qx.value(),Q2x.value());
 
 		fprintf(this->log,"BasicObs Finished receiving from process:%d\n",procId);
 		fflush(this->log);
@@ -266,6 +304,7 @@ template void BasicObs<int>::writeViaIndex(int idx);
 template void BasicObs<int>::clear();
 template void BasicObs<int>::gather(void* p);
 template Observable<int>* BasicObs<int>::duplicate(core::WalkerState<int>&);
+template void BasicObs<int>::copy(void* p);
 template int BasicObs<int>::parallelSend();
 template int BasicObs<int>::parallelReceive();
 

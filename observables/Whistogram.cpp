@@ -29,7 +29,7 @@ void Whistogram<T>::writeViaIndex(int idx) {
 	s<<idx;
 	string fname = this->baseFileName + "_" + s.str();
 	
-	ofstream wif(fname,std::ofstream::app);
+	ofstream wif(fname);
 	wif.precision(FIELDPRECISION);
 	wif.width(FIELDWIDTH);
 	wif.setf(FIELDFORMAT);
@@ -69,11 +69,19 @@ Observable<T>* Whistogram<T>::duplicate(core::WalkerState<T>& ws)
 	Whistogram<T>* newo = new Whistogram<T>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
-	newo->localWeight = this->localWeight;
+	newo->localWeight.copy(this->localWeight);
 	newo->Wcollection = this->Wcollection;
 	return newo;
 }
 
+template <class T>
+void Whistogram<T>::copy(void* p)
+{
+	Whistogram<T>* obj = (Whistogram<T>*)p;
+	this->ltime = obj->ltime;
+	this->localWeight.copy(obj->localWeight);
+	this->Wcollection = obj->Wcollection;
+}
 
 template <class T>
 int Whistogram<T>::parallelSend()
@@ -157,6 +165,7 @@ template void Whistogram<int>::writeViaIndex(int idx);
 template void Whistogram<int>::clear();
 template void Whistogram<int>::gather(void* p);
 template Observable<int>* Whistogram<int>::duplicate(core::WalkerState<int>&);
+template void Whistogram<int>::copy(void* p);
 template int Whistogram<int>::parallelSend();
 template int Whistogram<int>::parallelReceive();
 

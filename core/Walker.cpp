@@ -21,6 +21,27 @@ void Walker<T>::measure()
 }
 
 template <class T>
+void Walker<T>::display()
+{
+	fprintf(state.out,"======================================================\n");
+	fprintf(state.out,"Walker Display\n");
+	fprintf(state.out,"======================================================\n");
+	state.display();
+	for(int i=0;i<observablesCollection.size();i++)
+		observablesCollection[i]->display();
+	fprintf(state.out,"======================================================\n");
+}
+
+template <class T>
+void Walker<T>::copy(Walker<T>& w)
+{
+	this->state.copy(w.state);
+	//All observables needs to point to the walker state
+	for(int i=0;i<w.observablesCollection.size();i++)
+		observablesCollection[i]->copy(w.observablesCollection[i]);
+}
+
+template <class T>
 Walker<T>* Walker<T>::duplicate()
 {
 	vector<measures::Observable<T>*>* newob = new vector<measures::Observable<T>*>;
@@ -36,4 +57,6 @@ Walker<T>* Walker<T>::duplicate()
 //////////////////////////////////////////////////////////////////////
 template void Walker<int>::measure();
 template Walker<int>* Walker<int>::duplicate();
+template void Walker<int>::display();
+template void Walker<int>::copy(Walker<int>&);
 }

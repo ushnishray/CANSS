@@ -50,9 +50,12 @@ namespace core
 		~Walker()
 		{
 			delete &state;
+			observablesCollection.clear();
 			delete &observablesCollection;
 		}
 		
+		void display();
+
 		void reset()
 		{
 			state.reset();		
@@ -65,7 +68,7 @@ namespace core
 
 		virtual Walker* duplicate();
 		virtual void measure();
-
+		virtual void copy(Walker& w);
 
 	};
 }

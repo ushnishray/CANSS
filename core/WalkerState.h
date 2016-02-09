@@ -83,13 +83,28 @@ public:
 
 	~WalkerState()
 	{
+		Rcurr->clear();
 		delete Rcurr;
 		delete &weight;
+	}
+
+	void copy(WalkerState<T>& w)
+	{
+		DIM = w.DIM;
+		particleCount = w.particleCount;
+		Rcurr->clear();
+		for(typename PtclMap<T>::iterator it = w.Rcurr->begin(); it!=w.Rcurr->end();++it)
+				(*Rcurr)[it->first] = it->second;
+		dQ = w.dQ;
+		ltime = w.ltime;
+		weight.copy(w.weight);
+		out = w.out;
 	}
 
 	WalkerState* duplicate()
 	{
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,*(new Weight(weight)));
+		a->out = this->out;
 		return a;
 	}
 

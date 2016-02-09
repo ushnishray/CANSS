@@ -22,10 +22,12 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	RunParameters runParams;
 
 	int status = runParams.loadFile(baseSpecFile);
-
-
 	if(argc==3)
+	{
 		runParams.beta = atof(argv[2]);
+		runParams.trans.lmc = exp(runParams.beta);
+		runParams.trans.rmc = exp(-runParams.beta);
+	}
 
 	if(status == FILENOTFOUND)
 		return FAIL;

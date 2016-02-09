@@ -42,6 +42,7 @@ public:
 	void gather(void*);
 	void clear();
 	Observable<T>* duplicate(core::WalkerState<T>&);
+	void copy(void*);
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//MPI Comm

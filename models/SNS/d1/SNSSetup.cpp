@@ -22,16 +22,20 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	RunParameters runParams;
 
 	int status = runParams.loadFile(baseSpecFile);
-	if(argc>3)
-		runParams.beta = atof(argv[2]);
-
 	if(status == FILENOTFOUND)
 		return FAIL;
 	else if(status == DIMERROR)
 		return DIMERROR;
+
+	//Useful for batch runs
+	if(argc>2)
+	{
+		runParams.beta = atof(argv[2]);
+		runParams.trans.lmc = exp(runParams.beta);
+		runParams.trans.rmc = exp(-runParams.beta);
+	}
 	if(rank == 0)
 		runParams.display();
-
 
 	//Output Log
 	stringstream sp;

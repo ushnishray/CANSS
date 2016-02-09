@@ -172,11 +172,22 @@ public:
 
 	Weight& operator =(const Weight& a)
 	{
-		initval = a.initval;
+		//initval = a.initval;
 		val = a.val;
 		divisor = a.divisor;
 		exponent = a.exponent;
 		return *this;
+	}
+
+	void copy(Weight& w)
+	{
+		divisor = w.divisor;
+		maxvalue = w.maxvalue;
+		minvalue = w.minvalue;
+
+		val = w.val;
+		exponent = w.exponent;
+		initval = w.initval;
 	}
 
 	bool operator ==(const Weight& a)

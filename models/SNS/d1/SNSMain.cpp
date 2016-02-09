@@ -13,7 +13,7 @@
 #define MPI
 using namespace std;
 
-extern int setup(int rank, string baseSpecFile);
+extern int setup(int rank, string baseSpecFile,int argc, char* argv[]);
 
 int main(int argc,char* argv[])
 {

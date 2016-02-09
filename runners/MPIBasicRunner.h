@@ -51,6 +51,17 @@ struct Walkers {
 		lastIndex = initWalkerCount = walkerCount = walkerCollection->size();
 	}
 
+	void displayWalkers(FILE* out)
+	{
+		int idx = 0;
+		fprintf(out,"********************************************************************\n",idx++);
+		for(typename NumMap<Walker<T>>::iterator it = walkerCollection->begin();it!=walkerCollection->end();++it)
+		{
+			fprintf(out,"Walker id: %d\n",idx++);
+			it->second->display();
+		}
+	}
+
 	void resetWalkers()
 	{
 #ifndef REINDEX

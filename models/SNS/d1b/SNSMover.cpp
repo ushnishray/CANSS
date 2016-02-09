@@ -31,8 +31,7 @@ void SNSMover<T>::initialize(Walker<T>* w)
 	}
 
 	w->state.ltime = 0;
-	w->state.weight.resetValue();
-
+	w->state.reset();
 	//w->state.display();
 }
 
