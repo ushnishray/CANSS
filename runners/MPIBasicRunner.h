@@ -129,6 +129,13 @@ private:
 	//For output
 	FILE* log;
 
+	//Local statistical variables
+	long nclones;
+	long nelims;
+
+	//Display parameters
+	void displayBranchStat(int);
+
 public:
 
 	//For master
@@ -140,7 +147,10 @@ public:
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
 		walkers(*(new Walkers<T>)),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
-	{ }
+	{
+		nclones = 0;
+		nelims = 0;
+	}
 
 	//For slaves
 	MPIBasicRunner(FILE* _log, int _pcount, Mover<T>* _mover,
@@ -152,7 +162,10 @@ public:
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
 		walkers(*(new Walkers<T>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
-	{ }
+	{
+		nclones = 0;
+		nelims = 0;
+	}
 
 	~MPIBasicRunner()
 	{
@@ -169,7 +182,7 @@ public:
 	void masterRun();
 	void masterFinalize();
 
-	//Brancing
+	//Branching
 	void branch();
 };
 

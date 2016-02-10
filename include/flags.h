@@ -15,8 +15,12 @@
 //branching options
 ///////////////////////////////////////////////////////
 
+//Branching Every (%) states
+#define BRANCHPERCENT 0.05
 //Constant Population Branching
 #define CONSTPOPBRANCH
+//#define CPB1
+#define CPB2
 
 //Turnoff Branching - on by default
 //#define NOBRANCH
