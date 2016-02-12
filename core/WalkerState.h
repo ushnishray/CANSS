@@ -131,6 +131,15 @@ public:
 		ltime = 0;
 		weight.resetValue();	
 	}
+
+	/*
+	//Relegate serialization to Serializer
+	template <typename OStream>
+	friend void Serializer::serialize(Serializable&);
+	void serializeWith(Serializer& obj)
+	{
+		obj.serialize(this);
+	}*/
 };
 
 }

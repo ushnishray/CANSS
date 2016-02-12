@@ -70,6 +70,8 @@ namespace core
 		virtual void measure();
 		virtual void copy(Walker& w);
 
+		template<typename U>
+		friend class Serializer;
 	};
 }
 

@@ -100,7 +100,6 @@ struct vectorPairComp
 template <class T>
 using vectToValue = map<vect<T>,double,vectComp<T>>;
 
-
 template <class T>
 using vectorMap2d = map<vect<T>,vectToValue<T>,vectComp<T>>;
 

@@ -326,10 +326,21 @@ public:
 		MPI_Send(&this->exponent,1,MPI_INT,to,tag,MPI_COMM_WORLD);
 	}
 
+	void mpiBcast(int root)
+	{
+		MPI_Bcast(&this->val,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
+		MPI_Bcast(&this->exponent,1,MPI_INT,root,MPI_COMM_WORLD);
+	}
+
 	void display(FILE* out)
 	{
 		fprintf(out,"%10.6e %d %d\n",val,divisor,exponent);
 	}
+
+	//Serializer is a friend no matter what
+	template<typename U>
+	friend class Serializer;
+
 };
 
 #endif /* INCLUDE_WEIGHT_H_ */

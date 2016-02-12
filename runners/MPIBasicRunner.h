@@ -184,6 +184,8 @@ public:
 
 	//Branching
 	void branch();
+	void masterBranch();
+
 };
 
 } /* namespace runners */
