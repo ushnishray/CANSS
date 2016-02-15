@@ -13,6 +13,18 @@
 namespace measures {
 
 template <class T>
+void Density<T>::display()
+{
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"Density Observable\n");
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"Zcount: %d\n",Zcount);
+	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
+		fprintf(this->log,"%9.6e %9.6e %9.6e -> %24.16e\n",(float) itr->first.z,(float) itr->first.y,(float) itr->first.x,itr->second);
+	fprintf(this->log,"==============================================\n");
+}
+
+template <class T>
 void Density<T>::measure() {
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)
 		rho[it->first] += 1.0;

@@ -14,7 +14,7 @@
 #include <arpa/inet.h> // for htonl/s, ntoh/s
 #include <endian.h> // for htonbe64, if you have it...
 
-// uint64_t hton(uint64_t n) { return htonbe64(n); }
+//uint64_t hton(uint64_t n) { return htonbe64(n); }
 uint32_t hton(uint32_t n) { return htonl(n); }
 uint16_t hton(uint16_t n) { return htons(n); }
 
@@ -22,19 +22,18 @@ uint16_t hton(uint16_t n) { return htons(n); }
 uint32_t hton(int32_t n) { return htonl(n); }
 uint16_t hton(int16_t n) { return htons(n); }
 
-// uint64_t ntoh(uint64_t n) { return betoh64(n); }
+//uint64_t ntoh(uint64_t n) { return betoh64(n); }
 uint32_t ntoh(uint32_t n) { return ntohl(n); }
 uint16_t ntoh(uint16_t n) { return ntohs(n); }
 
-// uint64_t ntoh(uint64_t n) { return betoh64(n); }
+//uint64_t ntoh(uint64_t n) { return betoh64(n); }
 uint32_t ntoh(int32_t n) { return ntohl(n); }
 uint16_t ntoh(int16_t n) { return ntohs(n); }
 
 template <typename XStream>
-class Serializer : public XStream
+class Serializer: public virtual XStream //It is a stream
 {
 public:
-
 	typedef Serializer This;
 
 	//Handle primitives
@@ -53,16 +52,20 @@ public:
 	template <typename T>
 	This& rawwrite(const T& t)
 	{
-		static_cast<XStream&>(*this) << '[' << sizeof t << ']';
-		return write((const char*)&t, sizeof t);
+		XStream& p = *this;
+		p<<sizeof t;
+		write((const char*)&t, sizeof t);
+		return *this;
 	}
 
 	template <typename T>
 	This& rawread(T& t)
 	{
-		char x; int ss;
-		static_cast<XStream&>(*this) >> x >> ss >> x;
-		return read((char*)&t, ss);
+		XStream& p = *this;
+		unsigned int n;
+		p >> n;
+		read((char*)&t, n);
+		return *this;
 	}
 
 	template <typename T>
@@ -101,61 +104,419 @@ public:
 	}
 
 	// conversions for inbuilt & Standard-library types...
-	friend This& operator<<(This& bs, bool x) { return bs << (x ? 'T' : 'F'); }
-
-	friend This& operator<<(This& bs, int8_t x) { return bs << x; }
-	friend This& operator>>(This& bs, int8_t& x) { return bs >> x;}
-
-	friend This& operator<<(This& bs, uint8_t x) { return bs << x; }
-	friend This& operator>>(This& bs, uint8_t& x) { return bs >> x;}
-
-	friend This& operator<<(This& bs, uint16_t x){return bs.hton(x);}
-	friend This& operator>>(This& bs, uint16_t& x) { return bs.ntoh(x);}
-
-	friend This& operator<<(This& bs, int16_t x){return bs.hton(x);}
-	friend This& operator>>(This& bs, int16_t& x) { return bs.ntoh(x);}
-
-	friend This& operator<<(This& bs, int32_t x){return bs.hton(x);}
-	friend This& operator>>(This& bs, int32_t& x) { return bs.ntoh(x);}
-
-	friend This& operator<<(This& bs, uint32_t x){return bs.hton(x);}
-	friend This& operator>>(This& bs, uint32_t& x) { return bs.ntoh(x);}
-
-	friend This& operator<<(This& bs, double d){return bs.rawwrite(d);}
-	friend This& operator>>(This& bs, double& d) {return bs.rawread(d);}
-
-	friend This& operator<<(This& bs, const std::string& x)
+/*
+	This& operator<<(bool x)
 	{
-		bs << x.size();
-		return bs.write(x.data(), x.size());
+		XStream& bs = *this;
+		bs << (x ? 'T' : 'F');
+		return bs;
 	}
 
-	friend This& operator>>(This& bs, std::string& x)
+	This& operator>>(bool &x)
 	{
-		int size;
-		bs >> size;
+		char v;
+		static_cast<XStream&>(*this)>>v;
+		x = (v == 'T');
+		return (*this);
+	}
+*/
+
+	virtual This& operator<<(int8_t x) { XStream& bs = *this; bs << x; return (*this);}
+	virtual This& operator>>(int8_t& x) { XStream& bs = *this; bs >> x; return (*this);}
+
+	virtual This& operator<<(uint8_t x) { XStream& bs = *this; bs << x; return (*this);}
+	virtual This& operator>>(uint8_t& x) { XStream& bs = *this; bs >> x; return (*this);}
+
+	virtual This& operator<<(uint16_t x){return (*this).hton(x);}
+	virtual This& operator>>(uint16_t& x) { return (*this).ntoh(x);}
+
+	virtual This& operator<<(int16_t x){return (*this).hton(x);}
+	virtual This& operator>>(int16_t& x) { return (*this).ntoh(x);}
+
+	virtual This& operator<<(int32_t x){return (*this).hton(x);}
+	virtual This& operator>>(int32_t& x) { return (*this).ntoh(x);}
+
+	virtual This& operator<<(uint32_t x){return (*this).hton(x);}
+	virtual This& operator>>(uint32_t& x) { return (*this).ntoh(x);}
+
+	virtual This& operator<<(double d){return (*this).rawwrite(d);}
+	virtual This& operator>>(double& d) {return (*this).rawread(d);}
+
+	virtual This& operator<<(long double d){return (*this).rawwrite(d);}
+	virtual This& operator>>(long double& d) {return (*this).rawread(d);}
+
+	virtual This& operator<<(const std::string& x)
+	{
+		unsigned int l = x.size();
+		(*this) << l;
+		return (*this).write(x.data(), x.size());
+	}
+
+	virtual This& operator>>(std::string& x)
+	{
+		unsigned int size;
+		(*this) >> size;
 		char* data = new char[size+1];
-		This& rv = bs.read(data,size);
+		This& rv = (*this).read(data,size);
 		data[size] = 0;
 		x = string(data);
 		delete[] data;
 		return rv;
 	}
 
-	friend This& operator<<(This& bs, const char* x)
+	virtual This& operator<<(const char* x)
 	{
-		int l = strlen(x);
-		bs<<l;
-		return bs.write(x,l);
+		unsigned int l = strlen(x);
+		(*this)<<l;
+		return (*this).write(x,l);
 	}
-	friend This& operator>>(This& bs, char* x)
+
+	virtual This& operator>>(char* x)
+	{
+		unsigned int l;
+		(*this)>>l;
+		return (*this).read(x,l);
+	}
+
+	//****************************************************************
+
+	//////////////////////////////////////////////////////////////////
+	//Vect
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<(vect<T>& obj)
+	{
+		*this<<obj.x<<obj.y<<obj.z;
+		return *this;
+	}
+
+	template <class T>
+	This& operator>>(vect<T>& obj)
+	{
+		*this>>obj.x>>obj.y>>obj.z;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Particle Map
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( PtclMap<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		bs<<obj.size();
+		typename PtclMap<T>::iterator it;
+		for(it=obj.begin();it!=obj.end();++it)
+		{
+			vect<T> a = it->first;
+			(*this)<<a;
+			bs<<it->second;
+		}
+		return *this;
+	}
+
+	template <class T>
+	This& operator>>( PtclMap<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		int tsize;
+		bs>>tsize;
+		for(int i = 0;i<tsize;i++)
+		{
+			vect<T> v;
+			int val;
+			(*this)>>v;
+			bs>>val;
+			obj[v] = val;
+		}
+
+		return *this;
+	}
+
+	template <class T>
+	This& operator<<( PtclMap<T>* obj)
+	{
+		Serializer<XStream>& bs = *this;
+		unsigned int tsize = obj->size();
+		bs<<tsize;
+		typename PtclMap<T>::iterator it;
+		for(it=obj->begin();it!=obj->end();++it)
+		{
+			vect<T> a = it->first;
+			(*this)<<a;
+			bs<<it->second;
+		}
+		return *this;
+	}
+
+	template <class T>
+	This& operator>>( PtclMap<T>* obj)
+	{
+		Serializer<XStream>& bs = *this;
+		unsigned int tsize;
+		bs>>tsize;
+		for(int i = 0;i<tsize;i++)
+		{
+			vect<T> v;
+			int val;
+			(*this)>>v;
+			bs>>val;
+			(*obj)[v] = val;
+		}
+
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Vector
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( vector<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		bs<<(unsigned int) obj.size();
+		typename vector<T>::iterator it;
+		for(it=obj.begin();it!=obj.end();++it)
+			bs<<(*it);
+
+		return bs;
+	}
+
+	template <class T>
+	This& operator>>( vector<T>& obj)
+	{
+		This& bs = *this;
+		int ts;
+		bs>>ts;
+		for(int i=0;i<ts;i++)
+		{
+			T val;
+			bs>>val;
+			obj[i] = val;
+		}
+		return bs;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Vector-To-Value
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( vectToValue<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		bs<<(unsigned int) obj.size();
+
+		typename vectToValue<T>::iterator it;
+		for(it=obj.begin();it!=obj.end();++it)
+		{
+			vect<T> a = it->first;
+			(*this)<<a;
+			bs<<it->second;
+		}
+		return bs;
+	}
+
+	template <class T>
+	This& operator>>( vectToValue<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		int tsize;
+		bs>>tsize;
+		for(int i = 0;i<tsize;i++)
+		{
+			vect<T> v;
+			double val;
+			(*this)>>v;
+			bs>>val;
+			obj[v] = val;
+		}
+		return bs;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Weight
+	//////////////////////////////////////////////////////////////////
+
+	This& operator<<(Weight& w)
+	{
+		Serializer<XStream>& bs = (*this);
+		bs<<w.divisor<<w.exponent<<w.initval<<w.maxvalue<<w.minvalue<<w.val;
+		return *this;
+	}
+
+	This& operator>>(Weight& w)
+	{
+		Serializer<XStream>& bs = *this;
+		bs>>w.divisor>>w.exponent>>w.initval>>w.maxvalue>>w.minvalue>>w.val;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//WalkerState
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( WalkerState<T>& obj)
+	{
+		(*this)<<obj.DIM<<(obj.Rcurr)<<obj.dQ<<obj.ltime<<obj.particleCount<<obj.weight;
+		//(*this)<<obj.DIM<<obj.dQ<<obj.ltime<<obj.particleCount<<obj.weight;
+		return (*this);
+	}
+
+	template <class T>
+	This& operator>>( WalkerState<T>& obj)
+	{
+		(*this)>>obj.DIM>>(obj.Rcurr)>>obj.dQ>>obj.ltime>>obj.particleCount>>obj.weight;
+		return (*this);
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Observables: BasicObs
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( BasicObs<T>& obj)
+	{
+		(*this)<<obj.dt<<obj.Zcount<<obj.ltime<<obj.Q
+				<<obj.freeEnergy<<obj.Qx<<obj.Qy<<obj.Qz<<obj.Q2x<<obj.Q2y<<obj.Q2z;
+		return *this;
+	}
+
+	template <class T>
+	This& operator>>( BasicObs<T>& obj)
+	{
+		(*this)>>obj.dt>>obj.Zcount>>obj.ltime>>obj.Q
+				>>obj.freeEnergy>>obj.Qx>>obj.Qy>>obj.Qz>>obj.Q2x>>obj.Q2y>>obj.Q2z;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Observables: Density
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator>>( Density<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		(*this)>>obj.rho;
+		bs>>obj.Zcount;
+		return *this;
+	}
+
+	template <class T>
+	This& operator<<( Density<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		(*this)<<obj.rho;
+		bs<<obj.Zcount;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Observables: Qhistogram
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator>>( Qhistogram<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		bs>>obj.dt>>obj.ltime;
+		(*this)>>obj.Q>>obj.Qcollection;
+		return *this;
+	}
+
+	template <class T>
+	This& operator<<( Qhistogram<T>& obj)
+	{
+		Serializer<XStream>& bs = *this;
+		bs<<obj.dt<<obj.ltime;
+		(*this)<<obj.Q<<obj.Qcollection;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Observables: Whistogram
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator>>( Whistogram<T>& obj)
+	{
+		(*this)>>obj.dt>>obj.localWeight>>obj.ltime>>obj.Wcollection;
+		return *this;
+	}
+
+	template <class T>
+	This& operator<<( Whistogram<T>& obj)
+	{
+		(*this)<<obj.dt<<obj.localWeight<<obj.ltime<<obj.Wcollection;
+		return *this;
+	}
+
+	//////////////////////////////////////////////////////////////////
+	//Walker
+	//////////////////////////////////////////////////////////////////
+
+	template <class T>
+	This& operator<<( Walker<T>& w)
+	{
+		int l = w.observablesCollection.size();
+		(*this)<<w.state<<l;
+		for(int i=0;i<l;i++)
+		{
+			measures::Observable<T>* ob = w.observablesCollection[i];
+			if( BasicObs<T>* obj = dynamic_cast<BasicObs<T>*>(ob))
+				(*this)<<"BasicObs"<<obj->baseFileName<<*obj;
+			else if( Density<T>* obj = dynamic_cast<Density<T>*>(ob))
+				(*this)<<"Density"<<obj->baseFileName<<*obj;
+			else if( Qhistogram<T>* obj = dynamic_cast<Qhistogram<T>*>(ob))
+				(*this)<<"Qhistogram"<<obj->baseFileName<<*obj;
+			else if( Whistogram<T>* obj = dynamic_cast<Whistogram<T>*>(ob))
+				(*this)<<"Whistogram"<<obj->baseFileName<<*obj;
+		}
+		return *this;
+	}
+
+	template <class T>
+	This& operator>>( Walker<T>& w)
 	{
 		int l;
-		bs>>l;
-		return bs.read(x,l);
+		(*this)>>w.state>>l;
+		for(int i=0;i<l;i++)
+		{
+			string type,bfname;
+			(*this)>>type>>bfname;
+			if(type.compare("BasicObs") == 0)
+			{
+				BasicObs<T>& obj = *(new BasicObs<T>(w.state,bfname,w.state.out));
+				(*this)>>obj;
+				w.observablesCollection.push_back(&obj);
+			}
+			else if(type.compare("Density") == 0)
+			{
+				Density<T>& obj = *(new Density<T>(w.state,bfname,w.state.out));
+				(*this)>>obj;
+				w.observablesCollection.push_back(&obj);
+			}
+			else if(type.compare("Qhistogram") == 0)
+			{
+				Qhistogram<T>& obj = *(new Qhistogram<T>(w.state,bfname,w.state.out));
+				(*this)>>obj;
+				w.observablesCollection.push_back(&obj);
+			}
+			else if(type.compare("Whistogram") == 0)
+			{
+				Whistogram<T>& obj = *(new Whistogram<T>(w.state,bfname,w.state.out));
+				(*this)>>obj;
+				w.observablesCollection.push_back(&obj);
+			}
+
+		}
+		return *this;
 	}
-
-
 };
 
 #endif /* SERIALIZER_H_ */

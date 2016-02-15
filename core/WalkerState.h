@@ -22,7 +22,7 @@ public:
 	int particleCount;
 	PtclMap<T>* Rcurr;
 	vect<T> dQ;
-	long ltime;
+	unsigned int ltime;
 	Weight& weight;
 	FILE* out;
 
@@ -38,7 +38,7 @@ public:
 		out = ot;
 	}
 
-	WalkerState(int _dim,int _N,Weight& w):weight(w)
+	WalkerState(int _dim,int _N,Weight& w, FILE* ot):weight(w)
 	{
 		DIM = _dim;
 		particleCount = _N;
@@ -51,6 +51,8 @@ public:
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
 		ltime = 0;
+
+		out = ot;
 	}
 
 	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ, long _time, Weight& w):weight(w)

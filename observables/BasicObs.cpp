@@ -212,7 +212,7 @@ int BasicObs<T>::parallelSend()
 	fflush(this->log);
 
 	//send time
-	MPI_Send(&this->ltime,1,MPI_LONG,0,tag,MPI_COMM_WORLD);
+	MPI_Send(&this->ltime,1,MPI_UNSIGNED,0,tag,MPI_COMM_WORLD);
 
 	//send Zcount
 	MPI_Send(&this->Zcount,1,MPI_INT,0,tag,MPI_COMM_WORLD);
@@ -265,7 +265,7 @@ int BasicObs<T>::parallelReceive()
 		fprintf(this->log,"BasicObs Sending notification to process:%d\n",procId);
 		fflush(this->log);
 
-		MPI_Recv(&ltime,1,MPI_LONG,procId,tag,MPI_COMM_WORLD,&stat);
+		MPI_Recv(&ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
 
 		int zcountrec;
 		MPI_Recv(&zcountrec,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);

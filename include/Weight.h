@@ -14,6 +14,9 @@ const int DIVISOR = 1e5;
 
 class Weight
 {
+	template<typename XStream>
+	friend class Serializer;
+
 private:
 	int divisor;
 	long double maxvalue,minvalue;
@@ -336,10 +339,6 @@ public:
 	{
 		fprintf(out,"%10.6e %d %d\n",val,divisor,exponent);
 	}
-
-	//Serializer is a friend no matter what
-	template<typename U>
-	friend class Serializer;
 
 };
 

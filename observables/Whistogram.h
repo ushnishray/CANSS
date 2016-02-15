@@ -20,10 +20,16 @@ class Whistogram: public measures::Observable<T>, public measures::MPIObservable
 public:
 	double dt;
 	Weight& localWeight; 
-	long ltime;
+	unsigned int ltime;
 
 	//For gathering
 	vector<double> Wcollection;
+
+	Whistogram(core::WalkerState<T>& _state, string bsf, FILE* log) : Observable<T>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
+	{
+		dt = 0.0;
+		ltime = 0;
+	}
 
 	Whistogram(core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : Observable<T>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
@@ -49,6 +55,7 @@ public:
 	void clear();
 	Observable<T>* duplicate(core::WalkerState<T>&);
 	void copy(void*);
+	void display();
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//MPI Comm
 	////////////////////////////////////////////////////////////////////////////////////////////

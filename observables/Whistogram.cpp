@@ -13,6 +13,19 @@
 namespace measures {
 
 template <class T>
+void Whistogram<T>::display()
+{
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"W-Histogram Observable\n");
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"ltime: %d\n",ltime);
+	fprintf(this->log,"[log] local Weight: %16.10e\n",localWeight.logValue());
+	for(int i = 0;i<Wcollection.size();i++)
+		fprintf(this->log,"%16.10e\n",Wcollection[i]);
+	fprintf(this->log,"==============================================\n");
+}
+
+template <class T>
 void Whistogram<T>::measure() {
 	ltime = this->state.ltime;
 	localWeight = this->state.weight;

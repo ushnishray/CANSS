@@ -13,6 +13,19 @@
 namespace measures {
 
 template <class T>
+void Qhistogram<T>::display()
+{
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"Q-Histogram Observable\n");
+	fprintf(this->log,"==============================================\n");
+	fprintf(this->log,"ltime: %d\n",ltime);
+	fprintf(this->log,"Q: %16.10e %16.10e %16.10e\n",Q.x,Q.y,Q.z);
+	for(vector<vect<double>>::iterator itr=Qcollection.begin();itr!=Qcollection.end();++itr)
+		fprintf(this->log,"%16.10e %16.10e %16.10e\n",itr->x,itr->y,itr->z);
+	fprintf(this->log,"==============================================\n");
+}
+
+template <class T>
 void Qhistogram<T>::measure() {
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;

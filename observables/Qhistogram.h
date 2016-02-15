@@ -20,10 +20,19 @@ class Qhistogram: public measures::Observable<T>, public measures::MPIObservable
 public:
 	double dt;
 	vect<double> Q;
-	long ltime;
+	unsigned int ltime;
 
 	//For gathering
 	vector<vect<double>> Qcollection;
+
+	Qhistogram(core::WalkerState<T>& _state, string bsf, FILE* log) : Observable<T>(_state,bsf,log)
+	{
+		dt = 0.0;
+		ltime = 0;
+		Q.x = 0.0;
+		Q.y = 0.0;
+		Q.z = 0.0;
+	}
 
 	Qhistogram(core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : Observable<T>(_state,bsf,log)
 	{
@@ -54,6 +63,7 @@ public:
 	void clear();
 	Observable<T>* duplicate(core::WalkerState<T>&);
 	void copy(void*);
+	void display();
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//MPI Comm
 	////////////////////////////////////////////////////////////////////////////////////////////
