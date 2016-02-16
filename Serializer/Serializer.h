@@ -14,25 +14,26 @@
 #include <arpa/inet.h> // for htonl/s, ntoh/s
 #include <endian.h> // for htonbe64, if you have it...
 
-//uint64_t hton(uint64_t n) { return htonbe64(n); }
-uint32_t hton(uint32_t n) { return htonl(n); }
-uint16_t hton(uint16_t n) { return htons(n); }
-
-// there are no "int" versions - this is ugly but effective...
-uint32_t hton(int32_t n) { return htonl(n); }
-uint16_t hton(int16_t n) { return htons(n); }
-
-//uint64_t ntoh(uint64_t n) { return betoh64(n); }
-uint32_t ntoh(uint32_t n) { return ntohl(n); }
-uint16_t ntoh(uint16_t n) { return ntohs(n); }
-
-//uint64_t ntoh(uint64_t n) { return betoh64(n); }
-uint32_t ntoh(int32_t n) { return ntohl(n); }
-uint16_t ntoh(int16_t n) { return ntohs(n); }
-
 template <typename XStream>
 class Serializer: public virtual XStream //It is a stream
 {
+private:
+	//uint64_t hton(uint64_t n) { return htonbe64(n); }
+	uint32_t mhton(uint32_t n) { return htonl(n); }
+	uint16_t mhton(uint16_t n) { return htons(n); }
+
+	// there are no "int" versions - this is ugly but effective...
+	uint32_t mhton(int32_t n) { return htonl(n); }
+	uint16_t mhton(int16_t n) { return htons(n); }
+
+	//uint64_t ntoh(uint64_t n) { return betoh64(n); }
+	uint32_t mntoh(uint32_t n) { return ntohl(n); }
+	uint16_t mntoh(uint16_t n) { return ntohs(n); }
+
+	//uint64_t ntoh(uint64_t n) { return betoh64(n); }
+	uint32_t mntoh(int32_t n) { return ntohl(n); }
+	uint16_t mntoh(int16_t n) { return ntohs(n); }
+
 public:
 	typedef Serializer This;
 
@@ -52,18 +53,20 @@ public:
 	template <typename T>
 	This& rawwrite(const T& t)
 	{
-		XStream& p = *this;
-		p<<sizeof t;
-		write((const char*)&t, sizeof t);
+		XStream& p = static_cast<XStream&>(*this);
+		size_t n = sizeof(t);
+		p<<'['<<n<<']';
+		write((const char*)&t,n);
 		return *this;
 	}
 
 	template <typename T>
 	This& rawread(T& t)
 	{
-		XStream& p = *this;
-		unsigned int n;
-		p >> n;
+		XStream& p = static_cast<XStream&>(*this);
+		size_t n;
+		char x;
+		p >>x>>n>>x;
 		read((char*)&t, n);
 		return *this;
 	}
@@ -71,7 +74,7 @@ public:
 	template <typename T>
 	This& hton(T h)
 	{
-		T n = ::hton(h);
+		T n = mhton(h);
 		return rawwrite(n);
 	}
 
@@ -79,8 +82,7 @@ public:
 	This& ntoh(T& h)
 	{
 		rawread(h);
-		T v = h;
-		h = ::ntoh(v);
+		h = mntoh(h);
 		return *this;
 	}
 
@@ -139,11 +141,31 @@ public:
 	virtual This& operator<<(uint32_t x){return (*this).hton(x);}
 	virtual This& operator>>(uint32_t& x) { return (*this).ntoh(x);}
 
-	virtual This& operator<<(double d){return (*this).rawwrite(d);}
-	virtual This& operator>>(double& d) {return (*this).rawread(d);}
+	virtual This& operator<<(double d)
+	{
+//		long int i64 = *(reinterpret_cast<long int *>(&d)); /* Ugly, but works */
+//		int hiword = (static_cast<int>(i64 >> 32));
+//	    int loword = (static_cast<int>(i64));
+//
+//	    return *this<<hiword<<loword;
 
-	virtual This& operator<<(long double d){return (*this).rawwrite(d);}
-	virtual This& operator>>(long double& d) {return (*this).rawread(d);}
+	    return (*this).rawwrite(d);
+	}
+
+	virtual This& operator>>(double& d)
+	{
+//		int hiword,loword;
+//		*this>>hiword>>loword;
+//		long int i64 = static_cast<long int>(hiword);
+//		i64 = i64 << 32 | loword;
+
+//		d = *(reinterpret_cast<double *>(&i64));
+//		return *this;
+		return (*this).rawread(d);
+	}
+
+//	virtual This& operator<<(long double d){return (*this).rawwrite(d);}
+//	virtual This& operator>>(long double& d) {return (*this).rawread(d);}
 
 	virtual This& operator<<(const std::string& x)
 	{
@@ -202,11 +224,13 @@ public:
 	//Particle Map
 	//////////////////////////////////////////////////////////////////
 
+	/*
 	template <class T>
 	This& operator<<( PtclMap<T>& obj)
 	{
 		Serializer<XStream>& bs = *this;
-		bs<<obj.size();
+		unsigned int size = obj.size();
+		bs<<size;
 		typename PtclMap<T>::iterator it;
 		for(it=obj.begin();it!=obj.end();++it)
 		{
@@ -221,9 +245,9 @@ public:
 	This& operator>>( PtclMap<T>& obj)
 	{
 		Serializer<XStream>& bs = *this;
-		int tsize;
-		bs>>tsize;
-		for(int i = 0;i<tsize;i++)
+		unsigned int size;
+		bs>>size;
+		for(unsigned int i = 0;i<size;i++)
 		{
 			vect<T> v;
 			int val;
@@ -233,20 +257,19 @@ public:
 		}
 
 		return *this;
-	}
+	}*/
 
 	template <class T>
 	This& operator<<( PtclMap<T>* obj)
 	{
-		Serializer<XStream>& bs = *this;
 		unsigned int tsize = obj->size();
-		bs<<tsize;
+		(*this)<<tsize;
+
 		typename PtclMap<T>::iterator it;
 		for(it=obj->begin();it!=obj->end();++it)
 		{
-			vect<T> a = it->first;
-			(*this)<<a;
-			bs<<it->second;
+			vect<T> v(it->first.x,it->first.y,it->first.z);
+			(*this)<<v<<it->second;
 		}
 		return *this;
 	}
@@ -254,15 +277,14 @@ public:
 	template <class T>
 	This& operator>>( PtclMap<T>* obj)
 	{
-		Serializer<XStream>& bs = *this;
 		unsigned int tsize;
-		bs>>tsize;
-		for(int i = 0;i<tsize;i++)
+		(*this)>>tsize;
+
+		for(unsigned int i = 0;i<tsize;i++)
 		{
 			vect<T> v;
 			int val;
-			(*this)>>v;
-			bs>>val;
+			(*this)>>v>>val;
 			(*obj)[v] = val;
 		}
 
@@ -343,15 +365,13 @@ public:
 
 	This& operator<<(Weight& w)
 	{
-		Serializer<XStream>& bs = (*this);
-		bs<<w.divisor<<w.exponent<<w.initval<<w.maxvalue<<w.minvalue<<w.val;
+		(*this)<<w.divisor<<w.exponent<<w.initval<<w.maxvalue<<w.minvalue<<w.val;
 		return *this;
 	}
 
 	This& operator>>(Weight& w)
 	{
-		Serializer<XStream>& bs = *this;
-		bs>>w.divisor>>w.exponent>>w.initval>>w.maxvalue>>w.minvalue>>w.val;
+		(*this)>>w.divisor>>w.exponent>>w.initval>>w.maxvalue>>w.minvalue>>w.val;
 		return *this;
 	}
 
@@ -362,15 +382,19 @@ public:
 	template <class T>
 	This& operator<<( WalkerState<T>& obj)
 	{
-		(*this)<<obj.DIM<<(obj.Rcurr)<<obj.dQ<<obj.ltime<<obj.particleCount<<obj.weight;
+		//(*this)<<obj.DIM<<obj.dQ<<obj.ltime<<obj.particleCount<<obj.weight<<(obj.Rcurr);
 		//(*this)<<obj.DIM<<obj.dQ<<obj.ltime<<obj.particleCount<<obj.weight;
+		(*this)<<obj.DIM<<obj.dQ<<obj.ltime<<obj.particleCount<<(obj.Rcurr)<<obj.weight;
 		return (*this);
 	}
 
 	template <class T>
 	This& operator>>( WalkerState<T>& obj)
 	{
-		(*this)>>obj.DIM>>(obj.Rcurr)>>obj.dQ>>obj.ltime>>obj.particleCount>>obj.weight;
+		obj.Rcurr->clear();
+		//(*this)>>obj.DIM>>obj.dQ>>obj.ltime>>obj.particleCount>>obj.weight>>(obj.Rcurr);
+		//(*this)>>obj.DIM>>obj.dQ>>obj.ltime>>obj.particleCount>>obj.weight;
+		(*this)>>obj.DIM>>obj.dQ>>obj.ltime>>obj.particleCount>>(obj.Rcurr)>>obj.weight;
 		return (*this);
 	}
 
@@ -465,6 +489,12 @@ public:
 	{
 		int l = w.observablesCollection.size();
 		(*this)<<w.state<<l;
+
+		//fprintf(w.state.out,"State and obs size %d\n",l);
+		//fflush(w.state.out);
+		//w.state.display();
+		//fflush(w.state.out);
+
 		for(int i=0;i<l;i++)
 		{
 			measures::Observable<T>* ob = w.observablesCollection[i];
@@ -483,8 +513,16 @@ public:
 	template <class T>
 	This& operator>>( Walker<T>& w)
 	{
+		//copy don't add
+
+		vector<Observable<T>*>* localObs = new vector<Observable<T>*>;
+
 		int l;
 		(*this)>>w.state>>l;
+		//fprintf(w.state.out,"State and obs size %d\n",l);
+		//w.state.display();
+		//fflush(w.state.out);
+
 		for(int i=0;i<l;i++)
 		{
 			string type,bfname;
@@ -493,28 +531,33 @@ public:
 			{
 				BasicObs<T>& obj = *(new BasicObs<T>(w.state,bfname,w.state.out));
 				(*this)>>obj;
-				w.observablesCollection.push_back(&obj);
+				localObs->push_back(&obj);
 			}
 			else if(type.compare("Density") == 0)
 			{
 				Density<T>& obj = *(new Density<T>(w.state,bfname,w.state.out));
 				(*this)>>obj;
-				w.observablesCollection.push_back(&obj);
+				localObs->push_back(&obj);
 			}
 			else if(type.compare("Qhistogram") == 0)
 			{
 				Qhistogram<T>& obj = *(new Qhistogram<T>(w.state,bfname,w.state.out));
 				(*this)>>obj;
-				w.observablesCollection.push_back(&obj);
+				localObs->push_back(&obj);
 			}
 			else if(type.compare("Whistogram") == 0)
 			{
 				Whistogram<T>& obj = *(new Whistogram<T>(w.state,bfname,w.state.out));
 				(*this)>>obj;
-				w.observablesCollection.push_back(&obj);
+				localObs->push_back(&obj);
 			}
-
 		}
+
+		//Now copy i.e replace current data
+		for(int i=0;i<w.observablesCollection.size();i++)
+			w.observablesCollection[i]->copy((*localObs)[i]);
+		delete localObs;
+
 		return *this;
 	}
 };

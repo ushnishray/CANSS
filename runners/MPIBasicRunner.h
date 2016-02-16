@@ -38,10 +38,11 @@ struct Walkers {
 	int initWalkerCount;
 	long lastIndex;
 
-	Walkers()
+	Walkers(int _walkerCount)
 	{
 		maxValue = minValue = 0.0;
-		lastIndex = initWalkerCount = walkerCount = maxWalkerCount = 0;
+		lastIndex = 0;
+		initWalkerCount = walkerCount = maxWalkerCount = _walkerCount;
 		walkerCollection = NULL;
 	}
 
@@ -53,11 +54,10 @@ struct Walkers {
 
 	void displayWalkers(FILE* out)
 	{
-		int idx = 0;
-		fprintf(out,"********************************************************************\n",idx++);
+		fprintf(out,"********************************************************************\n");
 		for(typename NumMap<Walker<T>>::iterator it = walkerCollection->begin();it!=walkerCollection->end();++it)
 		{
-			fprintf(out,"Walker id: %d\n",idx++);
+			fprintf(out,"Walker id: %d\n",it->first);
 			it->second->display();
 		}
 	}
@@ -130,6 +130,7 @@ private:
 	FILE* log;
 
 	//Local statistical variables
+	unsigned int branchcount;
 	long nclones;
 	long nelims;
 
@@ -140,14 +141,15 @@ public:
 
 	//For master
 	MPIBasicRunner(FILE* _log, int _pcount,
-			int _esteps, int _bins, int _nsteps,
+			int _esteps, int _bins, int _nsteps,int _wcount,
 			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(NULL),
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
-		walkers(*(new Walkers<T>)),
+		walkers(*(new Walkers<T>(_wcount))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{
+		branchcount = 0;
 		nclones = 0;
 		nelims = 0;
 	}
@@ -163,6 +165,7 @@ public:
 		walkers(*(new Walkers<T>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{
+		branchcount = 0;
 		nclones = 0;
 		nelims = 0;
 	}

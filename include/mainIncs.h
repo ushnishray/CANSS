@@ -23,6 +23,7 @@
 #include <string>
 #include <cstring>
 #include <sstream>
+#include <cassert>
 
 //Advanced Data Structures
 #include <algorithm>

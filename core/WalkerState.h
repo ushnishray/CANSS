@@ -23,10 +23,10 @@ public:
 	PtclMap<T>* Rcurr;
 	vect<T> dQ;
 	unsigned int ltime;
-	Weight& weight;
+	Weight weight;
 	FILE* out;
 
-	WalkerState(int _dim, Weight& _w, FILE* ot):weight(_w)
+	WalkerState(int _dim, Weight& _w, FILE* ot)
 	{
 		DIM = _dim;
 		particleCount = 0;
@@ -35,10 +35,11 @@ public:
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
 		ltime = 0;
+		weight.copy(_w);
 		out = ot;
 	}
 
-	WalkerState(int _dim,int _N,Weight& w, FILE* ot):weight(w)
+	WalkerState(int _dim,int _N,Weight& w, FILE* ot)
 	{
 		DIM = _dim;
 		particleCount = _N;
@@ -51,11 +52,12 @@ public:
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
 		ltime = 0;
+		weight.copy(w);
 
 		out = ot;
 	}
 
-	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ, long _time, Weight& w):weight(w)
+	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ, long _time, Weight& w)
 	{
 		DIM = _dim;
 		particleCount = _N;
@@ -67,9 +69,10 @@ public:
 		dQ.z = _dQ.z;
 
 		ltime = _time;
+		weight.copy(w);
 	}
 
-	WalkerState(const WalkerState& ws):weight(*(new Weight(ws.weight)))
+	WalkerState(const WalkerState& ws)
 	{
 		DIM = ws.DIM;
 		particleCount = ws.particleCount;
@@ -81,13 +84,13 @@ public:
 		dQ.z = ws.dQ.z;
 
 		ltime = ws.ltime;
+		weight.copy(ws.weight);
 	}
 
 	~WalkerState()
 	{
 		Rcurr->clear();
 		delete Rcurr;
-		delete &weight;
 	}
 
 	void copy(WalkerState<T>& w)
@@ -105,7 +108,7 @@ public:
 
 	WalkerState* duplicate()
 	{
-		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,*(new Weight(weight)));
+		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
 		a->out = this->out;
 		return a;
 	}
@@ -120,7 +123,9 @@ public:
 		fprintf(out,"State:\n");
 		PtclMap<int>::iterator it;
 		for(it=Rcurr->begin();it!=Rcurr->end();++it)
+		{
 			fprintf(out,"(%d,%d,%d) = %d\n",it->first.x,it->first.y,it->first.z,it->second);
+		}
 		fprintf(out,"---------------------------------------------------\n");
 		fflush(out);
 	}

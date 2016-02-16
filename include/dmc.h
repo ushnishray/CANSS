@@ -18,6 +18,6 @@
 #include "measurables.h"
 #include "core.h"
 #include "runners.h"
-
+#include "Serializer.h"
 #endif
 /* VMC_H_ */

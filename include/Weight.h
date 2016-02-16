@@ -19,7 +19,7 @@ class Weight
 
 private:
 	int divisor;
-	long double maxvalue,minvalue;
+	double maxvalue,minvalue;
 
 	double val;
 	int exponent;
@@ -306,7 +306,7 @@ public:
 
 	void mpiReceive(int from)
 	{
-		int tag,recv;
+		int tag = 0,recv;
 		MPI_Status stat;
 
 		double mval;
@@ -322,7 +322,7 @@ public:
 
 	void mpiSend(int to)
 	{
-		int tag,recv;
+		int tag = 0,recv;
 		MPI_Status stat;
 
 		MPI_Send(&this->val,1,MPI_DOUBLE,to,tag,MPI_COMM_WORLD);
@@ -337,7 +337,7 @@ public:
 
 	void display(FILE* out)
 	{
-		fprintf(out,"%10.6e %d %d\n",val,divisor,exponent);
+		fprintf(out,"%10.6e %d %d %10.6e %10.6e %10.6e\n",val,divisor,exponent,minvalue,maxvalue,initval);
 	}
 
 };

@@ -30,7 +30,11 @@ void MPIBasicRunner<T>::initialize()
 template <class T>
 void MPIBasicRunner<T>::masterRun()
 {
-	int msg,tag;
+	char* rmsg = new char[this->procCount];
+	char smsg = 0, msg = 0;
+	for(int i = 0;i<procCount;i++)
+		rmsg[i] = 0;
+	int tag;
 	MPI_Status stat;
 
 	for(int m=0;m<this->runParams.bins;m++)
@@ -40,9 +44,17 @@ void MPIBasicRunner<T>::masterRun()
 
 		//Expect branching
 		do{
-			//Bin done
-			for(int procId=1;procId<this->procCount;procId++)
-				MPI_Recv(&msg,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
+			fprintf(this->log,"\nIn Control Loop\n");
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			MPI_Gather(&smsg,1,MPI_CHAR,rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+			msg = rmsg[1];
+			for(int i=2;i<procCount;i++)
+			{
+				msg &= rmsg[i];
+				fprintf(this->log,"Received %d from %d\n",rmsg[i],i);
+			}
+			fflush(this->log);
 
 			if(msg==MPIBRANCH)
 				masterBranch();
@@ -70,6 +82,8 @@ void MPIBasicRunner<T>::masterRun()
 		//Synchronize
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
+
+	delete[] rmsg;
 }
 
 template <class T>
@@ -172,8 +186,9 @@ void MPIBasicRunner<T>::run()
 		fflush(this->log);
 
 		//Master needs to be notified that process has finished a bin
-		int tag, msg = MPIBINDONE;
-		MPI_Send(&msg,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+		int tag, smsg = MPIBINDONE, rmsg = 0;
+		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
 
 		//Global Gather
 		for(int o=0;o<this->MPIobservablesCollection.size();o++)
@@ -321,45 +336,72 @@ void MPIBasicRunner<T>::branch()
 template <class T>
 void MPIBasicRunner<T>::branch()
 {
+
+	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
 	////////////////////////////////////////////////////////////
 	//Tell Master to Start expecting branch requests
 	////////////////////////////////////////////////////////////
-	int msg = MPIBRANCH, tag;
-	MPI_Send(&msg,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+	char smsg = MPIBRANCH, rmsg = 0;
+	int tag = 0, rem;
+	MPI_Status stat;
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+	fprintf(this->log,"Notified master to start expecting data.\n");
+	fflush(this->log);
 	////////////////////////////////////////////////////////////
 
 	int* idx = new int[walkers.walkerCount];
 	int* ni = new int[walkers.walkerCount];
-	bool* zvals = new bool[walkers.walkerCount];
+	int* zvals = new int[walkers.walkerCount];
 
-	int Nw = walkers.walkerCount*this->procCount; //Total no. of walkers
+	int Nw = walkers.walkerCount*(this->procCount-1); //Total no. of walkers recall master has no walkers
 
 	//Send to master
 	Weight lw;
 	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 		lw.add(it->second->state.weight);
+	MPI_Recv(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+	fprintf(this->log,"Received Z information send request.\n");
 	lw.mpiSend(0);
+	fprintf(this->log,"Sent Z information. log(Value) was: %10.6e\n",lw.logValue());
 	lw.resetValue();
 	lw.mpiBcast(0);
+	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",lw.logValue());
+	fflush(this->log);
 
 	//Now compute new population of walkers and figure out all the walkers that will be written over
 	int i = 0;
 	int ccount = 0, zc=0;
+//	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
 		idx[i] = it->first;
-		ni[i] = (it->second->state.weight/lw).value()*Nw;
+		double probi = (it->second->state.weight/lw).value();
+		ni[i] = int(probi*Nw+0.5);
+
+//		fprintf(this->log,"Walker %d, new population %d [prob %10.6e]\n",idx[i],ni[i],probi);
 
 		//Keep track of zero values
 		if(ni[i]==0)
-			zvals[zc++] = i;
+			zvals[zc++] = idx[i];
 
 		ccount += ni[i++];
 	}
+//	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+//	fprintf(this->log,"New count of walkers: %d\n",ccount);
+//	for(int i = 0;i<zc;i++)
+//		fprintf(this->log,"Zero value %d at %d\n",i,zvals[i]);
+//	walkers.displayWalkers(this->log);
 
 	//Tell master how many walkers are in excess or under
-	int rem = ccount - walkers.walkerCount;
+	MPI_Recv(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+	fprintf(this->log,"Received delta{pop} sending request.\n");
+	rem = ccount - walkers.walkerCount;
+	fprintf(this->log,"Excess/Deficient walkers: %d\n",rem);
 	MPI_Send(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+	fprintf(this->log,"Sent delta{pop}.\n");
+	fflush(this->log);
 
 	if(rem==0) //Rare but happens and lucky if it does!
 	{
@@ -372,6 +414,19 @@ void MPIBasicRunner<T>::branch()
 				ni[i]--;
 			}
 		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		fprintf(this->log,"Notified master that branching is done.\n");
+		fprintf(this->log,"Branching done\n");
+		fprintf(this->log,"========================================================\n");
+		fflush(this->log);
+
+		delete[] idx;
+		delete[] ni;
+		delete[] zvals;
 		return;
 	}
 
@@ -380,59 +435,244 @@ void MPIBasicRunner<T>::branch()
 	////////////////////////////////////////////////////////////
 
 	//Receive the update table
-	MPI_Status stat;
 	int tt;
 	MPI_Recv(&tt,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 	int* updateTable = new int[2*tt];
 	MPI_Recv(updateTable,2*tt,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+	fprintf(this->log,"Received update table of size %d from 0\n",tt);
+	fflush(this->log);
 
 	if(rem<0)
 	{
 		//Accept walkers from other nodes
 		//This is going to be slow!
 
+		fprintf(this->log,"Will accept from:\n");
+		for(int i=0;i<tt;i++)
+			fprintf(this->log,"%d %d walkers\n",updateTable[i],updateTable[i+tt]);
+		fflush(this->log);
+
+		//Now receive from other procs
+		int p = 0;
+		Serializer<stringstream> ser;
+		for(int i=0;i<tt;i++)
+		{
+			int tsize = 0;
+			MPI_Send(&tsize,1,MPI_INT,updateTable[i],tag,MPI_COMM_WORLD); //Notify and then
+			MPI_Recv(&tsize,1,MPI_INT,updateTable[i],tag,MPI_COMM_WORLD,&stat); //Receive
+			char* data = new char[tsize];
+			MPI_Recv(data,tsize,MPI_CHAR,updateTable[i],tag,MPI_COMM_WORLD,&stat);
+
+			fprintf(this->log,"Data received from %d of size %d:\n",updateTable[i],tsize);
+			fflush(this->log);
+
+
+			ser.write(data,tsize);
+			while(ser && p<zc)
+			{
+				int copies;
+				ser>>copies;
+				if(!ser)
+					break;
+
+				fprintf(this->log,"Copies: %d\n",copies);
+				//fprintf(this->log,"Copying into %d from proc\n",zvals[p]);
+				//fflush(this->log);
+				Walker<T>* copyw = walkers[zvals[p++]];
+				ser>>*copyw;
+				//fflush(this->log);
+				//copyw->display();
+				for(int i = 1;i<copies;i++)
+				{
+					//fprintf(this->log,"Copying into %d from proc\n",zvals[p]);
+					walkers[zvals[p++]]->copy(*copyw);
+					//fflush(this->log);
+				}
+				//fflush(this->log);
+			}
+			ser.str("");
+			ser.clear();
+			delete[] data;
+
+		}
+
+		//Redistribute locally as needed
+		for(int i=0;i<walkers.walkerCount && p<zc;i++)
+		{
+			while(ni[i]>1)
+			{
+				//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
+				(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+				ni[i]--;
+			}
+		}
+		//fflush(this->log);
 
 	}
 	else
 	{
 		//Send walkers to other nodes
 		//This is also going to be slow!
+		fprintf(this->log,"Will send to:\n");
+		for(int i=0;i<tt;i++)
+			fprintf(this->log,"%d %d walkers\n",updateTable[i],updateTable[i+tt]);
+		fflush(this->log);
 
+		int* nisend = new int[walkers.walkerCount];
+		for(int i = 0;i<walkers.walkerCount;i++)
+			nisend[i] = 0;
+
+		int count = 0;
+		while(count<rem)
+		{
+			for(int i = 0;i<walkers.walkerCount && count<rem;i++)
+			{
+				if(ni[i]>1)
+				{
+					ni[i]--;
+					nisend[i]++;
+					count++;
+				}
+			}
+		}
+
+		/*
+		fprintf(this->log,"++++++++ Distribution Send +++++++++++++++++++++++++++++++++\n");
+		for(int i = 0;i<walkers.walkerCount;i++)
+			fprintf(this->log,"Walker %d, local population %d send population %d\n",idx[i],ni[i],nisend[i]);
+		fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+		fflush(this->log);
+		*/
+
+		//Accummulate and send
+		int lcount = 0, startat = 0;
+		for(int i=0;i<tt;i++)
+		{
+			Serializer<stringstream> ser;
+			lcount = 0;
+			for(int j=startat;j<walkers.walkerCount;j++)
+			{
+				//Skip 0's
+				if(nisend[j]==0)
+					continue;
+
+				if(lcount+nisend[j]>updateTable[i+tt])
+				{
+					int tosend = updateTable[i+tt] - lcount;
+					nisend[j] -= tosend;
+					ser<<tosend<<*walkers[idx[j]];
+					fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],tosend,idx[j]);
+					startat = j;
+					break;
+				}
+				else if(lcount+nisend[j] == updateTable[i+tt])
+				{
+					ser<<nisend[j]<<*walkers[idx[j]];
+					fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],nisend[j],idx[j]);
+					startat = j+1;
+					break;
+				}
+
+				lcount += nisend[j];
+				//walkers[idx[j]]->display();
+				ser<<nisend[j]<<*walkers[idx[j]];
+				fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],nisend[j],idx[j]);
+			}
+
+			//Transmit Data
+			ser.seekg(0,ser.end);
+			unsigned int tsize = ser.tellg();
+			ser.seekg(0,ser.beg);
+			char* data = new char[tsize];
+			ser.read(data,tsize); //Read from stream
+
+			int temp;
+			MPI_Recv(&temp,1,MPI_INT,updateTable[i],tag,MPI_COMM_WORLD,&stat); //Receive notification
+			MPI_Send(&tsize,1,MPI_UNSIGNED,updateTable[i],tag,MPI_COMM_WORLD); //Send
+			MPI_Send(data,tsize,MPI_CHAR,updateTable[i],tag,MPI_COMM_WORLD); //Send
+			fprintf(this->log,"Data sent to %d of size %d:\n",updateTable[i],tsize);
+			fflush(this->log);
+
+			delete[] data;
+		}
+
+		//Now redistribute locally
+		int p = 0;
+		for(int i=0;i<walkers.walkerCount && p<zc;i++)
+		{
+			while(ni[i]>1)
+			{
+				//fprintf(this->log,"Copying %d into %d\n",idx[i],zvals[p]);
+				(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+				ni[i]--;
+			}
+		}
+		//fflush(this->log);
+		delete[] nisend;
 	}
 
 	delete[] updateTable;
+
+	fprintf(this->log,"Notifying master that branching is done.\n");
+	fflush(this->log);
+	//walkers.displayWalkers(this->log);
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	fprintf(this->log,"Notified master that branching is done.\n");
+	fprintf(this->log,"Branching done\n");
+	fprintf(this->log,"========================================================\n");
+	fflush(this->log);
+
+	delete[] idx;
+	delete[] ni;
+	delete[] zvals;
 }
 #endif
 
 template <class T>
 void MPIBasicRunner<T>::masterBranch()
 {
-	int tag;
+	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
+	int tag = 0, rem;
 	MPI_Status stat;
 	Weight Z;
 
 	//Accummulate Weights and Transmit
 	for(int i = 1;i<this->procCount;i++)
+	{
+		MPI_Send(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD);
 		Z.mpiReceive(i);
+		fprintf(this->log,"Received Z information from %d\n",i);
+	}
 	Z.mpiBcast(0);
+	fprintf(this->log,"BCast Z information.\n");
+	fflush(this->log);
 
+	int totalsend = 0, totalrecv = 0;
 	//Accummulate senders and receivers
 	vector<int> sendProcs, sendProcCount, recvProcs, recvProcCount;
 	for(int i = 1;i<this->procCount;i++)
 	{
-		int rem;
+		rem = MPISTATUSSTART;
+		MPI_Send(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD);
 		MPI_Recv(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD,&stat);
 		if(rem>0)
 		{
 			sendProcs.push_back(i);
 			sendProcCount.push_back(rem);
+			totalsend += rem;
 		}
 		else if(rem<0)
 		{
 			recvProcs.push_back(i);
 			recvProcCount.push_back(-rem);
+			totalrecv += (-rem);
 		}
 	}
+	fprintf(this->log,"Received delta{pop} information.\nTotal sends: %d, total recvs: %d\n",totalsend,totalrecv);
+	fflush(this->log);
 
 	//Assemble messages for senders and receivers
 	vector<int>* mproc = new vector<int>[sendProcs.size()+recvProcs.size()];
@@ -472,6 +712,33 @@ void MPIBasicRunner<T>::masterBranch()
 				recvp++;
 		}
 	}
+	fprintf(this->log,"Calculated delta{pop}.\n");
+	fflush(this->log);
+
+	fprintf(this->log,"+++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+	for(int i=0;i<sendProcs.size();i++)
+		for(int j=0;j<mcount[i].size();j++)
+			fprintf(this->log,"%d will send to %d, walkers = %d\n",sendProcs[i],mproc[i][j],mcount[i][j]);
+
+	int shift = sendProcs.size();
+	for(int i=0;i<recvProcs.size();i++)
+		for(int j=0;j<mcount[i+shift].size();j++)
+			fprintf(this->log,"%d will get from %d, walkers = %d\n",recvProcs[i],mproc[shift+i][j],mcount[shift+i][j]);
+
+	fprintf(this->log,"+++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+
+	//Walker count assert
+	int swalkers = 0, rwalkers = 0;
+	for(int i=0;i<sendProcs.size();i++)
+		for(int j=0;j<mcount[i].size();j++)
+			swalkers += mcount[i][j];
+
+	for(int i=sendProcs.size();i<sendProcs.size()+recvProcs.size();i++)
+		for(int j=0;j<mcount[i].size();j++)
+			rwalkers += mcount[i][j];
+
+	fprintf(this->log,"Send/Receive Walkers: %d/%d\n",swalkers,rwalkers);
+	assert(swalkers == rwalkers);
 
 	//Now inform the processes first senders and then receivers
 	int tsp = sendProcs.size();
@@ -481,6 +748,8 @@ void MPIBasicRunner<T>::masterBranch()
 		int* updateTable = new int[tt*2];
 		memcpy(updateTable,mproc[i].data(),tt*sizeof(int));
 		memcpy(updateTable+tt,mcount[i].data(),tt*sizeof(int));
+
+		fprintf(this->log,"Sending update table to: %d\n",sendProcs[i]);
 		MPI_Send(&tt,1,MPI_INT,sendProcs[i],tag,MPI_COMM_WORLD);
 		MPI_Send(updateTable,2*tt,MPI_INT,sendProcs[i],tag,MPI_COMM_WORLD);
 		delete[] updateTable;
@@ -492,7 +761,9 @@ void MPIBasicRunner<T>::masterBranch()
 		int* updateTable = new int[tt*2];
 		memcpy(updateTable,mproc[tsp+i].data(),tt*sizeof(int));
 		memcpy(updateTable+tt,mcount[tsp+i].data(),tt*sizeof(int));
-		MPI_Send(&tt,1,MPI_INT,sendProcs[i],tag,MPI_COMM_WORLD);
+
+		fprintf(this->log,"Sending update table to: %d\n",recvProcs[i]);
+		MPI_Send(&tt,1,MPI_INT,recvProcs[i],tag,MPI_COMM_WORLD);
 		MPI_Send(updateTable,2*tt,MPI_INT,recvProcs[i],tag,MPI_COMM_WORLD);
 		delete[] updateTable;
 	}
@@ -500,6 +771,27 @@ void MPIBasicRunner<T>::masterBranch()
 	//Clean up
 	delete[] mproc;
 	delete[] mcount;
+	fflush(this->log);
+	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	char* rmsg = new char[this->procCount];
+	char smsg = 0;
+	for(int i = 0;i<procCount;i++)
+		rmsg[i] = 0;
+
+	fprintf(this->log,"Expecting to received info from processes to notify completion of branching.\n");
+	fflush(this->log);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Gather(&smsg,1,MPI_CHAR,rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	fprintf(this->log,"Received info from processes that branching is done.\n");
+	fflush(this->log);
+
+	delete[] rmsg;
+	fprintf(this->log,"Branching done\n");
+	fprintf(this->log,"========================================================\n");
+	fflush(this->log);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

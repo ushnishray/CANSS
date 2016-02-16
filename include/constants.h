@@ -36,8 +36,8 @@ typedef int Integer;
 #define MPISTATUSSTART 2
 
 //MPI Message
-#define MPIBRANCH 100
-#define MPIBINDONE 101
+#define MPIBRANCH 1
+#define MPIBINDONE 2
 
 //debug flags
 //#define DEBUG

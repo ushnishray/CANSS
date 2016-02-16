@@ -27,7 +27,7 @@ void test1()
 
 	Serializer<stringstream> bs;
 	unsigned int b = 13;
-	bs <<"Hello World"<<b;
+	bs <<"Hello World"<<double(3.142);
 	cout<<"WS: "<<bs.printable(bs.str())<<endl;
 
 	//Create character buffer
@@ -69,7 +69,7 @@ void test1()
 	ns.write(buffer,ll);
 	cout<<"RS: "<<ns.printable(ns.str())<<endl;
 
-	string a; unsigned int bb;
+	string a; double bb;
 	ns>>a>>bb;
 	cout<<a<<bb<<endl;
 }
@@ -83,7 +83,7 @@ void test2()
 
 	FILE* logf = fopen("out.txt","a");
 
-#if 1
+#if 0
 	//Write part
 	double dt = 0.001;
 	Serializer<stringstream> s1;
@@ -171,7 +171,8 @@ void test2()
 	ns.write(data,size);
 	delete[] data;
 
-	ns>>*lwalker;
+	int count;
+	ns>>count>>*lwalker;
 	lwalker->display();
 
 #endif
@@ -185,8 +186,8 @@ int main(int argc, char* argv[])
 	//	core::WalkerState<int> w(1,10,*wt);
 	//	bs << w;
 
-//	test1();
-	test2();
+	test1();
+//	test2();
 
 }
 
