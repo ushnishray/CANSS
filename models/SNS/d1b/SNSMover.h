@@ -17,6 +17,7 @@ class SNSMover:public core::Mover<T>
 protected:
 
 	RunParameters& rp;
+	vector<int> pidxavailable;
 
 public:
 

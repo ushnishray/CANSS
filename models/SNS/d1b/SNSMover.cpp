@@ -30,6 +30,10 @@ void SNSMover<T>::initialize(Walker<T>* w)
 		}
 	}
 
+	//Using the fact that there at most L particles possible
+	for(int i=pp;i<rp.L;i++)
+		pidxavailable.push_back(i);
+
 	w->state.ltime = 0;
 	w->state.reset();
 	//w->state.display();
@@ -55,6 +59,7 @@ void SNSMover<T>::move(Walker<T>* w)
 		{
 			if(rd<rp.trans.lremove)
 			{
+				pidxavailable.push_back(it->second);
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;
 				newhop--;
@@ -64,7 +69,9 @@ void SNSMover<T>::move(Walker<T>* w)
 		{
 			if(rd<rp.trans.linsert)
 			{
-				(*w->state.Rcurr)[vect<int>(0,0,0)] = w->state.particleCount++;
+				int newidx = pidxavailable.back();pidxavailable.pop_back();
+				(*w->state.Rcurr)[vect<int>(0,0,0)] = newidx;
+				w->state.particleCount++;
 				newhop++;
 			}
 		}
@@ -76,6 +83,7 @@ void SNSMover<T>::move(Walker<T>* w)
 		{
 			if(rd<rp.trans.rremove)
 			{
+				pidxavailable.push_back(it->second);
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;
 				newhop++;
@@ -85,7 +93,9 @@ void SNSMover<T>::move(Walker<T>* w)
 		{
 			if(rd<rp.trans.rinsert)
 			{
-				(*w->state.Rcurr)[vect<int>(rp.L-1,0,0)] = w->state.particleCount++;
+				int newidx = pidxavailable.back();pidxavailable.pop_back();
+				(*w->state.Rcurr)[vect<int>(rp.L-1,0,0)] = newidx;
+				w->state.particleCount++;
 				newhop--;
 			}
 		}
