@@ -92,8 +92,8 @@ void MPIBasicRunner<T,U>::run()
 //	double gaccept = 0.0;
 //	double divisor = 1.0/this->runParams.nsteps/this->walkers.walkerCount/walkers[0]->state.particleCount;
 
-	int eqbranch = this->runParams.eSteps*0.90*BRANCHPERCENT;
-	eqbranch = (eqbranch<1) ? 1 : eqbranch;
+//	int eqbranch = this->runParams.eSteps*0.90*BRANCHPERCENT;
+//	eqbranch = (eqbranch<1) ? 1 : eqbranch;
 	int databranch = runParams.nsteps*0.90*BRANCHPERCENT;
 	databranch = (databranch<1) ? 1 : databranch;
 
@@ -108,15 +108,15 @@ void MPIBasicRunner<T,U>::run()
 		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			mover->initialize(it->second);
 			
-		//Do equilibration
+		//Do equilibration which is about reaching stead state
 #if defined CONSTPOPBRANCH
 		//Spend 10% of time getting to steady state
-		for(int i=0;i<this->runParams.eSteps*0.10;i++)
+		for(int i=0;i<this->runParams.eSteps;i++)
 		{
 			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 		}
-
+#if 0
 		//Spend 90% of time getting to weighted distribution
 		for(int i=0;i<this->runParams.eSteps*0.90;i++)
 		{
@@ -126,9 +126,12 @@ void MPIBasicRunner<T,U>::run()
 			if((i+1)%eqbranch == 0)
 			{
 				nbranches++;
+				walkers.displayWalkers(this->log);
 				branch();
+				walkers.displayWalkers(this->log);
 			}
 		}
+#endif
 #else
 		for(int i=0;i<this->runParams.eSteps;i++)
 		{
@@ -137,9 +140,9 @@ void MPIBasicRunner<T,U>::run()
 		}
 #endif
 
-		//Reset walker times
+		//Reset walker times etc. equilibration is just about eliminating crazy transients.
 		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-			it->second->reset();	
+			it->second->reset();
 
 		//Propagate in time
 		for(int i=0;i<this->runParams.nsteps;i++)

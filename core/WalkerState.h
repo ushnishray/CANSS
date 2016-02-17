@@ -24,6 +24,7 @@ public:
 	vect<T> dQ;
 	unsigned int ltime;
 	Weight weight;
+
 	FILE* out;
 
 	WalkerState(int _dim, Weight& _w, FILE* ot)
