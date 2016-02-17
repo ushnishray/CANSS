@@ -12,14 +12,15 @@
 
 #ifndef SERIALIZABLE_H_
 #define SERIALIZABLE_H_
-#include "Serializer.h"
 
+template <typename U>
 class Serializable
 {
 public:
 
+	virtual void serialize(Serializer<U>&) = 0;
 
-	void serializeWith(Serializer&) = 0;
+	virtual void unserialize(Serializer<U>&) = 0;
 };
 
 #endif /* SERIALIZABLE_H_ */

@@ -13,7 +13,7 @@
 
 namespace core {
 
-template <class T>
+template <class T, class U>
 class Mover {
 protected:
 
@@ -33,8 +33,8 @@ public:
 	{
 	}
 
-	virtual void initialize(Walker<T>*) = 0;
-	virtual void move(Walker<T>*) = 0;
+	virtual void initialize(Walker<T,U>*) = 0;
+	virtual void move(Walker<T,U>*) = 0;
 
 	double getAccept()
 	{

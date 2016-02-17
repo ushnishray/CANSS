@@ -13,17 +13,17 @@
 
 namespace measures{
 
-template <class T>
-class Observable
+template <class T,typename U>
+class Observable: public Serializable<U>
 {
 protected:
-	core::WalkerState<T>& state;
+	core::WalkerState<T,U>& state;
 	string baseFileName;
 	FILE* log;
 
 public:
 
-	Observable(core::WalkerState<T>& _state, string bfn, FILE* _log) : state(_state)
+	Observable(core::WalkerState<T,U>& _state, string bfn, FILE* _log) : state(_state)
 	{
 		baseFileName = bfn;
 		log = _log;
@@ -39,9 +39,9 @@ public:
 	virtual void display() {}
 
 	virtual void copy(void*) = 0; //Copy observables
-	virtual Observable* duplicate(core::WalkerState<T>& ws) = 0; //So that walkers can self copy
+	virtual Observable* duplicate(core::WalkerState<T,U>& ws) = 0; //So that walkers can self copy
 
-	template<typename U>
+	template<typename X>
 	friend class Serializer;
 };
 

@@ -15,8 +15,8 @@
 
 namespace measures {
 
-template <class T>
-class Whistogram: public measures::Observable<T>, public measures::MPIObservable {
+template <class T, class U>
+class Whistogram: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
 	double dt;
 	Weight& localWeight; 
@@ -25,19 +25,19 @@ public:
 	//For gathering
 	vector<double> Wcollection;
 
-	Whistogram(core::WalkerState<T>& _state, string bsf, FILE* log) : Observable<T>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
+	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
 		dt = 0.0;
 		ltime = 0;
 	}
 
-	Whistogram(core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : Observable<T>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
+	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		ltime = 0;
 	}
 
-	Whistogram(int pId,int nprocs, core::WalkerState<T>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
+	Whistogram(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		ltime = 0;
@@ -53,7 +53,7 @@ public:
 	void writeViaIndex(int idx);
 	void gather(void*);
 	void clear();
-	Observable<T>* duplicate(core::WalkerState<T>&);
+	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);
 	void display();
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,11 @@ public:
 	int parallelSend(); //To be called by slaves
 	int parallelReceive(); //To be called by master
 
+	////////////////////////////////////////////////////////////////////////////////////////////
+	//Serialization
+	////////////////////////////////////////////////////////////////////////////////////////////
+	virtual void serialize(Serializer<U>&);
+	virtual void unserialize(Serializer<U>&);
 };
 } /* namespace measures */
 #endif /* Whistogram_H_ */

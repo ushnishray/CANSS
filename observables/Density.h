@@ -15,19 +15,19 @@
 
 namespace measures {
 
-template <class T>
-class Density: public measures::Observable<T>, public measures::MPIObservable {
+template <class T, class U>
+class Density: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
 
 	vectToValue<int> rho;
 	int Zcount;
 
-	Density(core::WalkerState<T>& _state, string bsf, FILE* log) : Observable<T>(_state,bsf,log)
+	Density(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
 		Zcount = 0;
 	}
 
-	Density(int pId,int nprocs, core::WalkerState<T>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs),Observable<T>(_state,bsf,log)
+	Density(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log)
 	{
 		Zcount = 0;
 	}
@@ -41,7 +41,7 @@ public:
 	void writeViaIndex(int idx);
 	void gather(void*);
 	void clear();
-	Observable<T>* duplicate(core::WalkerState<T>&);
+	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);
 	void display();
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +50,12 @@ public:
 
 	int parallelSend(); //To be called by slaves
 	int parallelReceive(); //To be called by master
+
+	////////////////////////////////////////////////////////////////////////////////////////////
+	//Serialization
+	////////////////////////////////////////////////////////////////////////////////////////////
+	virtual void serialize(Serializer<U>&);
+	virtual void unserialize(Serializer<U>&);
 
 };
 } /* namespace measures */

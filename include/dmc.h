@@ -15,9 +15,11 @@
 #include "flags.h"
 #include "basicDataTypes.h"
 #include "Weight.h"
+#include "Serializer.h"
+#include "Serializable.h"
 #include "measurables.h"
 #include "core.h"
 #include "runners.h"
-#include "Serializer.h"
+
 #endif
 /* VMC_H_ */

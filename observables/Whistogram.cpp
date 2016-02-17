@@ -12,8 +12,8 @@
 
 namespace measures {
 
-template <class T>
-void Whistogram<T>::display()
+template <class T,class U>
+void Whistogram<T,U>::display()
 {
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"W-Histogram Observable\n");
@@ -25,15 +25,15 @@ void Whistogram<T>::display()
 	fprintf(this->log,"==============================================\n");
 }
 
-template <class T>
-void Whistogram<T>::measure() {
+template <class T,class U>
+void Whistogram<T,U>::measure() {
 	ltime = this->state.ltime;
 	localWeight = this->state.weight;
 //	fprintf(this->log,"%10.6e\n",localWeight.logValue()); 
 }
 
-template <class T>
-void Whistogram<T>::writeViaIndex(int idx) {
+template <class T,class U>
+void Whistogram<T,U>::writeViaIndex(int idx) {
 
 	fprintf(this->log,"Whistogram Write\n");
 	fflush(this->log);
@@ -57,17 +57,17 @@ void Whistogram<T>::writeViaIndex(int idx) {
 	clear();
 }
 
-template <class T>
-void Whistogram<T>::clear()
+template <class T,class U>
+void Whistogram<T,U>::clear()
 {
 	ltime = 0;
 	localWeight.resetValue();
 }
 
-template <class T>
-void Whistogram<T>::gather(void* p)
+template <class T,class U>
+void Whistogram<T,U>::gather(void* p)
 {
-	Whistogram<T>* obj = (Whistogram<T>*)p;
+	Whistogram<T,U>* obj = (Whistogram<T,U>*)p;
 	obj->ltime = ltime;
 	double it = 1.0/(ltime*dt);
 	obj->Wcollection.push_back(localWeight.logValue());
@@ -76,10 +76,10 @@ void Whistogram<T>::gather(void* p)
 	ltime = 0;
 }
 
-template <class T>
-Observable<T>* Whistogram<T>::duplicate(core::WalkerState<T>& ws)
+template <class T,class U>
+Observable<T,U>* Whistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Whistogram<T>* newo = new Whistogram<T>(this->processId,this->procCount,ws,
+	Whistogram<T,U>* newo = new Whistogram<T,U>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->localWeight.copy(this->localWeight);
@@ -87,17 +87,17 @@ Observable<T>* Whistogram<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
-template <class T>
-void Whistogram<T>::copy(void* p)
+template <class T,class U>
+void Whistogram<T,U>::copy(void* p)
 {
-	Whistogram<T>* obj = (Whistogram<T>*)p;
+	Whistogram<T,U>* obj = (Whistogram<T,U>*)p;
 	this->ltime = obj->ltime;
 	this->localWeight.copy(obj->localWeight);
 	this->Wcollection = obj->Wcollection;
 }
 
-template <class T>
-int Whistogram<T>::parallelSend()
+template <class T,class U>
+int Whistogram<T,U>::parallelSend()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -127,8 +127,8 @@ int Whistogram<T>::parallelSend()
 	return SUCCESS;
 }
 
-template <class T>
-int Whistogram<T>::parallelReceive()
+template <class T,class U>
+int Whistogram<T,U>::parallelReceive()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -171,16 +171,30 @@ int Whistogram<T>::parallelReceive()
 	return SUCCESS;
 }
 
+
+template <class T,class U>
+void Whistogram<T,U>::serialize(Serializer<U>& obj)
+{
+	obj<<dt<<localWeight<<ltime<<Wcollection;
+}
+
+template <class T,class U>
+void Whistogram<T,U>::unserialize(Serializer<U>& obj)
+{
+	obj>>dt>>localWeight>>ltime>>Wcollection;
+}
 ///////////////////////////////////////////////////////////////////////////
 
-template void Whistogram<int>::measure();
-template void Whistogram<int>::writeViaIndex(int idx);
-template void Whistogram<int>::clear();
-template void Whistogram<int>::gather(void* p);
-template Observable<int>* Whistogram<int>::duplicate(core::WalkerState<int>&);
-template void Whistogram<int>::copy(void* p);
-template int Whistogram<int>::parallelSend();
-template int Whistogram<int>::parallelReceive();
+template void Whistogram<int,stringstream>::measure();
+template void Whistogram<int,stringstream>::writeViaIndex(int idx);
+template void Whistogram<int,stringstream>::clear();
+template void Whistogram<int,stringstream>::gather(void* p);
+template Observable<int,stringstream>* Whistogram<int,stringstream>::duplicate(core::WalkerState<int,stringstream>&);
+template void Whistogram<int,stringstream>::copy(void* p);
+template int Whistogram<int,stringstream>::parallelSend();
+template int Whistogram<int,stringstream>::parallelReceive();
+template void Whistogram<int,stringstream>::serialize(Serializer<stringstream>&);
+template void Whistogram<int,stringstream>::unserialize(Serializer<stringstream>&);
 
 } /* namespace measures */
 

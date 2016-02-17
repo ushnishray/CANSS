@@ -12,8 +12,8 @@
 
 namespace measures {
 
-template <class T>
-void Qhistogram<T>::display()
+template <class T,class U>
+void Qhistogram<T,U>::display()
 {
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"Q-Histogram Observable\n");
@@ -25,8 +25,8 @@ void Qhistogram<T>::display()
 	fprintf(this->log,"==============================================\n");
 }
 
-template <class T>
-void Qhistogram<T>::measure() {
+template <class T,class U>
+void Qhistogram<T,U>::measure() {
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
@@ -34,8 +34,8 @@ void Qhistogram<T>::measure() {
 	ltime = this->state.ltime;
 }
 
-template <class T>
-void Qhistogram<T>::writeViaIndex(int idx) {
+template <class T,class U>
+void Qhistogram<T,U>::writeViaIndex(int idx) {
 
 	fprintf(this->log,"Qhistogram Write\n");
 	fflush(this->log);
@@ -59,8 +59,8 @@ void Qhistogram<T>::writeViaIndex(int idx) {
 	clear();
 }
 
-template <class T>
-void Qhistogram<T>::clear()
+template <class T,class U>
+void Qhistogram<T,U>::clear()
 {
 	Q.x = 0.0;
 	Q.y = 0.0;
@@ -68,10 +68,10 @@ void Qhistogram<T>::clear()
 	ltime = 0;
 }
 
-template <class T>
-void Qhistogram<T>::gather(void* p)
+template <class T,class U>
+void Qhistogram<T,U>::gather(void* p)
 {
-	Qhistogram<T>* obj = (Qhistogram<T>*)p;
+	Qhistogram<T,U>* obj = (Qhistogram<T,U>*)p;
 	obj->ltime = ltime;
 	double it = 1.0/(ltime*dt);
 	Q.x *= it;
@@ -83,10 +83,10 @@ void Qhistogram<T>::gather(void* p)
 	ltime = 0;
 }
 
-template <class T>
-Observable<T>* Qhistogram<T>::duplicate(core::WalkerState<T>& ws)
+template <class T,class U>
+Observable<T,U>* Qhistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Qhistogram<T>* newo = new Qhistogram<T>(this->processId,this->procCount,ws,
+	Qhistogram<T,U>* newo = new Qhistogram<T,U>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Q.x = this->Q.x;
@@ -96,10 +96,10 @@ Observable<T>* Qhistogram<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
-template <class T>
-void Qhistogram<T>::copy(void* p)
+template <class T,class U>
+void Qhistogram<T,U>::copy(void* p)
 {
-	Qhistogram<T>* obj = (Qhistogram<T>*) p;
+	Qhistogram<T,U>* obj = (Qhistogram<T,U>*) p;
 	this->Qcollection.clear();
 
 	this->ltime = obj->ltime;
@@ -109,8 +109,8 @@ void Qhistogram<T>::copy(void* p)
 	this->Qcollection = obj->Qcollection;
 }
 
-template <class T>
-int Qhistogram<T>::parallelSend()
+template <class T,class U>
+int Qhistogram<T,U>::parallelSend()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -140,8 +140,8 @@ int Qhistogram<T>::parallelSend()
 	return SUCCESS;
 }
 
-template <class T>
-int Qhistogram<T>::parallelReceive()
+template <class T,class U>
+int Qhistogram<T,U>::parallelReceive()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -184,16 +184,29 @@ int Qhistogram<T>::parallelReceive()
 	return SUCCESS;
 }
 
+template <class T,class U>
+void Qhistogram<T,U>::serialize(Serializer<U>& obj)
+{
+	obj<<dt<<ltime<<Q<<Qcollection;
+}
+
+template <class T,class U>
+void Qhistogram<T,U>::unserialize(Serializer<U>& obj)
+{
+	obj>>dt>>ltime>>Q>>Qcollection;
+}
 ///////////////////////////////////////////////////////////////////////////
 
-template void Qhistogram<int>::measure();
-template void Qhistogram<int>::writeViaIndex(int idx);
-template void Qhistogram<int>::clear();
-template void Qhistogram<int>::gather(void* p);
-template Observable<int>* Qhistogram<int>::duplicate(core::WalkerState<int>&);
-template void Qhistogram<int>::copy(void* p);
-template int Qhistogram<int>::parallelSend();
-template int Qhistogram<int>::parallelReceive();
+template void Qhistogram<int,stringstream>::measure();
+template void Qhistogram<int,stringstream>::writeViaIndex(int idx);
+template void Qhistogram<int,stringstream>::clear();
+template void Qhistogram<int,stringstream>::gather(void* p);
+template Observable<int,stringstream>* Qhistogram<int,stringstream>::duplicate(core::WalkerState<int,stringstream>&);
+template void Qhistogram<int,stringstream>::copy(void* p);
+template int Qhistogram<int,stringstream>::parallelSend();
+template int Qhistogram<int,stringstream>::parallelReceive();
+template void Qhistogram<int,stringstream>::serialize(Serializer<stringstream>&);
+template void Qhistogram<int,stringstream>::unserialize(Serializer<stringstream>&);
 
 } /* namespace measures */
 

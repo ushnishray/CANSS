@@ -12,8 +12,8 @@
 #include "RunParameters.h"
 #include "SNSMover.h"
 
-template <class T>
-void SNSMover<T>::initialize(Walker<T>* w)
+template <class T, class U>
+void SNSMover<T,U>::initialize(Walker<T,U>* w)
 {
 	w->state.Rcurr->clear();
 	w->state.particleCount = 0;
@@ -39,8 +39,8 @@ void SNSMover<T>::initialize(Walker<T>* w)
 	//w->state.display();
 }
 
-template <class T>
-void SNSMover<T>::move(Walker<T>* w)
+template <class T, class U>
+void SNSMover<T,U>::move(Walker<T,U>* w)
 {
 	vect<int> siteloc(gsl_rng_uniform_int(w->rgenref,rp.L+2),0,0);
 
@@ -167,5 +167,5 @@ void SNSMover<T>::move(Walker<T>* w)
 }
 
 /////////////////////////////////////////////////
-template void SNSMover<int>::initialize(Walker<int>*);
-template void SNSMover<int>::move(Walker<int>* w);
+template void SNSMover<int,stringstream>::initialize(Walker<int,stringstream>*);
+template void SNSMover<int,stringstream>::move(Walker<int,stringstream>* w);

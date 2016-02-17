@@ -23,10 +23,10 @@ struct MPIBRParams
 	MPIBRParams(int _eSteps, int _bins, int _nsteps):eSteps(_eSteps),bins(_bins),nsteps(_nsteps) {}
 };
 
-template <class T>
+template <class T, class U>
 struct Walkers {
-	//vector<core::Walker<T>*>* walkerCollection;
-	NumMap<Walker<T>>* walkerCollection;
+	//vector<core::Walker<T,U>*>* walkerCollection;
+	NumMap<Walker<T,U>>* walkerCollection;
 
 	double maxValue;
 	double minValue;
@@ -46,7 +46,7 @@ struct Walkers {
 		walkerCollection = NULL;
 	}
 
-	Walkers(NumMap<Walker<T>>* _wc, int _maxWalkerCount, double maxv, double minv):walkerCollection(_wc),maxValue(maxv),minValue(minv)
+	Walkers(NumMap<Walker<T,U>>* _wc, int _maxWalkerCount, double maxv, double minv):walkerCollection(_wc),maxValue(maxv),minValue(minv)
 	{
 		maxWalkerCount = _maxWalkerCount;
 		lastIndex = initWalkerCount = walkerCount = walkerCollection->size();
@@ -55,7 +55,7 @@ struct Walkers {
 	void displayWalkers(FILE* out)
 	{
 		fprintf(out,"********************************************************************\n");
-		for(typename NumMap<Walker<T>>::iterator it = walkerCollection->begin();it!=walkerCollection->end();++it)
+		for(typename NumMap<Walker<T,U>>::iterator it = walkerCollection->begin();it!=walkerCollection->end();++it)
 		{
 			fprintf(out,"Walker id: %d\n",it->first);
 			it->second->display();
@@ -74,7 +74,7 @@ struct Walkers {
 		{
 			int sizeToTrim = walkerCount - initWalkerCount;
 			int i = 0;
-			for(typename NumMap<Walker<T>>::iterator it = walkerCollection->begin();it!=walkerCollection->end() && i<sizeToTrim;++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkerCollection->begin();it!=walkerCollection->end() && i<sizeToTrim;++it)
 			{
 				walkerCollection->erase(it);
 				i++;
@@ -83,7 +83,7 @@ struct Walkers {
 		else
 		{
 			int sizeToAdd = initWalkerCount - walkerCount;
-			Walker<T>* wadd = walkerCollection->begin()->second->duplicate();
+			Walker<T,U>* wadd = walkerCollection->begin()->second->duplicate();
 
 			for(int i=0;i<sizeToAdd;i++)
 				(*walkerCollection)[lastIndex++] = wadd->duplicate();
@@ -92,7 +92,7 @@ struct Walkers {
 		}
 #else
 		//Reindex - slower but is suited for possibly very large number of walkers
-		Walker<T>* wadd = walkerCollection->begin()->second->duplicate();
+		Walker<T,U>* wadd = walkerCollection->begin()->second->duplicate();
 		lastIndex = 0;
 		walkerCollection->clear();
 		for(int i=0;i<initWalkerCount;i++)
@@ -102,28 +102,28 @@ struct Walkers {
 		walkerCount = initWalkerCount;
 	}
 
-	core::Walker<T>* operator[](std::size_t idx) { return (*walkerCollection)[idx];}
+	core::Walker<T,U>* operator[](std::size_t idx) { return (*walkerCollection)[idx];}
 };
 
-template <class T>
+template <class T, class U>
 class MPIBasicRunner {
 
 private:
 
 	//Mover
-	Mover<T>* mover;
+	Mover<T,U>* mover;
 
 	//Run parameters
 	MPIBRParams& runParams;
 
 	//For slaves
-	Walkers<T>& walkers;
+	Walkers<T,U>& walkers;
 
 	//For master
 	int procCount;
 
 	//For all
-	vector<measures::Observable<T>*>& observablesCollection;
+	vector<measures::Observable<T,U>*>& observablesCollection;
 	vector<measures::MPIObservable*>& MPIobservablesCollection;
 
 	//For output
@@ -142,11 +142,11 @@ public:
 	//For master
 	MPIBasicRunner(FILE* _log, int _pcount,
 			int _esteps, int _bins, int _nsteps,int _wcount,
-			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
+			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(NULL),
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
-		walkers(*(new Walkers<T>(_wcount))),
+		walkers(*(new Walkers<T,U>(_wcount))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{
 		branchcount = 0;
@@ -155,14 +155,14 @@ public:
 	}
 
 	//For slaves
-	MPIBasicRunner(FILE* _log, int _pcount, Mover<T>* _mover,
+	MPIBasicRunner(FILE* _log, int _pcount, Mover<T,U>* _mover,
 			int _esteps, int _bins, int _nsteps,
-			int maxwc, double maxv,double minv,NumMap<Walker<T>>* _wc,
-			vector<measures::Observable<T>*>& _oc, vector<measures::MPIObservable*>& _moc
+			int maxwc, double maxv,double minv,NumMap<Walker<T,U>>* _wc,
+			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(_mover),
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
-		walkers(*(new Walkers<T>(_wc,maxwc,maxv,minv))),
+		walkers(*(new Walkers<T,U>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{
 		branchcount = 0;

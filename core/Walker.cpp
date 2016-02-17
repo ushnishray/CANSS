@@ -13,15 +13,15 @@
 
 namespace core {
 
-template <class T>
-void Walker<T>::measure()
+template <class T, class U>
+void Walker<T,U>::measure()
 {
 	for(int i=0;i<this->observablesCollection.size();i++)
 		(this->observablesCollection)[i]->measure();
 }
 
-template <class T>
-void Walker<T>::display()
+template <class T, class U>
+void Walker<T,U>::display()
 {
 	fprintf(state.out,"======================================================\n");
 	fprintf(state.out,"Walker Display\n");
@@ -32,8 +32,8 @@ void Walker<T>::display()
 	fprintf(state.out,"======================================================\n");
 }
 
-template <class T>
-void Walker<T>::copy(Walker<T>& w)
+template <class T, class U>
+void Walker<T,U>::copy(Walker<T,U>& w)
 {
 	this->state.copy(w.state);
 	//All observables needs to point to the walker state
@@ -41,22 +41,44 @@ void Walker<T>::copy(Walker<T>& w)
 		observablesCollection[i]->copy(w.observablesCollection[i]);
 }
 
-template <class T>
-Walker<T>* Walker<T>::duplicate()
+template <class T, class U>
+Walker<T,U>* Walker<T,U>::duplicate()
 {
-	vector<measures::Observable<T>*>* newob = new vector<measures::Observable<T>*>;
+	vector<measures::Observable<T,U>*>* newob = new vector<measures::Observable<T,U>*>;
 
-	WalkerState<T>* ws = state.duplicate();
+	WalkerState<T,U>* ws = state.duplicate();
 	//All observables needs to point to the walker state
 	for(int i=0;i<observablesCollection.size();i++)
 		newob->push_back(observablesCollection[i]->duplicate(*ws));
 
-	return (new Walker<T>(rgenref,*ws,*newob));
+	return (new Walker<T,U>(rgenref,*ws,*newob));
 }
 
+template <class T, class U>
+void Walker<T,U>::serialize(Serializer<U>& obj)
+{
+	int l = observablesCollection.size();
+	state.serialize(obj);
+	obj<<l;
+
+	for(int i=0;i<l;i++)
+		observablesCollection[i]->serialize(obj);
+}
+
+template <class T, class U>
+void Walker<T,U>::unserialize(Serializer<U>& obj)
+{
+	int l;
+	//Replace don't add
+	state.unserialize(obj);
+	obj>>l;
+
+	for(int i = 0;i<l;i++)
+		observablesCollection[i]->unserialize(obj);
+}
 //////////////////////////////////////////////////////////////////////
-template void Walker<int>::measure();
-template Walker<int>* Walker<int>::duplicate();
-template void Walker<int>::display();
-template void Walker<int>::copy(Walker<int>&);
+template void Walker<int,stringstream>::measure();
+template Walker<int,stringstream>* Walker<int,stringstream>::duplicate();
+template void Walker<int,stringstream>::display();
+template void Walker<int,stringstream>::copy(Walker<int,stringstream>&);
 }

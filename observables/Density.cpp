@@ -12,8 +12,8 @@
 
 namespace measures {
 
-template <class T>
-void Density<T>::display()
+template <class T, class U>
+void Density<T,U>::display()
 {
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"Density Observable\n");
@@ -24,15 +24,15 @@ void Density<T>::display()
 	fprintf(this->log,"==============================================\n");
 }
 
-template <class T>
-void Density<T>::measure() {
+template <class T, class U>
+void Density<T,U>::measure() {
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)
 		rho[it->first] += 1.0;
 	Zcount++;
 }
 
-template <class T>
-void Density<T>::writeViaIndex(int idx) {
+template <class T, class U>
+void Density<T,U>::writeViaIndex(int idx) {
 
 	fprintf(this->log,"Density Write\n");
 	fflush(this->log);
@@ -57,17 +57,17 @@ void Density<T>::writeViaIndex(int idx) {
 	Zcount = 0;
 }
 
-template <class T>
-void Density<T>::clear()
+template <class T, class U>
+void Density<T,U>::clear()
 {
 	rho.clear();
 	Zcount = 0;
 }
 
-template <class T>
-void Density<T>::gather(void* p)
+template <class T, class U>
+void Density<T,U>::gather(void* p)
 {
-	Density<T>* obj = (Density<T>*)p;
+	Density<T,U>* obj = (Density<T,U>*)p;
 	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
 		obj->rho[itr->first] = obj->rho[itr->first] + itr->second;
 	obj->Zcount+=Zcount;
@@ -76,10 +76,10 @@ void Density<T>::gather(void* p)
 	rho.clear();
 }
 
-template <class T>
-Observable<T>* Density<T>::duplicate(core::WalkerState<T>& ws)
+template <class T, class U>
+Observable<T,U>* Density<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Density<T>* newo = new Density<T>(this->processId,this->procCount,ws,this->baseFileName,this->log);
+	Density<T,U>* newo = new Density<T,U>(this->processId,this->procCount,ws,this->baseFileName,this->log);
 	newo->Zcount = this->Zcount;
 
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)
@@ -88,18 +88,18 @@ Observable<T>* Density<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
-template <class T>
-void Density<T>::copy(void* p)
+template <class T, class U>
+void Density<T,U>::copy(void* p)
 {
-	Density<T>* w = (Density<T>*)p;
+	Density<T,U>* w = (Density<T,U>*)p;
 	this->Zcount = w->Zcount;
 	this->rho.clear();
 	for(typename PtclMap<T>::iterator it = w->state.Rcurr->begin(); it!=w->state.Rcurr->end();++it)
 		this->rho[it->first] = it->second;
 }
 
-template <class T>
-int Density<T>::parallelSend()
+template <class T, class U>
+int Density<T,U>::parallelSend()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -147,8 +147,8 @@ int Density<T>::parallelSend()
 	return SUCCESS;
 }
 
-template <class T>
-int Density<T>::parallelReceive()
+template <class T, class U>
+int Density<T,U>::parallelReceive()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -191,17 +191,30 @@ int Density<T>::parallelReceive()
 	}
 }
 
+
+template <class T, class U>
+void Density<T,U>::serialize(Serializer<U>& obj)
+{
+	obj<<rho<<Zcount;
+}
+
+template <class T, class U>
+void Density<T,U>::unserialize(Serializer<U>& obj)
+{
+	obj>>rho>>Zcount;
+}
 ///////////////////////////////////////////////////////////////////////////
 
-template void Density<int>::measure();
-template void Density<int>::writeViaIndex(int idx);
-template void Density<int>::clear();
-template void Density<int>::gather(void* p);
-template Observable<int>* Density<int>::duplicate(core::WalkerState<int>&);
-template void Density<int>::copy(void* p);
-template int Density<int>::parallelSend();
-template int Density<int>::parallelReceive();
-
+template void Density<int,stringstream>::measure();
+template void Density<int,stringstream>::writeViaIndex(int idx);
+template void Density<int,stringstream>::clear();
+template void Density<int,stringstream>::gather(void* p);
+template Observable<int,stringstream>* Density<int,stringstream>::duplicate(core::WalkerState<int,stringstream>&);
+template void Density<int,stringstream>::copy(void* p);
+template int Density<int,stringstream>::parallelSend();
+template int Density<int,stringstream>::parallelReceive();
+template void Density<int,stringstream>::serialize(Serializer<stringstream>&);
+template void Density<int,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 

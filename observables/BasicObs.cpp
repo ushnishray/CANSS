@@ -12,8 +12,8 @@
 
 namespace measures {
 
-template <class T>
-void BasicObs<T>::measure() {
+template <class T,class U>
+void BasicObs<T,U>::measure() {
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
@@ -24,8 +24,8 @@ void BasicObs<T>::measure() {
 
 }
 
-template <class T>
-void BasicObs<T>::writeViaIndex(int idx) {
+template <class T, class U>
+void BasicObs<T,U>::writeViaIndex(int idx) {
 
 	fprintf(this->log,"BasicObs Write\n");
 	fflush(this->log);
@@ -63,8 +63,8 @@ void BasicObs<T>::writeViaIndex(int idx) {
 	clear();
 }
 
-template <class T>
-void BasicObs<T>::clear()
+template <class T, class U>
+void BasicObs<T,U>::clear()
 {
 	Zcount = 0;
 	Q.x = 0.0;
@@ -80,12 +80,12 @@ void BasicObs<T>::clear()
 	Q2z.resetValue();
 }
 
-template <class T>
-void BasicObs<T>::gather(void* p)
+template <class T, class U>
+void BasicObs<T,U>::gather(void* p)
 {
 	double it = 1.0/(ltime*dt);
 
-	BasicObs<T>* obj = (BasicObs<T>*)p;
+	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 	obj->ltime = ltime;
 	obj->Zcount += 1;
 
@@ -138,10 +138,10 @@ void BasicObs<T>::gather(void* p)
 	fflush(this->log);
 }
 
-template <class T>
-void BasicObs<T>::copy(void* p)
+template <class T, class U>
+void BasicObs<T,U>::copy(void* p)
 {
-	BasicObs<T>* obj = (BasicObs<T>*)p;
+	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 	this->ltime = obj->ltime;
 	this->Zcount = obj->Zcount;
 	this->Q.x = obj->Q.x;
@@ -157,10 +157,10 @@ void BasicObs<T>::copy(void* p)
 	this->Q2z.copy(obj->Q2z);
 }
 
-template <class T>
-Observable<T>* BasicObs<T>::duplicate(core::WalkerState<T>& ws)
+template <class T, class U>
+Observable<T,U>* BasicObs<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	BasicObs<T>* newo = new BasicObs<T>(this->processId,this->procCount,ws,
+	BasicObs<T,U>* newo = new BasicObs<T,U>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Zcount = this->Zcount;
@@ -179,8 +179,8 @@ Observable<T>* BasicObs<T>::duplicate(core::WalkerState<T>& ws)
 	return newo;
 }
 
-template <class T>
-void BasicObs<T>::display()
+template <class T, class U>
+void BasicObs<T,U>::display()
 {
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"Basic Observable\n");
@@ -194,8 +194,8 @@ void BasicObs<T>::display()
 	fprintf(this->log,"==============================================\n");
 }
 
-template <class T>
-int BasicObs<T>::parallelSend()
+template <class T, class U>
+int BasicObs<T,U>::parallelSend()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -246,8 +246,8 @@ int BasicObs<T>::parallelSend()
 	return SUCCESS;
 }
 
-template <class T>
-int BasicObs<T>::parallelReceive()
+template <class T, class U>
+int BasicObs<T,U>::parallelReceive()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
@@ -297,17 +297,29 @@ int BasicObs<T>::parallelReceive()
 	}
 }
 
+template <class T, class U>
+void BasicObs<T,U>::serialize(Serializer<U>& obj)
+{
+	obj<<dt<<Zcount<<ltime<<Q<<freeEnergy<<Qx<<Qy<<Qz<<Q2x<<Q2y<<Q2z;
+}
+
+template <class T, class U>
+void BasicObs<T,U>::unserialize(Serializer<U>& obj)
+{
+	obj>>dt>>Zcount>>ltime>>Q>>freeEnergy>>Qx>>Qy>>Qz>>Q2x>>Q2y>>Q2z;
+}
 ///////////////////////////////////////////////////////////////////////////
 
-template void BasicObs<int>::measure();
-template void BasicObs<int>::writeViaIndex(int idx);
-template void BasicObs<int>::clear();
-template void BasicObs<int>::gather(void* p);
-template Observable<int>* BasicObs<int>::duplicate(core::WalkerState<int>&);
-template void BasicObs<int>::copy(void* p);
-template int BasicObs<int>::parallelSend();
-template int BasicObs<int>::parallelReceive();
-
+template void BasicObs<int,stringstream>::measure();
+template void BasicObs<int,stringstream>::writeViaIndex(int idx);
+template void BasicObs<int,stringstream>::clear();
+template void BasicObs<int,stringstream>::gather(void* p);
+template Observable<int,stringstream>* BasicObs<int,stringstream>::duplicate(core::WalkerState<int,stringstream>&);
+template void BasicObs<int,stringstream>::copy(void* p);
+template int BasicObs<int,stringstream>::parallelSend();
+template int BasicObs<int,stringstream>::parallelReceive();
+template void BasicObs<int,stringstream>::serialize(Serializer<stringstream>&);
+template void BasicObs<int,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 

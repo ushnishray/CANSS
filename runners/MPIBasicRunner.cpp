@@ -1,5 +1,5 @@
 /*
- * MPIBasicRunner<T>.cpp
+ * MPIBasicRunner<T,U>.cpp
  *
  *  Created on: Aug 24, 2014
  *      Author: ushnish
@@ -12,8 +12,8 @@
 
 namespace runners {
 
-template <class T>
-void MPIBasicRunner<T>::displayBranchStat(int nbranches)
+template <class T, class U>
+void MPIBasicRunner<T,U>::displayBranchStat(int nbranches)
 {
 	fprintf(this->log,"\n***************************************\n");
 	fprintf(this->log,"Total branches: %d\n",nbranches);
@@ -21,14 +21,14 @@ void MPIBasicRunner<T>::displayBranchStat(int nbranches)
 	fprintf(this->log,"No. of eliminates: %d\n",this->nelims);
 }
 
-template <class T>
-void MPIBasicRunner<T>::initialize()
+template <class T, class U>
+void MPIBasicRunner<T,U>::initialize()
 {
 
 }
 
-template <class T>
-void MPIBasicRunner<T>::masterRun()
+template <class T, class U>
+void MPIBasicRunner<T,U>::masterRun()
 {
 	char* rmsg = new char[this->procCount];
 	char smsg = 0, msg = 0;
@@ -86,8 +86,8 @@ void MPIBasicRunner<T>::masterRun()
 	delete[] rmsg;
 }
 
-template <class T>
-void MPIBasicRunner<T>::run()
+template <class T, class U>
+void MPIBasicRunner<T,U>::run()
 {
 //	double gaccept = 0.0;
 //	double divisor = 1.0/this->runParams.nsteps/this->walkers.walkerCount/walkers[0]->state.particleCount;
@@ -105,7 +105,7 @@ void MPIBasicRunner<T>::run()
 		fprintf(this->log,"Starting Bin: %d with %d walkers\n",m,walkers.walkerCount);
 		fflush(this->log);
 		//Initalize walkers
-		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			mover->initialize(it->second);
 			
 		//Do equilibration
@@ -113,14 +113,14 @@ void MPIBasicRunner<T>::run()
 		//Spend 10% of time getting to steady state
 		for(int i=0;i<this->runParams.eSteps*0.10;i++)
 		{
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 		}
 
 		//Spend 90% of time getting to weighted distribution
 		for(int i=0;i<this->runParams.eSteps*0.90;i++)
 		{
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 
 			if((i+1)%eqbranch == 0)
@@ -132,13 +132,13 @@ void MPIBasicRunner<T>::run()
 #else
 		for(int i=0;i<this->runParams.eSteps;i++)
 		{
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 		}
 #endif
 
 		//Reset walker times
-		for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			it->second->reset();	
 
 		//Propagate in time
@@ -148,11 +148,11 @@ void MPIBasicRunner<T>::run()
 			fprintf(this->log,"Step: %d\n",i);
 			fflush(this->log);
 #endif
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 
 			//Now do measure for each walker
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			{	
 //				fprintf(this->log,"Step: %d\n",i); 
 				it->second->measure();
@@ -178,7 +178,7 @@ void MPIBasicRunner<T>::run()
 		for(int o=0;o<this->observablesCollection.size();o++)
 		{
 			//Trace over all walkers and accumulate required observable
-			for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				it->second->observablesCollection[o]->gather((void *) this->observablesCollection[o]);
 		}
 
@@ -205,15 +205,15 @@ void MPIBasicRunner<T>::run()
 	}
 }
 
-template <class T>
-void MPIBasicRunner<T>::finalize()
+template <class T, class U>
+void MPIBasicRunner<T,U>::finalize()
 {
 	for(int o=0;o<this->observablesCollection.size();o++)
 		this->observablesCollection[o]->clear();
 }
 
-template <class T>
-void MPIBasicRunner<T>::masterFinalize()
+template <class T, class U>
+void MPIBasicRunner<T,U>::masterFinalize()
 {
 	//Notify slaves to finish wait
 	int tag, statusRun = MPISTATUSFINISH;
@@ -224,8 +224,8 @@ void MPIBasicRunner<T>::masterFinalize()
 }
 
 #if !defined CONSTPOPBRANCH
-template <class T>
-void MPIBasicRunner<T>::branch()
+template <class T, class U>
+void MPIBasicRunner<T,U>::branch()
 {
 #if defined CONSTPOPBRANCH
 	paircomp paircompobj;
@@ -234,7 +234,7 @@ void MPIBasicRunner<T>::branch()
 	Weight localNorm;
 	int scount = 0, ccount = 0;
 
-	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
 		widx.push_back(pair<int,double>(it->first,it->second->state.weight.logValue()));
 		localNorm.add(it->second->state.weight);
@@ -298,7 +298,7 @@ void MPIBasicRunner<T>::branch()
 		//This SHOULD WORK but unfortunately c++ garbage collection is hideously bad
 		//Ends in memory over-allocation :(
 		walkers[widx[p].first]->state.weight.update(0.5);
-		Walker<T>* wcpy = walkers[widx[p].first]->duplicate();
+		Walker<T,U>* wcpy = walkers[widx[p].first]->duplicate();
 
 		double w1 = walkers[widx[i].first]->state.weight.logValue();
 		double w2 = walkers[widx[i+1].first]->state.weight.logValue();
@@ -333,8 +333,8 @@ void MPIBasicRunner<T>::branch()
 #endif
 }
 #else
-template <class T>
-void MPIBasicRunner<T>::branch()
+template <class T, class U>
+void MPIBasicRunner<T,U>::branch()
 {
 
 	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
@@ -359,7 +359,7 @@ void MPIBasicRunner<T>::branch()
 
 	//Send to master
 	Weight lw;
-	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 		lw.add(it->second->state.weight);
 	MPI_Recv(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 	fprintf(this->log,"Received Z information send request.\n");
@@ -374,7 +374,7 @@ void MPIBasicRunner<T>::branch()
 	int i = 0;
 	int ccount = 0, zc=0;
 //	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-	for(typename NumMap<Walker<T>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
 		idx[i] = it->first;
 		double probi = (it->second->state.weight/lw).value();
@@ -478,8 +478,8 @@ void MPIBasicRunner<T>::branch()
 				fprintf(this->log,"Copies: %d\n",copies);
 				//fprintf(this->log,"Copying into %d from proc\n",zvals[p]);
 				//fflush(this->log);
-				Walker<T>* copyw = walkers[zvals[p++]];
-				ser>>*copyw;
+				Walker<T,U>* copyw = walkers[zvals[p++]];
+				copyw->unserialize(ser);
 				//fflush(this->log);
 				//copyw->display();
 				for(int i = 1;i<copies;i++)
@@ -560,14 +560,19 @@ void MPIBasicRunner<T>::branch()
 				{
 					int tosend = updateTable[i+tt] - lcount;
 					nisend[j] -= tosend;
-					ser<<tosend<<*walkers[idx[j]];
+
+					ser<<tosend;
+					walkers[idx[j]]->serialize(ser);
+
 					fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],tosend,idx[j]);
 					startat = j;
 					break;
 				}
 				else if(lcount+nisend[j] == updateTable[i+tt])
 				{
-					ser<<nisend[j]<<*walkers[idx[j]];
+					ser<<nisend[j];
+					walkers[idx[j]]->serialize(ser);
+
 					fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],nisend[j],idx[j]);
 					startat = j+1;
 					break;
@@ -575,7 +580,9 @@ void MPIBasicRunner<T>::branch()
 
 				lcount += nisend[j];
 				//walkers[idx[j]]->display();
-				ser<<nisend[j]<<*walkers[idx[j]];
+				ser<<nisend[j];
+				walkers[idx[j]]->serialize(ser);
+
 				fprintf(this->log,"Sending to %d, %d copies of walker %d\n",updateTable[i],nisend[j],idx[j]);
 			}
 
@@ -631,8 +638,8 @@ void MPIBasicRunner<T>::branch()
 }
 #endif
 
-template <class T>
-void MPIBasicRunner<T>::masterBranch()
+template <class T, class U>
+void MPIBasicRunner<T,U>::masterBranch()
 {
 	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
 	int tag = 0, rem;
@@ -795,13 +802,13 @@ void MPIBasicRunner<T>::masterBranch()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template void MPIBasicRunner<int>::initialize();
-template void MPIBasicRunner<int>::masterRun();
-template void MPIBasicRunner<int>::run();
-template void MPIBasicRunner<int>::finalize();
-template void MPIBasicRunner<int>::masterFinalize();
-template void MPIBasicRunner<int>::branch();
-template void MPIBasicRunner<int>::masterBranch();
-template void MPIBasicRunner<int>::displayBranchStat(int);
+template void MPIBasicRunner<int,stringstream>::initialize();
+template void MPIBasicRunner<int,stringstream>::masterRun();
+template void MPIBasicRunner<int,stringstream>::run();
+template void MPIBasicRunner<int,stringstream>::finalize();
+template void MPIBasicRunner<int,stringstream>::masterFinalize();
+template void MPIBasicRunner<int,stringstream>::branch();
+template void MPIBasicRunner<int,stringstream>::masterBranch();
+template void MPIBasicRunner<int,stringstream>::displayBranchStat(int);
 
 } /* namespace runners */

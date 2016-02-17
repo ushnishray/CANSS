@@ -23,23 +23,23 @@
 
 namespace core
 {
-	template <class T>
-	class Walker
+	template <class T, typename U>
+	class Walker:public Serializable<U>
 	{
 	public:
 
 		gsl_rng* rgenref;
 
-		WalkerState<T>& state;
-		vector<measures::Observable<T>*>& observablesCollection;
+		WalkerState<T,U>& state;
+		vector<measures::Observable<T,U>*>& observablesCollection;
 
-		Walker(gsl_rng* r, WalkerState<T>& _state, vector<measures::Observable<T>*>& _obc):
+		Walker(gsl_rng* r, WalkerState<T,U>& _state, vector<measures::Observable<T,U>*>& _obc):
 			rgenref(r),state(_state),observablesCollection(_obc)
 		{ }
 
 		//Copy Constructor
 		Walker(Walker& w):
-			state(*(w.state.duplicate())),observablesCollection(*(new vector<measures::Observable<T>*>))
+			state(*(w.state.duplicate())),observablesCollection(*(new vector<measures::Observable<T,U>*>))
 		{
 			rgenref = w.rgenref;
 
@@ -70,8 +70,12 @@ namespace core
 		virtual void measure();
 		virtual void copy(Walker& w);
 
-		template<typename U>
+		template<typename X>
 		friend class Serializer;
+
+		virtual void serialize(Serializer<U>&);
+
+		virtual void unserialize(Serializer<U>&);
 	};
 }
 

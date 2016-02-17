@@ -13,8 +13,8 @@
 
 namespace core{
 
-template <class T>
-class WalkerState
+template <class T, typename U>
+class WalkerState: public Serializable<U>
 {
 
 public:
@@ -93,7 +93,7 @@ public:
 		delete Rcurr;
 	}
 
-	void copy(WalkerState<T>& w)
+	void copy(WalkerState<T,U>& w)
 	{
 		DIM = w.DIM;
 		particleCount = w.particleCount;
@@ -139,14 +139,15 @@ public:
 		weight.resetValue();	
 	}
 
-	/*
-	//Relegate serialization to Serializer
-	template <typename OStream>
-	friend void Serializer::serialize(Serializable&);
-	void serializeWith(Serializer& obj)
+	virtual void serialize(Serializer<U>& obj)
 	{
-		obj.serialize(this);
-	}*/
+		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight;
+	}
+
+	virtual void unserialize(Serializer<U>& obj)
+	{
+		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight;
+	}
 };
 
 }

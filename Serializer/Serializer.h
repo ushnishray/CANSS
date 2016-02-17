@@ -375,6 +375,8 @@ public:
 		return *this;
 	}
 
+
+#if 0
 	//////////////////////////////////////////////////////////////////
 	//WalkerState
 	//////////////////////////////////////////////////////////////////
@@ -479,11 +481,12 @@ public:
 		(*this)<<obj.dt<<obj.localWeight<<obj.ltime<<obj.Wcollection;
 		return *this;
 	}
+#endif
 
 	//////////////////////////////////////////////////////////////////
 	//Walker
 	//////////////////////////////////////////////////////////////////
-
+#if 0
 	template <class T>
 	This& operator<<( Walker<T>& w)
 	{
@@ -560,6 +563,22 @@ public:
 
 		return *this;
 	}
+#endif
+
+	/*
+	template <class T, class U>
+	This& operator<<( core::Walker<T,U>& w)
+	{
+		w.serialize(*this);
+	}
+
+	template <class T, class U>
+	This& operator>>( core::Walker<T,U>& w)
+	{
+		w.unserialize(*this);
+	}
+	*/
+
 };
 
 #endif /* SERIALIZER_H_ */
