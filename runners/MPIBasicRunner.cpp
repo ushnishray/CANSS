@@ -225,114 +225,7 @@ void MPIBasicRunner<T,U>::masterFinalize()
 }
 
 #if !defined CONSTPOPBRANCH
-template <class T, class U>
-void MPIBasicRunner<T,U>::branch()
-{
-#if defined CONSTPOPBRANCH
-	paircomp paircompobj;
-	vector<pair<int,double>> widx;
 
-	Weight localNorm;
-	int scount = 0, ccount = 0;
-
-	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-	{
-		widx.push_back(pair<int,double>(it->first,it->second->state.weight.logValue()));
-		localNorm.add(it->second->state.weight);
-#if defined CPB1
-		if(it->second->state.weight.logValue() >= walkers.maxValue)
-			scount++;
-		else if(it->second->state.weight.logValue() <= walkers.minValue)
-			ccount++;
-#endif
-	}
-
-	//Merging involves 2 files so round up to an even number
-	ccount = int(ccount/2+0.5)*2;
-
-	//walkers to keep untouched
-	int kcount = walkers.walkerCount - scount - ccount;
-
-#if defined CPB1
-	int dpop = kcount + 2*scount + ccount - walkers.walkerCount;
-#elif defined CPB2
-	//int dpop = kcount + 2*scount - walkers.walkerCount;
-#endif
-
-	sort(widx.begin(),widx.end(),paircompobj);
-
-	//if dpop>0 then there are more splits than merges so we need to remove low weights
-	//if dpop<0 then there are more merges than splits so we need to split large weights
-#if defined CPB1
-	if(dpop>0)
-		ccount = 2*scount;
-	else
-		scount = ccount/2;
-#elif defined CPB2
-	//Eliminate 25% of the low weighted walkers
-	//Provided they have a small weight
-	scount = ccount = walkers.walkerCount*0.25;
-	Weight discardedwt;
-	int tsi = 0;
-	for(int i = widx.size()-1;i>=widx.size()-scount;i--,tsi++)
-	{
-		discardedwt.add(walkers[widx[i].first]->state.weight);
-		double cprob = discardedwt.logValue() - localNorm.logValue();
-		if(cprob>=MINBRANCHWEIGHT)
-			break;
-	}
-	scount = ccount = tsi;
-
-#endif
-	this->nclones += scount;
-	this->nelims += ccount;
-
-	//Now merge and split. For every 2 merged we can do 1 split
-	int p = 0;
-#if defined CPB1
-	for(int i = widx.size()-ccount;i<widx.size();i+=2)
-#elif defined CPB2
-	for(int i = widx.size()-ccount;i<widx.size();i++)
-#endif
-	{
-#if 0
-		//This SHOULD WORK but unfortunately c++ garbage collection is hideously bad
-		//Ends in memory over-allocation :(
-		walkers[widx[p].first]->state.weight.update(0.5);
-		Walker<T,U>* wcpy = walkers[widx[p].first]->duplicate();
-
-		double w1 = walkers[widx[i].first]->state.weight.logValue();
-		double w2 = walkers[widx[i+1].first]->state.weight.logValue();
-		int idx = 0;
-		if(gsl_rng_uniform(walkers[i]->rgenref)<w1/(w1+w2))
-			idx = widx[i].first;
-		else
-			idx = widx[i+1].first;
-		walkers.walkerCollection->erase(idx);
-		(*walkers.walkerCollection)[idx] = wcpy;
-#else
-#if defined CPB1
-		walkers[widx[p].first]->state.weight.update(0.5);
-
-		double w1 = walkers[widx[i].first]->state.weight.logValue();
-		double w2 = walkers[widx[i+1].first]->state.weight.logValue();
-		int idx = 0;
-		if(gsl_rng_uniform(walkers[i]->rgenref)<w1/(w1+w2))
-			idx = widx[i].first;
-		else
-			idx = widx[i+1].first;
-		(*walkers.walkerCollection)[idx]->copy(*walkers[widx[p].first]);
-#elif defined CPB2
-		(*walkers.walkerCollection)[widx[i].first]->copy(*walkers[widx[p].first]);
-#endif
-#endif
-		p++;
-	}
-
-	widx.clear();
-	//walkers.displayWalkers(this->log);
-#endif
-}
 #else
 template <class T, class U>
 void MPIBasicRunner<T,U>::branch()
@@ -374,10 +267,10 @@ void MPIBasicRunner<T,U>::branch()
 #endif
 	lw.resetValue();
 	lw.mpiBcast(0);
-#if DEBUG >= 3
+//#if DEBUG >= 3
 	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",lw.logValue());
 	fflush(this->log);
-#endif
+//#endif
 
 	//Now compute new population of walkers and figure out all the walkers that will be written over
 	int i = 0;
@@ -405,12 +298,18 @@ void MPIBasicRunner<T,U>::branch()
 
 	//Tell master how many walkers are in excess or under
 	MPI_Recv(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+#if DEBUG >= 3
 	fprintf(this->log,"Received delta{pop} sending request.\n");
+#endif
 	rem = ccount - walkers.walkerCount;
+#if DEBUG >= 3
 	fprintf(this->log,"Excess/Deficient walkers: %d\n",rem);
+#endif
 	MPI_Send(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+#if DEBUG >= 3
 	fprintf(this->log,"Sent delta{pop}.\n");
 	fflush(this->log);
+#endif
 
 	if(rem==0) //Rare but happens and lucky if it does!
 	{
