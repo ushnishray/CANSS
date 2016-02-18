@@ -73,6 +73,9 @@ void Walker<T,U>::unserialize(Serializer<U>& obj)
 	state.unserialize(obj);
 	obj>>l;
 
+//	fprintf(this->state.out,"Walker size read: %d\n",l);
+//	fflush(this->state.out);
+
 	for(int i = 0;i<l;i++)
 		observablesCollection[i]->unserialize(obj);
 }

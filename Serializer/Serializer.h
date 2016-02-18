@@ -54,9 +54,15 @@ public:
 	This& rawwrite(const T& t)
 	{
 		XStream& p = static_cast<XStream&>(*this);
-		size_t n = sizeof(t);
+		int n = sizeof(t);
 		p<<'['<<n<<']';
 		write((const char*)&t,n);
+/*
+		if(!this->good())
+		{
+			throw;
+		}
+*/
 		return *this;
 	}
 
@@ -64,10 +70,18 @@ public:
 	This& rawread(T& t)
 	{
 		XStream& p = static_cast<XStream&>(*this);
-		size_t n;
+		int n;
 		char x;
-		p >>x>>n>>x;
+
+//		if(!this->good())
+//		{
+//			cout<<"Size to read in bytes: "<<n<<endl;
+//			throw;
+//		}
+
+		p>>x>>n>>x;
 		read((char*)&t, n);
+
 		return *this;
 	}
 

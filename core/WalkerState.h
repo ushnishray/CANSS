@@ -22,6 +22,7 @@ public:
 	int particleCount;
 	PtclMap<T>* Rcurr;
 	vect<T> dQ;
+//	vect<Weight> Q;
 	unsigned int ltime;
 	Weight weight;
 
@@ -58,7 +59,8 @@ public:
 		out = ot;
 	}
 
-	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ, long _time, Weight& w)
+//	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ,vect<Weight> _Q, long _time, Weight& w)
+	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ,long _time, Weight& w)
 	{
 		DIM = _dim;
 		particleCount = _N;
@@ -68,6 +70,10 @@ public:
 		dQ.x = _dQ.x;
 		dQ.y = _dQ.y;
 		dQ.z = _dQ.z;
+
+//		Q.x = _Q.x;
+//		Q.y = _Q.y;
+//		Q.z = _Q.z;
 
 		ltime = _time;
 		weight.copy(w);
@@ -83,6 +89,10 @@ public:
 		dQ.x = ws.dQ.x;
 		dQ.y = ws.dQ.y;
 		dQ.z = ws.dQ.z;
+
+//		Q.x = ws.Q.x;
+//		Q.y = ws.Q.y;
+//		Q.z = ws.Q.z;
 
 		ltime = ws.ltime;
 		weight.copy(ws.weight);
@@ -102,6 +112,7 @@ public:
 		for(typename PtclMap<T>::iterator it = w.Rcurr->begin(); it!=w.Rcurr->end();++it)
 				(*Rcurr)[it->first] = it->second;
 		dQ = w.dQ;
+//		Q = w.Q;
 		ltime = w.ltime;
 		weight.copy(w.weight);
 		out = w.out;
@@ -109,6 +120,7 @@ public:
 
 	WalkerState* duplicate()
 	{
+//		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,Q,ltime,weight);
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
 		a->out = this->out;
 		return a;
@@ -119,6 +131,7 @@ public:
 		fprintf(out,"Dimension: %d\n",DIM);
 		fprintf(out,"Particle Count: %d\n",particleCount);
 		fprintf(out,"dQ = (%d,%d,%d)\n",(int) dQ.x,(int) dQ.y,(int) dQ.z);
+//		fprintf(out,"Q = (%10.6e,%10.6e,%10.6e)\n",Q.x.logValue(),Q.y.logValue(),Q.z.logValue());
 		fprintf(out,"time = %d\n",ltime);
 		weight.display(out);
 		fprintf(out,"State:\n");
@@ -136,18 +149,21 @@ public:
 		dQ.x = (T) 0.0;
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
+//		Q.x = 0.0;
+//		Q.y = 0.0;
+//		Q.z = 0.0;
 		ltime = 0;
 		weight.resetValue();	
 	}
 
 	virtual void serialize(Serializer<U>& obj)
 	{
-		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight;
+		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight;//<<Q.x<<Q.y<<Q.z;
 	}
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
-		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight;
+		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight;//>>Q.x>>Q.y>>Q.z;
 	}
 };
 

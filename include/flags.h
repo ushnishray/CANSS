@@ -17,12 +17,18 @@
 
 //MINIMUM PROBABILITY TO KEEP log(1.0e-5)
 #define MINBRANCHWEIGHT -11.51292546
-//Branching Every (%) states
-#define BRANCHPERCENT 0.05
+//Branching Every (%) states or specs
+#define BRANCHPERCENT (-1.0)
 //Constant Population Branching
 #define CONSTPOPBRANCH
-//#define CPB1
-#define CPB2
+
+///////////////////////////////////////////////////////
+//Debug output options
+///////////////////////////////////////////////////////
+//Can produce large files so watch out!
+//Level 2 is Observables
+//Level 3 is BRANCHING
+#define DEBUG 0
 
 //Turnoff Branching - on by default
 //#define NOBRANCH

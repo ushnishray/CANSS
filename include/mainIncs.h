@@ -24,6 +24,7 @@
 #include <cstring>
 #include <sstream>
 #include <cassert>
+#include <exception>
 
 //Advanced Data Structures
 #include <algorithm>

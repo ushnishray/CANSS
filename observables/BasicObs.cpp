@@ -26,10 +26,10 @@ void BasicObs<T,U>::measure() {
 
 template <class T, class U>
 void BasicObs<T,U>::writeViaIndex(int idx) {
-
+#if DEBUG >= 2
 	fprintf(this->log,"BasicObs Write\n");
 	fflush(this->log);
-
+#endif
 	double t = this->ltime*dt;
 	double it = 1.0/t;
 	double iZ = 1.0/Zcount;
@@ -92,26 +92,26 @@ void BasicObs<T,U>::gather(void* p)
 //	fprintf(this->log,"%d\n", obj->Zcount);
 	Qx = freeEnergy;
 //	Qx.display(this->log);
-	Qx.update(Q.x*it);
+	Qx.multUpdate(Q.x*it);
 //	Qx.display(this->log);
 	obj->Qx.add(Qx);
 //	obj->Qx.display(this->log);
 	Q2x = freeEnergy;
-	Q2x.update(Q.x*Q.x*it*it);
+	Q2x.multUpdate(Q.x*Q.x*it*it);
 	obj->Q2x.add(Q2x);
 
 	Qy = freeEnergy;
-	Qy.update(Q.y*it);
+	Qy.multUpdate(Q.y*it);
 	obj->Qy.add(Qy);
 	Q2y = freeEnergy;
-	Q2y.update(Q.y*Q.y*it*it);
+	Q2y.multUpdate(Q.y*Q.y*it*it);
 	obj->Q2y.add(Q2y);
 
 	Qz = freeEnergy;
-	Qz.update(Q.z*it);
+	Qz.multUpdate(Q.z*it);
 	obj->Qz.add(Qz);
 	Q2z = freeEnergy;
-	Q2z.update(Q.z*Q.z*it*it);
+	Q2z.multUpdate(Q.z*Q.z*it*it);
 	obj->Q2z.add(Q2z);
 
 	obj->Q.x += Q.x*it;
@@ -192,6 +192,7 @@ void BasicObs<T,U>::display()
 	fprintf(this->log,"With Bias Q2.x: %9.6e\tQ2.y: %9.6e\tQ2.z: %9.6e\n",Q2x.logValue(),Q2y.logValue(),Q2z.logValue());
 	fprintf(this->log,"Free Energy: %9.6e\n",freeEnergy.logValue());
 	fprintf(this->log,"==============================================\n");
+	fflush(this->log);
 }
 
 template <class T, class U>
@@ -208,9 +209,10 @@ int BasicObs<T,U>::parallelSend()
 
 	//Wait to be notified by master
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+#if DEBUG >= 2
 	fprintf(this->log,"BasicObs Received notification from master\n");
 	fflush(this->log);
-
+#endif
 	//send time
 	MPI_Send(&this->ltime,1,MPI_UNSIGNED,0,tag,MPI_COMM_WORLD);
 
@@ -232,10 +234,10 @@ int BasicObs<T,U>::parallelSend()
 	this->Q2x.mpiSend(0);
 	this->Q2y.mpiSend(0);
 	this->Q2z.mpiSend(0);
-
+#if DEBUG >= 2
 	fprintf(this->log,"BasicObs Transfer Complete\n");
 	fflush(this->log);
-
+#endif
 	Zcount = 0;
 	ltime = 0;
 	Q.x = Q.y = Q.z = 0;
@@ -262,9 +264,10 @@ int BasicObs<T,U>::parallelReceive()
 		MPI_Status stat;
 
 		MPI_Send(&recv,1,MPI_INT,procId,tag,MPI_COMM_WORLD);
+#if DEBUG >= 2
 		fprintf(this->log,"BasicObs Sending notification to process:%d\n",procId);
 		fflush(this->log);
-
+#endif
 		MPI_Recv(&ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
 
 		int zcountrec;
@@ -291,9 +294,10 @@ int BasicObs<T,U>::parallelReceive()
 		this->Q2y.mpiReceive(procId);
 		this->Q2z.mpiReceive(procId);
 		//fprintf(this->log,"MPI Check %10.6Le %10.6Le %10.6Le\n",freeEnergy.value(),Qx.value(),Q2x.value());
-
+#if DEBUG >= 2
 		fprintf(this->log,"BasicObs Finished receiving from process:%d\n",procId);
 		fflush(this->log);
+#endif
 	}
 }
 

@@ -33,10 +33,10 @@ void Density<T,U>::measure() {
 
 template <class T, class U>
 void Density<T,U>::writeViaIndex(int idx) {
-
+#if DEBUG >= 2
 	fprintf(this->log,"Density Write\n");
 	fflush(this->log);
-
+#endif
 	stringstream s;
 	s<<idx;
 	string fname = this->baseFileName + "_" + s.str();
@@ -112,9 +112,10 @@ int Density<T,U>::parallelSend()
 
 	//Wait to be notified by master
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
+#if DEBUG >= 2
 	fprintf(this->log,"Density Received notification from master\n");
 	fflush(this->log);
-
+#endif
 	//send Zcount
 	MPI_Send(&this->Zcount,1,MPI_INT,0,tag,MPI_COMM_WORLD);
 
@@ -134,10 +135,10 @@ int Density<T,U>::parallelSend()
 	}
 	MPI_Send(r_is,rows*3,MPI_INT,0,tag,MPI_COMM_WORLD);
 	MPI_Send(values,rows,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-
+#if DEBUG >= 2
 	fprintf(this->log,"Density Transfer Complete\n");
 	fflush(this->log);
-
+#endif
 	rho.clear();
 	Zcount = 0;
 
@@ -163,9 +164,10 @@ int Density<T,U>::parallelReceive()
 		MPI_Status stat;
 
 		MPI_Send(&recv,1,MPI_INT,procId,tag,MPI_COMM_WORLD);
+#if DEBUG >= 2
 		fprintf(this->log,"Density Sending notification to process:%d\n",procId);
 		fflush(this->log);
-
+#endif
 		int zcountrec;
 		MPI_Recv(&zcountrec,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
 		this->Zcount += zcountrec;
@@ -185,9 +187,10 @@ int Density<T,U>::parallelReceive()
 		}
 		delete[] r_is;
 		delete[] values;
-
+#if DEBUG >= 2
 		fprintf(this->log,"Density Finished receiving from process:%d\n",procId);
 		fflush(this->log);
+#endif
 	}
 }
 

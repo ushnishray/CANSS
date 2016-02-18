@@ -62,6 +62,7 @@ struct Walkers {
 		}
 	}
 
+
 	void resetWalkers()
 	{
 #ifndef REINDEX
@@ -189,6 +190,17 @@ public:
 	void branch();
 	void masterBranch();
 
+	//Helpers
+	void shortWalkerDisplay()
+	{
+		//Report currents
+		fprintf(this->log,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+//			fprintf(this->log,"Walker %d Current %10.6e, %10.6e, %10.6e\n",it->first,it->second->state.Q.x.logValue(),it->second->state.Q.y.logValue(),it->second->state.Q.z.logValue());
+			fprintf(this->log,"Walker %d Current %10.6e\n",it->first,it->second->state.weight.logValue());
+		fprintf(this->log,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+		fflush(this->log);
+	}
 };
 
 } /* namespace runners */

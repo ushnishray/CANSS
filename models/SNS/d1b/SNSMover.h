@@ -17,12 +17,14 @@ class SNSMover:public core::Mover<T,U>
 protected:
 
 	RunParameters& rp;
-	vector<int> pidxavailable;
+	unsigned int pidx;
 
 public:
 
 	SNSMover(FILE* _dlog, RunParameters& _rp):core::Mover<T,U>(_dlog),rp(_rp)
-	{}
+	{
+		pidx = 0;
+	}
 
 	~SNSMover()
 	{}

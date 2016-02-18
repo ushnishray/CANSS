@@ -34,10 +34,10 @@ void Whistogram<T,U>::measure() {
 
 template <class T,class U>
 void Whistogram<T,U>::writeViaIndex(int idx) {
-
+#if DEBUG >= 2
 	fprintf(this->log,"Whistogram Write\n");
 	fflush(this->log);
-
+#endif
 	stringstream s;
 	s<<idx;
 	string fname = this->baseFileName + "_" + s.str();
@@ -110,9 +110,10 @@ int Whistogram<T,U>::parallelSend()
 
 	//Wait to be notified by master
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
-//	fprintf(this->log,"Whistogram Received notification from master\n");
-//	fflush(this->log);
-
+#if DEBUG >= 2
+	fprintf(this->log,"Whistogram Received notification from master\n");
+	fflush(this->log);
+#endif
 	//First send size	
 	int lsize = this->Wcollection.size();
 	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
@@ -144,8 +145,10 @@ int Whistogram<T,U>::parallelReceive()
 		MPI_Status stat;
 
 		MPI_Send(&recv,1,MPI_INT,procId,tag,MPI_COMM_WORLD);
-//		fprintf(this->log,"Whistogram Sending notification to process:%d\n",procId);
-//		fflush(this->log);
+#if DEBUG >= 2
+		fprintf(this->log,"Whistogram Sending notification to process:%d\n",procId);
+		fflush(this->log);
+#endif
 		int lsize = 0;		
 		MPI_Recv(&lsize,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
 		tsize += lsize;
@@ -161,8 +164,10 @@ int Whistogram<T,U>::parallelReceive()
 		MPI_Status stat;
 
 		MPI_Send(&recv,1,MPI_INT,procId,tag,MPI_COMM_WORLD);
-//		fprintf(this->log,"Whistogram Sending notification to process:%d\n",procId);
-//		fflush(this->log);
+#if DEBUG >= 2
+		fprintf(this->log,"Whistogram Sending notification to process:%d\n",procId);
+		fflush(this->log);
+#endif
 		MPI_Recv(data,psizes[procId-1],MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		data += psizes[procId-1];
 	}

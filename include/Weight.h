@@ -182,6 +182,34 @@ public:
 		return *this;
 	}
 
+	Weight& operator =(double a)
+	{
+		initval = a;
+		maxvalue = MAXV;
+		minvalue = MINV;
+		divisor = DIVISOR;
+		exponent = 0;
+
+		if(fabs(a)>DBL_EPSILON)
+		{
+			while(fabs(a)>maxvalue)
+			{
+				a /= divisor;
+				exponent++;
+			}
+
+			while(fabs(a)<minvalue)
+			{
+				a *= divisor;
+				exponent--;
+			}
+		}
+		else
+			a = 0.0;
+
+		val = a;
+	}
+
 	void copy(Weight& w)
 	{
 		divisor = w.divisor;
@@ -196,6 +224,14 @@ public:
 	bool operator ==(const Weight& a)
 	{
 		return (val == a.val && divisor == a.divisor && exponent == a.exponent);
+	}
+
+	bool operator <(const Weight& a) const
+	{
+		double v1 = log(val) + exponent*log(divisor);
+		double v2 =  log(a.val) + a.exponent*log(a.divisor);
+
+		return (v1<v2);
 	}
 
 	Weight operator *(const Weight& a)
@@ -243,7 +279,27 @@ public:
 		return nw;
 	}
 
-	void update(double a)
+	void addUpdate(double a)
+	{
+		val += a;
+		if(fabs(val)>DBL_EPSILON)
+		{
+			//printf("%10.6e %10.6Le %10.6Le %10.6e\n",DBL_EPSILON,minvalue,maxvalue,val);
+			while(fabs(val)>maxvalue)
+			{
+				val /= divisor;
+				exponent++;
+			}
+
+			while(fabs(val)<minvalue)
+			{
+				val *= divisor;
+				exponent--;
+			}
+		}
+	}
+
+	void multUpdate(double a)
 	{
 		val *= a;
 		if(fabs(val)>DBL_EPSILON)
