@@ -44,17 +44,22 @@ void MPIBasicRunner<T,U>::masterRun()
 
 		//Expect branching
 		do{
+#if DEBUG >= 3
 			fprintf(this->log,"\nIn Control Loop\n");
-
+#endif
 			MPI_Barrier(MPI_COMM_WORLD);
 			MPI_Gather(&smsg,1,MPI_CHAR,rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
 			msg = rmsg[1];
 			for(int i=2;i<procCount;i++)
 			{
 				msg &= rmsg[i];
+#if DEBUG >= 3
 				fprintf(this->log,"Received %d from %d\n",rmsg[i],i);
+#endif
 			}
+#if DEBUG >= 3
 			fflush(this->log);
+#endif
 
 			if(msg==MPIBRANCH)
 				masterBranch();
