@@ -15,7 +15,7 @@ for line in f:
 f.close()
 
 output = 'CPP=mpicxx\n'
-output += 'CFLAGS= -O3 -fopenmp -lm -std=gnu++0x -I ./include -I ./core  -I ./movers -I ./waveFunctions -I ./observables -I ./drivers -I ./runners -I ./walkers\n'
+output += 'CFLAGS= -O3 -fopenmp -lm -std=gnu++0x -I ./include -I ./core  -I ./movers -I ./waveFunctions -I ./observables -I ./drivers -I ./runners -I ./walkers -I ./Serializer\n'
 output += 'LDFLAGS = -fopenmp -lgsl -lgslcblas\n'
 output += 'OBJTARGET = ./objLibrary\n'
 output += 'OBJECTS=$(OBJTARGET)/*.o\n'
@@ -35,8 +35,10 @@ for i in range(0,dn):
 				print dd + '/' + ff[:-4] + '.o'	
 				objfile = ff[:-4] + '.o'
 								
-				cppff = dd + '/' + ff
+				cppff = dd + '/' + ff		
 				hff = dd + '/' + ff[:-4] + '.h'
+				if(~os.path.isfile(hff)):
+					hff = ''
 				off = '$(OBJTARGET)/' + objfile
 
 				objFileList += off + ' '

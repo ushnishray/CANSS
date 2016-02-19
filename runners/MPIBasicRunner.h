@@ -187,8 +187,14 @@ public:
 	void masterFinalize();
 
 	//Branching
-	void branch();
+	void branch(int);
 	void masterBranch();
+
+	//branching algorithms
+	void branchLimited();
+	void masterBranchLimited(float);
+	void branchFull();
+	void masterBranchFull();
 
 	//Helpers
 	void shortWalkerDisplay()

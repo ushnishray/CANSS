@@ -28,7 +28,7 @@
 //Can produce large files so watch out!
 //Level 2 is Observables
 //Level 3 is BRANCHING
-#define DEBUG 0
+#define DEBUG 1
 
 //Turnoff Branching - on by default
 //#define NOBRANCH
