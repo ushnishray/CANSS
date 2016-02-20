@@ -34,7 +34,7 @@ void MPIBasicRunner<T,U>::branchLimited()
 	fprintf(this->log,"Received Z information send request.\n");
 #endif
 	lw.mpiSend(0);
-#if DEBUG >= 3
+#if DEBUG >= 1
 	fprintf(this->log,"Sent Z information. log(Value) was: %10.6e\n",lw.logValue());
 #endif
 	lw.resetValue();
@@ -53,7 +53,7 @@ void MPIBasicRunner<T,U>::branchLimited()
 		idx[i] = it->first;
 		float probi = (it->second->state.weight/lw).value();
 		probs[i] = probi;
-		ni[i] = int(probi*Nw+0.5);
+		ni[i] = probi*Nw + gsl_rng_uniform(it->second->rgenref);
 #if DEBUG >= 4
 		fprintf(this->log,"Walker %d, new population %d [prob %10.6e]\n",idx[i],ni[i],probi);
 #endif
@@ -117,9 +117,8 @@ void MPIBasicRunner<T,U>::branchLimited()
 		{
 			if(ni[i]>1) //Have to do this so that weight update doesn't end up getting stuck
 			{
-				double uw = 1.0/ni[i];
-				walkers[idx[i]]->state.weight.multUpdate(uw);
-
+				//double uw = 1.0/ni[i];
+				//walkers[idx[i]]->state.weight.multUpdate(uw);
 				while(ni[i]>1)
 				{
 					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
@@ -398,7 +397,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	{
 		MPI_Send(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD);
 		Z.mpiReceive(i);
-#if DEBUG >= 3
+#if DEBUG >= 1
 		fprintf(this->log,"Received Z information from %d\n",i);
 #endif
 	}
@@ -554,7 +553,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 		}
 	}
 
-#if DEBUG >= 3
+#if DEBUG >= 1
 	fprintf(this->log,"################################################################\n");
 	for(int i = 1;i<this->procCount;i++)
 	{

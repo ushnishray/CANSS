@@ -18,7 +18,7 @@
 //MINIMUM PROBABILITY TO KEEP log(1.0e-5)
 #define MINBRANCHWEIGHT -11.51292546
 //Branching Every (%) states or specs
-#define BRANCHPERCENT (-1.0)
+#define BRANCHPERCENT (0.05)
 //Constant Population Branching
 #define CONSTPOPBRANCH
 

@@ -42,6 +42,7 @@ void MPIBasicRunner<T,U>::masterRun()
 		fprintf(this->log,"Bin: %d\n",m);
 		fflush(this->log);
 
+#if !defined NOBRANCH
 		//Expect branching
 		do{
 #if DEBUG >= 3
@@ -64,6 +65,7 @@ void MPIBasicRunner<T,U>::masterRun()
 			if(msg==MPIBRANCH)
 				masterBranch();
 		}while(msg != MPIBINDONE);
+#endif
 
 		//Global Gather
 		for(int o=0;o<this->MPIobservablesCollection.size();o++)
@@ -186,10 +188,12 @@ void MPIBasicRunner<T,U>::run()
 		fprintf(this->log,"Local gather done\n");
 		fflush(this->log);
 
+#if !defined NOBRANCH
 		//Master needs to be notified that process has finished a bin
 		int tag, smsg = MPIBINDONE, rmsg = 0;
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+#endif
 
 		//Global Gather
 		for(int o=0;o<this->MPIobservablesCollection.size();o++)
@@ -261,8 +265,11 @@ void MPIBasicRunner<T,U>::branch(int step)
 
 	////////////////////////////////////////////////////////////
 	//Can generalize to a sweep schedule but fixed for now
+	//Not a good idea to branch while Q is small wait
+	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
-	branchLimited();
+	if((float) step/this->runParams.nsteps > 0.10)
+		branchLimited();
 
 }
 #endif
@@ -273,14 +280,24 @@ void MPIBasicRunner<T,U>::masterBranch()
 	////////////////////////////////////////////////////////////
 	//Get sweep number
 	MPI_Status stat;
-	int sweep, tag;
-	MPI_Recv(&sweep,1,MPI_INT,1,tag,MPI_COMM_WORLD,&stat);
+	int step, tag;
+	MPI_Recv(&step,1,MPI_INT,1,tag,MPI_COMM_WORLD,&stat);
 	MPI_Barrier(MPI_COMM_WORLD);
 	////////////////////////////////////////////////////////////
 	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
 	fflush(this->log);
 
-	this->masterBranchLimited(0.25);
+	////////////////////////////////////////////////////////////
+	//Can generalize to a sweep schedule but fixed for now
+	//Not a good idea to branch while Q is small wait
+	//for some Q accummulation before pruning.
+	////////////////////////////////////////////////////////////
+	if((float) step/this->runParams.nsteps > 0.10)
+		this->masterBranchLimited(0.25); // Do not prune more than specified percent
+	else if((float) step/this->runParams.nsteps > 0.60)
+		this->masterBranchLimited(0.50);
+	else if((float) step/this->runParams.nsteps > 0.90)
+			this->masterBranchLimited(0.90);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

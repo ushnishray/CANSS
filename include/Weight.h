@@ -360,6 +360,7 @@ public:
 		}
 	}
 
+
 	void mpiReceive(int from)
 	{
 		int tag = 0,recv;
@@ -374,6 +375,18 @@ public:
 		Weight *w = new Weight(mval,divisor,mexponent,maxvalue,minvalue);
 		this->add(*w);
 		delete w;
+	}
+
+	void mpiReceiveNA(int from)
+	{
+		int tag = 0,recv;
+		MPI_Status stat;
+
+		double mval;
+		int mexponent;
+
+		MPI_Recv(&mval,1,MPI_DOUBLE,from,tag,MPI_COMM_WORLD,&stat);
+		MPI_Recv(&mexponent,1,MPI_INT,from,tag,MPI_COMM_WORLD,&stat);
 	}
 
 	void mpiSend(int to)
