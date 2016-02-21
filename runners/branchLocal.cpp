@@ -114,6 +114,8 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 	fflush(this->log);
 #endif
 
+
+#if 0
 	if(newtotalwalkers>walkers.walkerCount)
 	{
 		//Find smallest probability walkers and reduce them to keep total
@@ -145,6 +147,15 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 			newPops[si]++;
 		}
 	}
+#else
+	//Randomly copy or destroy if not right number of walkers
+	int incr = (newtotalwalkers>walkers.walkerCount) ? -1: 1;
+	int diff = abs(newtotalwalkers-walkers.walkerCount);
+	for(int i = 0;i<diff;i++)
+	{
+
+	}
+#endif
 
 #if DEBUG >= 1
 	fprintf(this->log,"################################################################\n");
