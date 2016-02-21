@@ -42,7 +42,7 @@ void MPIBasicRunner<T,U>::masterRun()
 		fprintf(this->log,"Bin: %d\n",m);
 		fflush(this->log);
 
-#if !defined NOBRANCH
+#if !defined NOBRANCH && !defined LOCALBRANCH
 		//Expect branching
 		do{
 #if DEBUG >= 3
@@ -188,7 +188,7 @@ void MPIBasicRunner<T,U>::run()
 		fprintf(this->log,"Local gather done\n");
 		fflush(this->log);
 
-#if !defined NOBRANCH
+#if !defined NOBRANCH && !defined LOCALBRANCH
 		//Master needs to be notified that process has finished a bin
 		int tag, smsg = MPIBINDONE, rmsg = 0;
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -234,6 +234,7 @@ void MPIBasicRunner<T,U>::masterFinalize()
 template <class T, class U>
 void MPIBasicRunner<T,U>::branch(int step)
 {
+#if !defined LOCALBRANCH
 	////////////////////////////////////////////////////////////
 	//Tell Master to Start expecting branch requests
 	//Keep this header no matter what. It pairs with the loop control
@@ -270,13 +271,22 @@ void MPIBasicRunner<T,U>::branch(int step)
 	////////////////////////////////////////////////////////////
 	if((float) step/this->runParams.nsteps > 0.10)
 		branchLimited();
-
+#else
+	//Local branching
+	if((float) step/this->runParams.nsteps > 0.10)
+		branchLocal(0.25); // Do not prune more than specified percent
+	else if((float) step/this->runParams.nsteps > 0.60)
+		branchLocal(0.50);
+	else if((float) step/this->runParams.nsteps > 0.90)
+		branchLocal(0.90);
+#endif
 }
 #endif
 
 template <class T, class U>
 void MPIBasicRunner<T,U>::masterBranch()
 {
+#if !defined LOCALBRANCH
 	////////////////////////////////////////////////////////////
 	//Get sweep number
 	MPI_Status stat;
@@ -298,6 +308,9 @@ void MPIBasicRunner<T,U>::masterBranch()
 		this->masterBranchLimited(0.50);
 	else if((float) step/this->runParams.nsteps > 0.90)
 			this->masterBranchLimited(0.90);
+#else
+
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

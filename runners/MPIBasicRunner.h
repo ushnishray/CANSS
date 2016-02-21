@@ -191,10 +191,12 @@ public:
 	void masterBranch();
 
 	//branching algorithms
+	void branchLocal(float);
 	void branchLimited();
 	void masterBranchLimited(float);
 	void branchFull();
 	void masterBranchFull();
+
 
 	//Helpers
 	void shortWalkerDisplay()

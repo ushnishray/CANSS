@@ -33,6 +33,9 @@
 //Turnoff Branching - on by default
 //#define NOBRANCH
 
+//Do local branching usually
+#define LOCALBRANCH
+
 //Reindex - off by default
 //#define REINDEX
 
