@@ -275,8 +275,8 @@ void MPIBasicRunner<T,U>::branch(int step)
 	//Not a good idea to branch while Q is small wait
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
-	if((float) step/this->runParams.nsteps > 0.10)
-		branchLimited();
+	//if((float) step/this->runParams.nsteps > 0.10)
+		branchFull();
 #else
 	//Local branching
 	if((float) step/this->runParams.nsteps > 0.10)
@@ -308,8 +308,8 @@ void MPIBasicRunner<T,U>::masterBranch()
 	//Not a good idea to branch while Q is small wait
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
-	if((float) step/this->runParams.nsteps > 0.10)
-		this->masterBranchLimited(1.0); // Do not prune more than specified percent
+	//if((float) step/this->runParams.nsteps > 0.10)
+	this->masterBranchFull(); // Do not prune more than specified percent
 
 #else
 
