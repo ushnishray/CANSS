@@ -131,6 +131,7 @@ private:
 	FILE* log;
 
 	//Local statistical variables
+	Weight FreeEnergy; //Need master to know what the C.G.F. is
 	unsigned int branchcount;
 	long nclones;
 	long nelims;

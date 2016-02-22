@@ -45,23 +45,35 @@ void MPIBasicRunner<T,U>::branchFull()
 	//Now compute new population of walkers and figure out all the walkers that will be written over
 	int i = 0;
 	int ccount = 0, zc=0;
-//	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+	double tprob = 0.0;
+#if DEBUG>=4
+	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+#endif
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
 		idx[i] = it->first;
-		double probi = (it->second->state.weight/lw).value();
-		ni[i] = int(probi*Nw+0.5);
+		double probi = (it->second->state.weight/lw).value(); tprob += probi;
+		it->second->state.weight.resetValue(); //Reset for next round
 
-//		fprintf(this->log,"Walker %d, new population %d [prob %10.6e]\n",idx[i],ni[i],probi);
-
+		ni[i] = probi*Nw + gsl_rng_uniform(walkers[0]->rgenref);
+#if DEBUG>=4
+		fprintf(this->log,"Walker %d, new population %d [prob %10.6e]\n",idx[i],ni[i],probi);
+#endif
 		//Keep track of zero values
 		if(ni[i]==0)
 			zvals[zc++] = idx[i];
 
 		ccount += ni[i++];
 	}
-//	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-//	fprintf(this->log,"New count of walkers: %d\n",ccount);
+#if DEBUG>=4
+	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+	fprintf(this->log,"New count of walkers: %d\n",ccount);
+	fflush(this->log);
+#elif DEBUG>=3
+	fprintf(this->log,"Net prob of walkers: %10.6e\n",tprob);
+	fflush(this->log);
+#endif
+
 //	for(int i = 0;i<zc;i++)
 //		fprintf(this->log,"Zero value %d at %d\n",i,zvals[i]);
 //	walkers.displayWalkers(this->log);
@@ -86,16 +98,10 @@ void MPIBasicRunner<T,U>::branchFull()
 		int p = 0;
 		for(int i=0;i<walkers.walkerCount && p<zc;i++)
 		{
-			if(ni[i]>1) //Have to do this so that weight update doesn't end up getting stuck
+			while(ni[i]>1)
 			{
-				double uw = 1.0/ni[i];
-				walkers[idx[i]]->state.weight.multUpdate(uw);
-
-				while(ni[i]>1)
-				{
-					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
-					ni[i]--;
-				}
+				(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+				ni[i]--;
 			}
 		}
 	}
@@ -113,6 +119,7 @@ void MPIBasicRunner<T,U>::branchFull()
 		fprintf(this->log,"Received update table of size %d from 0\n",tt);
 		fflush(this->log);
 
+
 		if(rem<0)
 		{
 			//Accept walkers from other nodes
@@ -123,8 +130,20 @@ void MPIBasicRunner<T,U>::branchFull()
 				fprintf(this->log,"%d %d walkers\n",updateTable[i],updateTable[i+tt]);
 			fflush(this->log);
 #endif
-			//Now receive from other procs
+
+			//Redistribute locally as needed
 			int p = 0;
+			for(int i=0;i<walkers.walkerCount && p<zc;i++)
+			{
+				while(ni[i]>1)
+				{
+					//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
+					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+					ni[i]--;
+				}
+			}
+
+			//Now receive from other procs
 			Serializer<stringstream> ser;
 			for(int i=0;i<tt;i++)
 			{
@@ -173,22 +192,18 @@ void MPIBasicRunner<T,U>::branchFull()
 
 			}
 
-			//Redistribute locally as needed
-			for(int i=0;i<walkers.walkerCount && p<zc;i++)
+
+#if DEBUG >= 3
+				fprintf(this->log,"Randomly copying remaining %d walkers\n",zc-p);
+				fflush(this->log);
+#endif
+			//Now make up for fractional occupation by randomly increasing walker populations
+			for(;p<zc;p++)
 			{
-				if(ni[i]>1)
-				{
-					double uw = 1.0/ni[i];
-					walkers[idx[i]]->state.weight.multUpdate(uw);
-					while(ni[i]>1)
-					{
-						//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
-						(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
-						ni[i]--;
-					}
-				}
+				int ridx = gsl_rng_uniform_int(walkers[0]->rgenref,walkers.walkerCount);
+				(*walkers.walkerCollection)[zvals[p]]->copy(*walkers[idx[ridx]]);
+				ni[ridx]++;
 			}
-			//fflush(this->log);
 
 		}
 		else
@@ -202,19 +217,11 @@ void MPIBasicRunner<T,U>::branchFull()
 			fflush(this->log);
 #endif
 
-			//Also update weight
 			int* nisend = new int[walkers.walkerCount];
 			for(int i = 0;i<walkers.walkerCount;i++)
-			{
 				nisend[i] = 0;
-				if(ni[i]>1)
-				{
-					double uw = 1.0/ni[i];
-					walkers[idx[i]]->state.weight.multUpdate(uw);
-				}
-			}
 
-
+			//Update new populations due to sending
 			int count = 0;
 			while(count<rem)
 			{
@@ -306,7 +313,6 @@ void MPIBasicRunner<T,U>::branchFull()
 			{
 				while(ni[i]>1)
 				{
-					//fprintf(this->log,"Copying %d into %d\n",idx[i],zvals[p]);
 					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
 					ni[i]--;
 				}
@@ -375,6 +381,10 @@ void MPIBasicRunner<T,U>::masterBranchFull()
 #endif
 	}
 	Z.mpiBcast(0);
+
+	//Update master's estimation of C.G.F.
+	this->FreeEnergy.add(Z.logValue());
+
 #if DEBUG >= 3
 	fprintf(this->log,"BCast Z information.\n");
 	fflush(this->log);
@@ -559,3 +569,6 @@ void MPIBasicRunner<T,U>::masterBranchFull()
 #endif
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template void MPIBasicRunner<int,stringstream>::branchFull();
+template void MPIBasicRunner<int,stringstream>::masterBranchFull();

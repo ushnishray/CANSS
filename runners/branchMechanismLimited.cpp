@@ -25,10 +25,11 @@ void MPIBasicRunner<T,U>::branchLimited()
 
 	int Nw = walkers.walkerCount*(this->procCount-1); //Total no. of walkers recall master has no walkers
 
-	//Send to master
+	//Send to master AND ALSO RESET WALKER WEIGHTS
 	Weight lw;
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 		lw.add(it->second->state.weight);
+
 	MPI_Recv(&temp,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 #if DEBUG >= 3
 	fprintf(this->log,"Received Z information send request.\n");
@@ -52,6 +53,9 @@ void MPIBasicRunner<T,U>::branchLimited()
 	{
 		idx[i] = it->first;
 		float probi = (it->second->state.weight/lw).value();
+		it->second->state.weight.resetValue();
+		//it->second->state.weight.setValue(1.0,0.0); // For next round
+
 		probs[i] = probi;
 		ni[i] = probi*Nw + gsl_rng_uniform(it->second->rgenref);
 #if DEBUG >= 4
@@ -206,8 +210,8 @@ void MPIBasicRunner<T,U>::branchLimited()
 			{
 				if(ni[i]>1)
 				{
-					double uw = 1.0/ni[i];
-					walkers[idx[i]]->state.weight.multUpdate(uw);
+					//double uw = 1.0/ni[i];
+					//walkers[idx[i]]->state.weight.multUpdate(uw);
 					while(ni[i]>1)
 					{
 						//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
@@ -235,11 +239,11 @@ void MPIBasicRunner<T,U>::branchLimited()
 			for(int i = 0;i<walkers.walkerCount;i++)
 			{
 				nisend[i] = 0;
-				if(ni[i]>1)
-				{
-					double uw = 1.0/ni[i];
-					walkers[idx[i]]->state.weight.multUpdate(uw);
-				}
+//				if(ni[i]>1)
+//				{
+//					double uw = 1.0/ni[i];
+//					walkers[idx[i]]->state.weight.multUpdate(uw);
+//				}
 			}
 
 
@@ -407,10 +411,13 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	fflush(this->log);
 #endif
 
+	//Update master's estimation of C.G.F.
+	this->FreeEnergy.add(Z.logValue());
+
 #if DEBUG >= 1
 	//This debug is particularly useful to see how the total weight of walkers
 	//changes over the course of the sampling. We always want this to increase
-	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",Z.logValue());
+	fprintf(this->log,"BCast from 0. log(Value) is %10.6e (Accum: %10.6Le)\n",Z.logValue(),FreeEnergy.value());
 	fflush(this->log);
 #endif
 

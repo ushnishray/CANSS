@@ -34,7 +34,7 @@
 //#define NOBRANCH
 
 //Do local branching usually
-#define LOCALBRANCH
+//#define LOCALBRANCH
 
 //Reindex - off by default
 //#define REINDEX

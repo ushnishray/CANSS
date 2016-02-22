@@ -80,9 +80,15 @@ void MPIBasicRunner<T,U>::masterRun()
 		{
 //			fprintf(this->log,"Writing observable %d.\n",o);
 //			fflush(this->log);
+
+			//Ugly but easy
+			if( BasicObs<T,U>* obj = dynamic_cast<BasicObs<T,U>*>(this->observablesCollection[o]))
+				obj->freeEnergy.copy(FreeEnergy);
+
 			this->observablesCollection[o]->writeViaIndex(m);
 		}
 
+		FreeEnergy.resetValue(); //IMPORTANT
 		fprintf(this->log,"Write Done.\n");
 		fflush(this->log);
 
@@ -303,11 +309,8 @@ void MPIBasicRunner<T,U>::masterBranch()
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
 	if((float) step/this->runParams.nsteps > 0.10)
-		this->masterBranchLimited(0.25); // Do not prune more than specified percent
-	else if((float) step/this->runParams.nsteps > 0.60)
-		this->masterBranchLimited(0.50);
-	else if((float) step/this->runParams.nsteps > 0.90)
-			this->masterBranchLimited(0.90);
+		this->masterBranchLimited(1.0); // Do not prune more than specified percent
+
 #else
 
 #endif

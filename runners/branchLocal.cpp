@@ -18,8 +18,6 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 	int* idx = new int[walkers.walkerCount];
 	int* ni = new int[walkers.walkerCount];
 	int* newPops = new int[walkers.walkerCount];
-	float* wProbs = new float[walkers.walkerCount];
-
 
 	//Send to master
 	Weight lw;
@@ -27,7 +25,7 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 		lw.add(it->second->state.weight);
 
 	//Now compute new population of walkers based on local weight
-	int i = 0;
+	int i = 0, newtotalwalkers = 0;
 #if DEBUG >= 4
 	fprintf(this->log,"++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 #endif
@@ -35,11 +33,11 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 	{
 		idx[i] = it->first;
 		float probi = (it->second->state.weight/lw).value();
-		wProbs[i] = probi;
 		ni[i] = probi*walkers.walkerCount + gsl_rng_uniform(it->second->rgenref);
 #if DEBUG >= 4
 		fprintf(this->log,"Walker %d, new population %d [prob %10.6e]\n",idx[i],ni[i],probi);
 #endif
+		newtotalwalkers += ni[i];
 		i++;
 	}
 #if DEBUG >= 4
@@ -48,74 +46,18 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 
 	memcpy(newPops,ni,sizeof(int)*walkers.walkerCount);
 
-	//Now that we have total populations adjust them
-	//Find extras and then redistribute among walkers that have 0 population with largest weight
-	int extras = 0;
-	double totalp = 0.0;
-	vector<pair<int,float>> plist, tlist;
-
-	int maxpopallowed = maxpercent*walkers.walkerCount;
-	for(int j=0;j<walkers.walkerCount;j++)
-	{
-		if(ni[j]>maxpopallowed)
-		{
-			extras += ni[j] - maxpopallowed;
-			newPops[j] = maxpopallowed;
-		}
-		else if(ni[j] == 0)
-		{
-			plist.push_back(pair<int,float>(j,wProbs[j]));
-			totalp += wProbs[j];
-		}
-
-		tlist.push_back(pair<int,float>(j,wProbs[j]));
-	}
-
-
-	struct compobj
-	{
-		bool operator()(pair<int,float> a, pair<int,float> b)
-		{
-			return (a.second > b.second);
-		}
-	} co;
-	sort(plist.begin(),plist.end(),co);
-	for(int i = 0;i<extras;i++)
-	{
-		int si = plist[i].first;
-		newPops[si] = 1;
-	}
-
-	///////////////////////////////////////////////////////////////////////////////
-	// Need to do a check that total population is exactly right
-	// This should be small - happens because of fractional occupation
-	///////////////////////////////////////////////////////////////////////////////
-	sort(tlist.begin(),tlist.end(),co);
-//	fprintf(this->log,"################################################################\n");
-	int newtotalwalkers = 0;
-	for(int i = 0;i<tlist.size();i++)
-	{
-		int si = tlist[i].first;
-//		float prb = tlist[i].second;
-
-		newtotalwalkers += newPops[si];
-//		fprintf(this->log,"Sorted Process: %d Walker: %d New pop: %d Prob: %10.6e\n",si,sj,newPops[si][sj],prb);
-	}
-//	fprintf(this->log,"################################################################\n");
-//	fflush(this->log);
-
 #if DEBUG >= 1
 	fprintf(this->log,"################################################################\n");
 	for(int j=0;j<walkers.walkerCount;j++)
-			fprintf(this->log,"Walker: %d Population [Old] [New]: %d %d %10.6e\n",j,ni[j],newPops[j],wProbs[j]);
+			fprintf(this->log,"Walker: %d Population [Old] [New]: %d %d\n",j,ni[j],newPops[j]);
 
 	fprintf(this->log,"################################################################\n");
 	fprintf(this->log,"New population: %d Expected: %d\n",newtotalwalkers,walkers.walkerCount);
 	fflush(this->log);
 #endif
 
-
 #if 0
+
 	if(newtotalwalkers>walkers.walkerCount)
 	{
 		//Find smallest probability walkers and reduce them to keep total
@@ -148,29 +90,30 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 		}
 	}
 #else
+
 	//Randomly copy or destroy if not right number of walkers
 	int incr = (newtotalwalkers>walkers.walkerCount) ? -1: 1;
 	int diff = abs(newtotalwalkers-walkers.walkerCount);
 	for(int i = 0;i<diff;i++)
 	{
-
+		int ridx = 0;
+		do{
+			ridx = gsl_rng_uniform_int(walkers[0]->rgenref,walkers.walkerCount);
+		} while(incr<0 && newPops[ridx]<=0);
+		newPops[ridx] += incr;
 	}
 #endif
 
 #if DEBUG >= 1
 	fprintf(this->log,"################################################################\n");
 	for(int j=0;j<walkers.walkerCount;j++)
-		fprintf(this->log,"Walker: %d Population [Old] [New]: %d %d %10.6e\n",j,ni[j],newPops[j],wProbs[j]);
+		fprintf(this->log,"Walker: %d Population [Old] [New]: %d %d\n",j,ni[j],newPops[j]);
 		fprintf(this->log,"################################################################\n");
 	fflush(this->log);
 #endif
 
 	memcpy(ni,newPops,sizeof(int)*walkers.walkerCount);
-
 	delete[] newPops;
-	delete[] wProbs;
-	plist.clear();
-	tlist.clear();
 
 	int* zvals = new int[walkers.walkerCount];
 
@@ -195,6 +138,9 @@ void MPIBasicRunner<T,U>::branchLocal(float maxpercent)
 			ni[i]--;
 		}
 	}
+
+	//Ensure that all 0 occupancies are copied into
+	assert(p == zc);
 
 	delete[] idx;
 	delete[] ni;

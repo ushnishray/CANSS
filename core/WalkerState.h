@@ -60,7 +60,7 @@ public:
 	}
 
 //	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ,vect<Weight> _Q, long _time, Weight& w)
-	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ,long _time, Weight& w)
+	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ, long _time, Weight& w)
 	{
 		DIM = _dim;
 		particleCount = _N;
