@@ -423,11 +423,10 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 
 	//Get population from processes
 	int** initPops = new int*[procCount];
-	int** newPops = new int*[procCount];
 	float** wProbs = new float*[procCount];
 	int* wsizes = new int[procCount];
 
-	int totalwalkers = 0;
+	int totalwalkers = 0, newtotalwalkers = 0;
 	for(int i = 1;i<this->procCount;i++)
 	{
 		MPI_Send(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD);
@@ -435,129 +434,33 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 		int cwsize = 0;
 		MPI_Recv(&cwsize,1,MPI_INT,i,tag,MPI_COMM_WORLD,&stat);
 		initPops[i] = new int[cwsize];
-		newPops[i] = new int[cwsize];
 		wProbs[i] = new float[cwsize];
+
 		wsizes[i] = cwsize;
 		MPI_Recv(initPops[i],cwsize,MPI_INT,i,tag,MPI_COMM_WORLD,&stat);
-		memcpy(newPops[i],initPops[i],sizeof(int)*cwsize);
 		MPI_Recv(wProbs[i],cwsize,MPI_FLOAT,i,tag,MPI_COMM_WORLD,&stat);
 
 		totalwalkers += cwsize;
+		for(int j = 0;j<cwsize;j++)
+			newtotalwalkers += initPops[i][j];
 #if DEBUG >= 3
 		fprintf(this->log,"Received from %d Size %d, Init Pop., Prob.\n",i,cwsize);
 #endif
 	}
 
-	//Now that we have total populations adjust them
-	//Find extras and then redistribute among walkers that have 0 population with largest weight
-	int extras = 0;
-	double totalp = 0.0;
-	vector<pair<int*,float>> plist, tlist;
-
-	for(int i = 1;i<this->procCount;i++)
+	//Randomly increase/decrease to make sure total size is constant
+	int incr = (newtotalwalkers > totalwalkers) ? -1: 1;
+	int diff = abs(newtotalwalkers - totalwalkers);
+	for(int i = 0;i<diff;i++)
 	{
-		int maxpopallowed = maxpercent*wsizes[i];
-		for(int j=0;j<wsizes[i];j++)
+		int proc, walker;
+		do
 		{
-			if(initPops[i][j]>maxpopallowed)
-			{
-				extras += initPops[i][j] - maxpopallowed;
-				newPops[i][j] = maxpopallowed;
-			}
-			else if(initPops[i][j] == 0)
-			{
-				int* x = new int[2]; x[0] = i; x[1] = j;
+			proc = gsl_rng_uniform_int(this->rgenref,procCount-1)+1;
+			walker = gsl_rng_uniform_int(this->rgenref,wsizes[proc]);
+		}while((incr==-1 && initPops[proc][walker]<=0));
 
-				plist.push_back(pair<int*,float>(x,wProbs[i][j]));
-				totalp += wProbs[i][j];
-			}
-
-			int* y = new int[2];
-			y[0] = i; y[1] = j;
-			tlist.push_back(pair<int*,float>(y,wProbs[i][j]));
-		}
-	}
-
-	struct compobj
-	{
-		bool operator()(pair<int*,float> a, pair<int*,float> b)
-		{
-			return (a.second > b.second);
-		}
-	} co;
-	sort(plist.begin(),plist.end(),co);
-	for(int i = 0;i<extras;i++)
-	{
-		int si = plist[i].first[0];
-		int sj = plist[i].first[1];
-		newPops[si][sj] = 1;
-	}
-
-	///////////////////////////////////////////////////////////////////////////////
-	// Need to do a check that total population is exactly right
-	// This should be small - happens because of fractional occupation
-	///////////////////////////////////////////////////////////////////////////////
-	sort(tlist.begin(),tlist.end(),co);
-//	fprintf(this->log,"################################################################\n");
-	int newtotalwalkers = 0;
-	for(int i = 0;i<tlist.size();i++)
-	{
-		int si = tlist[i].first[0];
-		int sj = tlist[i].first[1];
-		float prb = tlist[i].second;
-
-		newtotalwalkers += newPops[si][sj];
-//		fprintf(this->log,"Sorted Process: %d Walker: %d New pop: %d Prob: %10.6e\n",si,sj,newPops[si][sj],prb);
-	}
-//	fprintf(this->log,"################################################################\n");
-//	fflush(this->log);
-
-#if DEBUG >= 4
-	fprintf(this->log,"################################################################\n");
-	for(int i = 1;i<this->procCount;i++)
-	{
-		for(int j=0;j<wsizes[i];j++)
-			fprintf(this->log,"Process: %d Walker: %d Population [Old] [New]: %d %d %10.6e\n",i,j,initPops[i][j],newPops[i][j],wProbs[i][j]);
-	}
-	fprintf(this->log,"################################################################\n");
-	fprintf(this->log,"New population: %d Expected: %d\n",newtotalwalkers,totalwalkers);
-	fflush(this->log);
-#endif
-
-	if(newtotalwalkers>totalwalkers)
-	{
-		//Find smallest probability walkers and reduce them to keep total
-		//population constant
-
-		int tsize = tlist.size()-1;
-		for(int i = 0,j = 0;i<newtotalwalkers-totalwalkers;i++)
-		{
-			int si = tlist[tsize-j].first[0];
-			int sj = tlist[tsize-j].first[1];
-			while(newPops[si][sj]<1)
-			{
-				j++;
-				//cycle if needed;
-				j = (j>tsize) ? 0: j;
-
-				si = tlist[tsize-j].first[0];
-				sj = tlist[tsize-j].first[1];
-			}
-
-
-			newPops[si][sj]--;
-		}
-	}
-	else if(newtotalwalkers<totalwalkers)
-	{
-		//Find largest probability walkers and reduce them to keep total
-		//population constant
-		for(int i = 0;i<totalwalkers-newtotalwalkers;i++)
-		{
-			int si = tlist[i].first[0];
-			int sj = tlist[i].first[1];
-			newPops[si][sj]++;
-		}
+		initPops[proc][walker] += incr;
 	}
 
 #if DEBUG >= 1
@@ -565,7 +468,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	for(int i = 1;i<this->procCount;i++)
 	{
 		for(int j=0;j<wsizes[i];j++)
-			fprintf(this->log,"Process: %d Walker: %d Population [Old] [New]: %d %d %10.6e\n",i,j,initPops[i][j],newPops[i][j],wProbs[i][j]);
+			fprintf(this->log,"Process: %d Walker: %d Population [New]: %d\n",i,j,initPops[i][j]);
 	}
 	fprintf(this->log,"################################################################\n");
 	fflush(this->log);
@@ -573,7 +476,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 
 	//Send back new adjusted population to the processes
 	for(int i = 1;i<this->procCount;i++)
-		MPI_Send(newPops[i],wsizes[i],MPI_INT,i,tag,MPI_COMM_WORLD);
+		MPI_Send(initPops[i],wsizes[i],MPI_INT,i,tag,MPI_COMM_WORLD);
 
 	///////////////////////////////////////////////////////////////////////////////////
 	//Calculate what to send/receive to/from which processor
@@ -586,7 +489,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	{
 		rem = 0;
 		for(int j=0;j<wsizes[i];j++)
-			rem += (newPops[i][j]);
+			rem += (initPops[i][j]);
 		rem -= wsizes[i];
 
 		if(rem>0)
@@ -603,15 +506,11 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 		}
 
 		delete[] initPops[i];
-		delete[] newPops[i];
 		delete[] wProbs[i];
 	}
 	delete[] initPops;
-	delete[] newPops;
 	delete[] wProbs;
 	delete[] wsizes;
-	plist.clear();
-	tlist.clear();
 
 #if DEBUG >= 1
 	fprintf(this->log,"Calculated delta{pop} information.\nTotal sends: %d, total recvs: %d\n",totalsend,totalrecv);

@@ -107,7 +107,15 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 		fprintf(log,"Starting master run.\n");
 		fflush(log);
 
-		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,runParams.eSteps,runParams.bins,runParams.nSteps,runParams.walkerCount,globalObs,mpiGlobalObs);
+		gsl_rng_env_setup();
+		int procSeed;
+		if(runParams.rinitseed == -1)
+			runParams.rinitseed = (int) time(NULL);
+		gsl_rng* rgenref = gsl_rng_alloc(gsl_rng_mt19937);
+		gsl_rng_set(rgenref,runParams.rinitseed + rank);
+		fprintf(log,"Seed: %d\n",runParams.rinitseed + rank);
+
+		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,runParams.eSteps,runParams.bins,runParams.nSteps,runParams.walkerCount,globalObs,mpiGlobalObs,rgenref);
 		brunner->masterRun();
 	}
 	else

@@ -110,6 +110,8 @@ template <class T, class U>
 class MPIBasicRunner {
 
 private:
+	//Local random number generator
+	gsl_rng* rgenref;
 
 	//Mover
 	Mover<T,U>* mover;
@@ -144,12 +146,13 @@ public:
 	//For master
 	MPIBasicRunner(FILE* _log, int _pcount,
 			int _esteps, int _bins, int _nsteps,int _wcount,
-			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc
-			):
+			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc,
+			gsl_rng* r):
 		log(_log),procCount(_pcount),mover(NULL),
 		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
 		walkers(*(new Walkers<T,U>(_wcount))),
-		observablesCollection(_oc),MPIobservablesCollection(_moc)
+		observablesCollection(_oc),MPIobservablesCollection(_moc),
+		rgenref(r)
 	{
 		branchcount = 0;
 		nclones = 0;

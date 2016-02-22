@@ -276,7 +276,7 @@ void MPIBasicRunner<T,U>::branch(int step)
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
 	//if((float) step/this->runParams.nsteps > 0.10)
-		branchFull();
+		branchLimited();
 #else
 	//Local branching
 	if((float) step/this->runParams.nsteps > 0.10)
@@ -309,7 +309,7 @@ void MPIBasicRunner<T,U>::masterBranch()
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
 	//if((float) step/this->runParams.nsteps > 0.10)
-	this->masterBranchFull(); // Do not prune more than specified percent
+	this->masterBranchLimited(1.0); // Do not prune more than specified percent
 
 #else
 
