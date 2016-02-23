@@ -82,9 +82,10 @@ void MPIBasicRunner<T,U>::masterRun()
 //			fflush(this->log);
 
 			//Ugly but easy
+#if !defined NOBRANCH
 			if( BasicObs<T,U>* obj = dynamic_cast<BasicObs<T,U>*>(this->observablesCollection[o]))
 				obj->freeEnergy.copy(FreeEnergy);
-
+#endif
 			this->observablesCollection[o]->writeViaIndex(m);
 		}
 

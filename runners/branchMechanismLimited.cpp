@@ -119,15 +119,10 @@ void MPIBasicRunner<T,U>::branchLimited()
 		int p = 0;
 		for(int i=0;i<walkers.walkerCount && p<zc;i++)
 		{
-			if(ni[i]>1) //Have to do this so that weight update doesn't end up getting stuck
+			while(ni[i]>1)
 			{
-				//double uw = 1.0/ni[i];
-				//walkers[idx[i]]->state.weight.multUpdate(uw);
-				while(ni[i]>1)
-				{
-					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
-					ni[i]--;
-				}
+				(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+				ni[i]--;
 			}
 		}
 	}
@@ -208,16 +203,11 @@ void MPIBasicRunner<T,U>::branchLimited()
 			//Redistribute locally as needed
 			for(int i=0;i<walkers.walkerCount && p<zc;i++)
 			{
-				if(ni[i]>1)
+				while(ni[i]>1)
 				{
-					//double uw = 1.0/ni[i];
-					//walkers[idx[i]]->state.weight.multUpdate(uw);
-					while(ni[i]>1)
-					{
-						//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
-						(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
-						ni[i]--;
-					}
+					//fprintf(this->log,"Copying into %d from %d\n",zvals[p],idx[i]);
+					(*walkers.walkerCollection)[zvals[p++]]->copy(*walkers[idx[i]]);
+					ni[i]--;
 				}
 			}
 			//fflush(this->log);
@@ -237,15 +227,7 @@ void MPIBasicRunner<T,U>::branchLimited()
 			//Also update weight
 			int* nisend = new int[walkers.walkerCount];
 			for(int i = 0;i<walkers.walkerCount;i++)
-			{
 				nisend[i] = 0;
-//				if(ni[i]>1)
-//				{
-//					double uw = 1.0/ni[i];
-//					walkers[idx[i]]->state.weight.multUpdate(uw);
-//				}
-			}
-
 
 			int count = 0;
 			while(count<rem)
