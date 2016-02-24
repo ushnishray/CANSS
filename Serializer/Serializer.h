@@ -331,8 +331,9 @@ public:
 		{
 			T val;
 			bs>>val;
-			obj[i] = val;
+			obj.push_back(val);
 		}
+
 		return bs;
 	}
 

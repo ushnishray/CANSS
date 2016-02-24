@@ -169,6 +169,7 @@ public:
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
+		Rcurr->clear();
 		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight;
 	}
 };

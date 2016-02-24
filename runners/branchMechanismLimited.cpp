@@ -28,7 +28,11 @@ void MPIBasicRunner<T,U>::branchLimited()
 	//Send to master AND ALSO RESET WALKER WEIGHTS
 	Weight lw;
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	{
+//		fprintf(this->log,"Sending Z information. log(Value) was: %10.6e\n",it->second->state.weight.logValue());
+//		fflush(this->log);
 		lw.add(it->second->state.weight);
+	}
 
 	MPI_Recv(&temp,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 #if DEBUG >= 3
@@ -40,7 +44,8 @@ void MPIBasicRunner<T,U>::branchLimited()
 #endif
 	lw.resetValue();
 	lw.mpiBcast(0);
-#if DEBUG >= 3
+#if DEBUG >= 1
+	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",lw.logValue());
 	fflush(this->log);
 #endif
 
@@ -351,19 +356,24 @@ void MPIBasicRunner<T,U>::branchLimited()
 	//Send to master
 	Weight ulw;
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	{
+//		fprintf(this->log,"E Sending Z information. log(Value) was: %10.6e\n",it->second->state.weight.logValue());
+//		fflush(this->log);
 		ulw.add(it->second->state.weight);
+	}
+
 	MPI_Recv(&rem,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 #if DEBUG >= 3
 	fprintf(this->log,"Received Z information send request.\n");
 #endif
 	ulw.mpiSend(0);
-#if DEBUG >= 3
-	fprintf(this->log,"Sent Z information. log(Value) was: %10.6e\n",ulw.logValue());
+#if DEBUG >= 1
+	fprintf(this->log,"E Sent Z information. log(Value) was: %10.6e\n",ulw.logValue());
 #endif
 	ulw.resetValue();
 	ulw.mpiBcast(0);
-#if DEBUG >= 3
-	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",lw.logValue());
+#if DEBUG >= 1
+	fprintf(this->log,"E BCast from 0. log(Value) is %10.6e\n",ulw.logValue());
 	fflush(this->log);
 #endif
 #endif
@@ -445,7 +455,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 		initPops[proc][walker] += incr;
 	}
 
-#if DEBUG >= 1
+#if DEBUG >= 3
 	fprintf(this->log,"################################################################\n");
 	for(int i = 1;i<this->procCount;i++)
 	{
