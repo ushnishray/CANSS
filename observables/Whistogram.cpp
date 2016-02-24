@@ -62,6 +62,7 @@ void Whistogram<T,U>::clear()
 {
 	ltime = 0;
 	localWeight.resetValue();
+	this->Wcollection.clear();
 }
 
 template <class T,class U>
@@ -93,6 +94,7 @@ void Whistogram<T,U>::copy(void* p)
 	Whistogram<T,U>* obj = (Whistogram<T,U>*)p;
 	this->ltime = obj->ltime;
 	this->localWeight.copy(obj->localWeight);
+	this->Wcollection.clear();
 	this->Wcollection = obj->Wcollection;
 }
 
@@ -186,6 +188,7 @@ void Whistogram<T,U>::serialize(Serializer<U>& obj)
 template <class T,class U>
 void Whistogram<T,U>::unserialize(Serializer<U>& obj)
 {
+	Wcollection.clear();
 	obj>>dt>>localWeight>>ltime>>Wcollection;
 }
 ///////////////////////////////////////////////////////////////////////////

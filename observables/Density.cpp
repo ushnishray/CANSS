@@ -204,6 +204,7 @@ void Density<T,U>::serialize(Serializer<U>& obj)
 template <class T, class U>
 void Density<T,U>::unserialize(Serializer<U>& obj)
 {
+	rho.clear();
 	obj>>rho>>Zcount;
 }
 ///////////////////////////////////////////////////////////////////////////

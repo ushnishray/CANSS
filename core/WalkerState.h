@@ -24,6 +24,7 @@ public:
 	vect<T> dQ;
 //	vect<Weight> Q;
 	unsigned int ltime;
+	double dweight;
 	Weight weight;
 
 	FILE* out;
@@ -36,6 +37,7 @@ public:
 		dQ.x = (T) 0.0;
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
+		dweight = 0.0;
 		ltime = 0;
 		weight.copy(_w);
 		out = ot;
@@ -53,6 +55,7 @@ public:
 		dQ.x = (T) 0.0;
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
+		dweight = 0.0;
 		ltime = 0;
 		weight.copy(w);
 
@@ -70,7 +73,7 @@ public:
 		dQ.x = _dQ.x;
 		dQ.y = _dQ.y;
 		dQ.z = _dQ.z;
-
+		dweight = 0.0;
 //		Q.x = _Q.x;
 //		Q.y = _Q.y;
 //		Q.z = _Q.z;
@@ -89,7 +92,7 @@ public:
 		dQ.x = ws.dQ.x;
 		dQ.y = ws.dQ.y;
 		dQ.z = ws.dQ.z;
-
+		dweight = 0.0;
 //		Q.x = ws.Q.x;
 //		Q.y = ws.Q.y;
 //		Q.z = ws.Q.z;
@@ -114,6 +117,7 @@ public:
 		dQ = w.dQ;
 //		Q = w.Q;
 		ltime = w.ltime;
+		dweight = w.dweight;
 		weight.copy(w.weight);
 		out = w.out;
 	}
@@ -122,6 +126,7 @@ public:
 	{
 //		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,Q,ltime,weight);
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
+		a->dweight = this->dweight;
 		a->out = this->out;
 		return a;
 	}
@@ -153,17 +158,19 @@ public:
 //		Q.y = 0.0;
 //		Q.z = 0.0;
 		ltime = 0;
+		dweight = 0.0;
 		weight.resetValue();	
 	}
 
 	virtual void serialize(Serializer<U>& obj)
 	{
-		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight;//<<Q.x<<Q.y<<Q.z;
+		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight;
 	}
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
-		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight;//>>Q.x>>Q.y>>Q.z;
+		Rcurr->clear();
+		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight;
 	}
 };
 

@@ -19,6 +19,10 @@ void BasicObs<T,U>::measure() {
 	Q.z += this->state.dQ.z;
 
 	ltime = this->state.ltime;
+
+#if defined NOBRANCH
+	this->freeEnergy.copy(this->state.weight);
+#endif
 }
 
 template <class T, class U>
@@ -49,7 +53,13 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	Q2.y = t*(Q2.y-Q.x*Q.y);
 	Q2.z = t*(Q2.z-Q.x*Q.z);
 
-	wif<<t<<" "<<(this->freeEnergy.value()*it)<<" "<<setfill(' ')<<Q.x<<" "<<setfill(' ')<<Q.y<<" "<<setfill(' ')
+#if defined NOBRANCH
+	wif<<t<<" "<<(this->freeEnergy.logValue()*it);
+#else
+	wif<<t<<" "<<(this->freeEnergy.value()*it);
+#endif
+
+	wif<<" "<<setfill(' ')<<Q.x<<" "<<setfill(' ')<<Q.y<<" "<<setfill(' ')
 			<<Q.z<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z<<endl;
 	wif.close();
 
@@ -82,6 +92,12 @@ void BasicObs<T,U>::gather(void* p)
 	obj->Q2.x += Q.x*Q.x*it*it;
 	obj->Q2.y += Q.y*Q.y*it*it;
 	obj->Q2.z += Q.z*Q.z*it*it;
+
+#if defined NOBRANCH
+	obj->freeEnergy.add(freeEnergy);
+//	fprintf(this->log,"FE: %10.6e %10.6e\n",freeEnergy.logValue(),obj->freeEnergy.logValue());
+	freeEnergy.resetValue();
+#endif
 
 	Zcount = 0;
 	Q.x = Q.y = Q.z = 0;
@@ -184,7 +200,11 @@ int BasicObs<T,U>::parallelSend()
 	ltime = 0;
 	Q.x = Q.y = Q.z = 0;
 	Q2.x = Q2.y = Q2.z = 0.0;
-	//freeEnergy.resetValue();
+
+#if defined NOBRANCH
+	freeEnergy.mpiSend(0);
+	freeEnergy.resetValue();
+#endif
 
 	return SUCCESS;
 }
@@ -231,6 +251,12 @@ int BasicObs<T,U>::parallelReceive()
 		this->Q2.y += temp;
 		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		this->Q2.z += temp;
+
+#if defined NOBRANCH
+		this->freeEnergy.mpiReceive(procId);
+		//fprintf(this->log,"FE: %10.6e\n",freeEnergy.logValue());
+		//fflush(this->log);
+#endif
 
 		//fprintf(this->log,"MPI Check %10.6Le %10.6Le %10.6Le\n",freeEnergy.value(),Qx.value(),Q2x.value());
 #if DEBUG >= 2

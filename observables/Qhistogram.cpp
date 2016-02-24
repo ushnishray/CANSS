@@ -66,6 +66,7 @@ void Qhistogram<T,U>::clear()
 	Q.y = 0.0;
 	Q.z = 0.0;
 	ltime = 0;
+	this->Qcollection.clear();
 }
 
 template <class T,class U>
@@ -106,6 +107,8 @@ void Qhistogram<T,U>::copy(void* p)
 	this->Q.x = obj->Q.x;
 	this->Q.y = obj->Q.y;
 	this->Q.z = obj->Q.z;
+
+	this->Qcollection.clear();
 	this->Qcollection = obj->Qcollection;
 }
 
@@ -198,6 +201,7 @@ void Qhistogram<T,U>::serialize(Serializer<U>& obj)
 template <class T,class U>
 void Qhistogram<T,U>::unserialize(Serializer<U>& obj)
 {
+	Qcollection.clear();
 	obj>>dt>>ltime>>Q>>Qcollection;
 }
 ///////////////////////////////////////////////////////////////////////////

@@ -12,8 +12,8 @@
 #include "RunParameters.h"
 #include "SNSMover.h"
 
-template <class T>
-void SNSMover<T>::initialize(Walker<T>* w)
+template <class T, class U>
+void SNSMover<T,U>::initialize(Walker<T,U>* w)
 {
 	w->state.Rcurr->clear();
 	w->state.particleCount = 0;
@@ -30,14 +30,16 @@ void SNSMover<T>::initialize(Walker<T>* w)
 		}
 	}
 
+	pidx = pp;
+
 	w->state.ltime = 0;
-	w->state.weight.resetValue();
+	w->state.reset();
 
 	//w->state.display();
 }
 
-template <class T>
-void SNSMover<T>::move(Walker<T>* w)
+template <class T, class U>
+void SNSMover<T,U>::move(Walker<T,U>* w)
 {
 	vect<int> siteloc(gsl_rng_uniform_int(w->rgenref,rp.L+2),0,0);
 
@@ -140,6 +142,7 @@ void SNSMover<T>::move(Walker<T>* w)
 			(*w->state.Rcurr)[vect<int>(siteloc.x+1,0,0)] = ptclnum;
 		}
 	}
+#if 0
 	else if(w->state.particleCount>0)
 	{
 		double lweight = 0.0;
@@ -182,17 +185,18 @@ void SNSMover<T>::move(Walker<T>* w)
 			(*w->state.Rcurr)[siteloc] = ptclnum;
 		}
 	}
+#endif
 
 	w->state.dQ.x = newhop;
 	w->state.ltime++;
 
 //	fprintf(this->debugLog,"%d ================================\n",w->state.ltime);
 //	w->state.weight.display(this->debugLog);
-	w->state.weight.update(tweight);
+	w->state.weight.multUpdate(tweight);
 //	w->state.weight.display(this->debugLog);
 //	fprintf(this->debugLog,"=================================\n");
 }
 
 /////////////////////////////////////////////////
-template void SNSMover<int>::initialize(Walker<int>*);
-template void SNSMover<int>::move(Walker<int>* w);
+template void SNSMover<int,stringstream>::initialize(Walker<int,stringstream>*);
+template void SNSMover<int,stringstream>::move(Walker<int,stringstream>* w);

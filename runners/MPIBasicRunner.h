@@ -19,8 +19,18 @@ struct MPIBRParams
 
 	int bins;
 	int nsteps;
+	int branchStep;
 
-	MPIBRParams(int _eSteps, int _bins, int _nsteps):eSteps(_eSteps),bins(_bins),nsteps(_nsteps) {}
+	MPIBRParams(int _eSteps, int _bins, int _nsteps):eSteps(_eSteps),bins(_bins),nsteps(_nsteps)
+	{
+		branchStep = nsteps*BRANCHPERCENT;
+		branchStep = (branchStep<1) ? 1 : branchStep;
+	}
+
+	MPIBRParams(int _eSteps, int _bins, int _nsteps, int _bstep):eSteps(_eSteps),bins(_bins),nsteps(_nsteps),branchStep(_bstep)
+	{
+		branchStep = (branchStep<1) ? 1 : branchStep;
+	}
 };
 
 template <class T, class U>
@@ -145,11 +155,12 @@ public:
 
 	//For master
 	MPIBasicRunner(FILE* _log, int _pcount,
-			int _esteps, int _bins, int _nsteps,int _wcount,
+			int _esteps, int _bins, int _nsteps, int _bstep,
+			int _wcount,
 			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc,
 			gsl_rng* r):
 		log(_log),procCount(_pcount),mover(NULL),
-		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
+		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps,_bstep))),
 		walkers(*(new Walkers<T,U>(_wcount))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc),
 		rgenref(r)
@@ -161,12 +172,12 @@ public:
 
 	//For slaves
 	MPIBasicRunner(FILE* _log, int _pcount, Mover<T,U>* _mover,
-			int _esteps, int _bins, int _nsteps,
+			int _esteps, int _bins, int _nsteps, int _bstep,
 			int maxwc, double maxv,double minv,NumMap<Walker<T,U>>* _wc,
 			vector<measures::Observable<T,U>*>& _oc, vector<measures::MPIObservable*>& _moc
 			):
 		log(_log),procCount(_pcount),mover(_mover),
-		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps))),
+		runParams(*(new MPIBRParams(_esteps,_bins,_nsteps,_bstep))),
 		walkers(*(new Walkers<T,U>(_wc,maxwc,maxv,minv))),
 		observablesCollection(_oc),MPIobservablesCollection(_moc)
 	{

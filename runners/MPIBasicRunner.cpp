@@ -82,9 +82,10 @@ void MPIBasicRunner<T,U>::masterRun()
 //			fflush(this->log);
 
 			//Ugly but easy
+#if !defined NOBRANCH
 			if( BasicObs<T,U>* obj = dynamic_cast<BasicObs<T,U>*>(this->observablesCollection[o]))
 				obj->freeEnergy.copy(FreeEnergy);
-
+#endif
 			this->observablesCollection[o]->writeViaIndex(m);
 		}
 
@@ -104,11 +105,6 @@ void MPIBasicRunner<T,U>::run()
 {
 //	double gaccept = 0.0;
 //	double divisor = 1.0/this->runParams.nsteps/this->walkers.walkerCount/walkers[0]->state.particleCount;
-
-//	int eqbranch = this->runParams.eSteps*0.90*BRANCHPERCENT;
-//	eqbranch = (eqbranch<1) ? 1 : eqbranch;
-	int databranch = runParams.nsteps*BRANCHPERCENT;
-	databranch = (databranch<1) ? 1 : databranch;
 
 	for(int m=0;m<this->runParams.bins;m++)
 	{
@@ -167,7 +163,7 @@ void MPIBasicRunner<T,U>::run()
 
 #ifndef NOBRANCH
 			//branch
-			if((i+1)%databranch == 0)
+			if((i+1)%runParams.branchStep == 0)
 			{
 				nbranches++;
 				//shortWalkerDisplay();
@@ -276,7 +272,8 @@ void MPIBasicRunner<T,U>::branch(int step)
 	//for some Q accummulation before pruning.
 	////////////////////////////////////////////////////////////
 	//if((float) step/this->runParams.nsteps > 0.10)
-		branchLimited();
+	branchLimited();
+
 #else
 	//Local branching
 	if((float) step/this->runParams.nsteps > 0.10)

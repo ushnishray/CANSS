@@ -115,7 +115,9 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 		gsl_rng_set(rgenref,runParams.rinitseed + rank);
 		fprintf(log,"Seed: %d\n",runParams.rinitseed + rank);
 
-		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,runParams.eSteps,runParams.bins,runParams.nSteps,runParams.walkerCount,globalObs,mpiGlobalObs,rgenref);
+		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,
+				runParams.eSteps,runParams.bins,runParams.nSteps,runParams.branchStep,
+				runParams.walkerCount,globalObs,mpiGlobalObs,rgenref);
 		brunner->masterRun();
 	}
 	else
@@ -173,8 +175,10 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			//////////////////////////////////////////////////////////////////////////////////////////
 		}
 
-		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,mov,runParams.eSteps,runParams.bins,runParams.nSteps,runParams.maxWalkerCount,
-				runParams.maxBranchWeight,runParams.minBranchWeight,&walkerCollection,globalObs,mpiGlobalObs);
+		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,mov,runParams.eSteps,runParams.bins,
+				runParams.nSteps,runParams.branchStep,
+				runParams.maxWalkerCount, runParams.maxBranchWeight,runParams.minBranchWeight,
+				&walkerCollection,globalObs,mpiGlobalObs);
 		fprintf(log,"Starting spawn runs.\n");
 
 		//Now run

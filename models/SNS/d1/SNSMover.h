@@ -11,23 +11,26 @@
 #ifndef SNSMOVER_H_
 #define SNSMOVER_H_
 
-template <class T>
-class SNSMover:public core::Mover<T>
+template <class T, class U>
+class SNSMover:public core::Mover<T,U>
 {
 protected:
 
 	RunParameters& rp;
+	unsigned int pidx;
 
 public:
 
-	SNSMover(FILE* _dlog, RunParameters& _rp):core::Mover<T>(_dlog),rp(_rp)
-	{}
+	SNSMover(FILE* _dlog, RunParameters& _rp):core::Mover<T,U>(_dlog),rp(_rp)
+	{
+		pidx = 0;
+	}
 
 	~SNSMover()
 	{}
 
-	void initialize(Walker<T>*);
-	void move(Walker<T>*);
+	void initialize(Walker<T,U>*);
+	void move(Walker<T,U>*);
 
 };
 #endif /* MOVER_H_ */
