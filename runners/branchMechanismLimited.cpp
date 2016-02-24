@@ -393,7 +393,7 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	{
 		MPI_Send(&rem,1,MPI_INT,i,tag,MPI_COMM_WORLD);
 		Z.mpiReceive(i);
-#if DEBUG >= 1
+#if DEBUG >= 3
 		fprintf(this->log,"Received Z information from %d\n",i);
 #endif
 	}
