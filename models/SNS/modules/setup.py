@@ -1,15 +1,28 @@
 import os
+import sys
+
+fin = open(sys.argv[1])
+betas = fin.read().split('\n')
+fin.close()
 
 w = ''
-bexec = '/home/ushnish/research/Development/checkouts/DMCsns/cppmods/models/SNS/d1b/DEX.branch'
-for i in range(0,21):
-	beta = -0.1 + 0.01*i
-	sdir = 'set.' + str(i)
-	os.system('mkdir ' + sdir)
-	os.system('cp -r params ' + sdir + '/')
-	
+bexec = '/home/ushnish/research/dmcsns/models/SNS/d1b/DEX.branch'
+i = 0
 
-	w += 'cd ../' + sdir + '\n'
-	w += 'mpirun -np 5 ' + bexec + ' ' + './params/param.txt ' + str(beta) + ' >> out\n\n'
-	
+nproc = 2
+for beta in betas:
+	try:
+		float(beta)
+		sdir = 'set.' + str(i)
+		os.system('mkdir ' + sdir)
+		os.system('cp -r params ' + sdir + '/')
+
+		w += 'cd ../' + sdir + '\n'
+		w += 'mpirun -np 2 ' + bexec + ' ' + './params/params.txt ' + str(beta) + ' >> out &\n\n'
+		i += 1
+		if((i*nproc)%30 == 0):
+			w += 'wait\n'
+	except:
+		pass		
+w += 'wait\n'
 print w
