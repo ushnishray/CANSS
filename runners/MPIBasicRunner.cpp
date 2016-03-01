@@ -123,22 +123,6 @@ void MPIBasicRunner<T,U>::run()
 			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 		}
-#if 0
-		//Spend 90% of time getting to weighted distribution
-		for(int i=0;i<this->runParams.eSteps*0.90;i++)
-		{
-			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-				mover->move(it->second);
-
-			if((i+1)%eqbranch == 0)
-			{
-				nbranches++;
-				walkers.displayWalkers(this->log);
-				branch();
-				walkers.displayWalkers(this->log);
-			}
-		}
-#endif
 
 		//Reset walker times etc. equilibration is just about eliminating crazy transients.
 		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
@@ -151,6 +135,7 @@ void MPIBasicRunner<T,U>::run()
 			fprintf(this->log,"Step: %d\n",i);
 			fflush(this->log);
 #endif
+
 			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 				mover->move(it->second);
 
@@ -323,4 +308,12 @@ template void MPIBasicRunner<int,stringstream>::branch(int);
 template void MPIBasicRunner<int,stringstream>::masterBranch();
 template void MPIBasicRunner<int,stringstream>::displayBranchStat(int);
 
+template void MPIBasicRunner<float,stringstream>::initialize();
+template void MPIBasicRunner<float,stringstream>::masterRun();
+template void MPIBasicRunner<float,stringstream>::run();
+template void MPIBasicRunner<float,stringstream>::finalize();
+template void MPIBasicRunner<float,stringstream>::masterFinalize();
+template void MPIBasicRunner<float,stringstream>::branch(int);
+template void MPIBasicRunner<float,stringstream>::masterBranch();
+template void MPIBasicRunner<float,stringstream>::displayBranchStat(int);
 } /* namespace runners */

@@ -29,7 +29,6 @@ struct RunParameters
 	/////////////////////////////////////////
 	int walkerCount;
 	int maxWalkerCount;
-	int branchStep;
 	long double minBranchWeight;
 	long double maxBranchWeight;
 	/////////////////////////////////////////
@@ -60,7 +59,6 @@ struct RunParameters
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Walker Count (per process): "<<walkerCount<<endl;
 		cout<<"Max. Walker Count (per process): "<<maxWalkerCount<<endl;
-		cout<<"Branch interval (sweeps): "<<branchStep<<endl;
 		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
 		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
 		cout<<"-----------------------------------------------------------\n";
@@ -73,7 +71,7 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<eSteps<<endl;
 		cout<<"D-Steps (max time) (sweeps): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
 		cout<<"===========================================================\n\n";
 
@@ -114,7 +112,6 @@ struct RunParameters
 
 		bf>>walkerCount;
 		bf>>maxWalkerCount;
-		bf>>branchStep;
 		bf>>minBranchWeight; minBranchWeight = log(minBranchWeight);
 		bf>>maxBranchWeight; maxBranchWeight = log(maxBranchWeight);
 
@@ -146,6 +143,8 @@ struct RunParameters
 		trans.rmc = exp(-beta);
 		return SUCCESS;
 	}
+
+
 
 };
 

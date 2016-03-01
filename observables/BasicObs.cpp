@@ -289,6 +289,17 @@ template int BasicObs<int,stringstream>::parallelSend();
 template int BasicObs<int,stringstream>::parallelReceive();
 template void BasicObs<int,stringstream>::serialize(Serializer<stringstream>&);
 template void BasicObs<int,stringstream>::unserialize(Serializer<stringstream>&);
+
+template void BasicObs<float,stringstream>::measure();
+template void BasicObs<float,stringstream>::writeViaIndex(int idx);
+template void BasicObs<float,stringstream>::clear();
+template void BasicObs<float,stringstream>::gather(void* p);
+template Observable<float,stringstream>* BasicObs<float,stringstream>::duplicate(core::WalkerState<float,stringstream>&);
+template void BasicObs<float,stringstream>::copy(void* p);
+template int BasicObs<float,stringstream>::parallelSend();
+template int BasicObs<float,stringstream>::parallelReceive();
+template void BasicObs<float,stringstream>::serialize(Serializer<stringstream>&);
+template void BasicObs<float,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 

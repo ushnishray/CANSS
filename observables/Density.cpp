@@ -19,7 +19,7 @@ void Density<T,U>::display()
 	fprintf(this->log,"Density Observable\n");
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"Zcount: %d\n",Zcount);
-	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
+	for(typename vectToValue<T>::iterator itr=rho.begin();itr!=rho.end();++itr)
 		fprintf(this->log,"%9.6e %9.6e %9.6e -> %24.16e\n",(float) itr->first.z,(float) itr->first.y,(float) itr->first.x,itr->second);
 	fprintf(this->log,"==============================================\n");
 }
@@ -47,7 +47,7 @@ void Density<T,U>::writeViaIndex(int idx) {
 	wif.width(FIELDWIDTH);
 	wif.setf(FIELDFORMAT);
 
-	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
+	for(typename vectToValue<T>::iterator itr=rho.begin();itr!=rho.end();++itr)
 	{
 		wif<<itr->first.z<<" "<<itr->first.y<<" "<<itr->first.x<<" "<<itr->second*izc<<endl;
 	}
@@ -68,7 +68,7 @@ template <class T, class U>
 void Density<T,U>::gather(void* p)
 {
 	Density<T,U>* obj = (Density<T,U>*)p;
-	for(vectToValue<int>::iterator itr=rho.begin();itr!=rho.end();++itr)
+	for(typename vectToValue<T>::iterator itr=rho.begin();itr!=rho.end();++itr)
 		obj->rho[itr->first] = obj->rho[itr->first] + itr->second;
 	obj->Zcount+=Zcount;
 
@@ -122,18 +122,18 @@ int Density<T,U>::parallelSend()
 	//Send rho
 	int rows = rho.size();
 	MPI_Send(&rows,1,MPI_INT,0,tag,MPI_COMM_WORLD);
-	int* r_is = new int[3*rows];
+	double* r_is = new double[3*rows];
 	double* values = new double[rows];
 
 	int i = 0;
-	for(vectToValue<int>::iterator it=rho.begin();it!=rho.end();++it)
+	for(typename vectToValue<T>::iterator it=rho.begin();it!=rho.end();++it)
 	{
-		r_is[3*i] = it->first.z;
-		r_is[3*i+1] = it->first.y;
-		r_is[3*i+2] = it->first.x;
+		r_is[3*i] = (double) it->first.z;
+		r_is[3*i+1] = (double) it->first.y;
+		r_is[3*i+2] = (double) it->first.x;
 		values[i++] = it->second;
 	}
-	MPI_Send(r_is,rows*3,MPI_INT,0,tag,MPI_COMM_WORLD);
+	MPI_Send(r_is,rows*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 	MPI_Send(values,rows,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 #if DEBUG >= 2
 	fprintf(this->log,"Density Transfer Complete\n");
@@ -175,14 +175,14 @@ int Density<T,U>::parallelReceive()
 		//Receive rho
 		int rows=0;
 		MPI_Recv(&rows,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
-		int* r_is = new int[3*rows];
+		double* r_is = new double[3*rows];
 		double* values = new double[rows];
-		MPI_Recv(r_is,rows*3,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
+		MPI_Recv(r_is,rows*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(values,rows,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 
 		for(int i=0;i<rows;i++)
 		{
-			vect<int> r_i(r_is[3*i],r_is[3*i+1],r_is[3*i+2]);
+			vect<T> r_i(r_is[3*i],r_is[3*i+1],r_is[3*i+2]);
 			this->rho[r_i] = this->rho[r_i] + values[i];
 		}
 		delete[] r_is;
@@ -219,6 +219,17 @@ template int Density<int,stringstream>::parallelSend();
 template int Density<int,stringstream>::parallelReceive();
 template void Density<int,stringstream>::serialize(Serializer<stringstream>&);
 template void Density<int,stringstream>::unserialize(Serializer<stringstream>&);
+
+template void Density<float,stringstream>::measure();
+template void Density<float,stringstream>::writeViaIndex(int idx);
+template void Density<float,stringstream>::clear();
+template void Density<float,stringstream>::gather(void* p);
+template Observable<float,stringstream>* Density<float,stringstream>::duplicate(core::WalkerState<float,stringstream>&);
+template void Density<float,stringstream>::copy(void* p);
+template int Density<float,stringstream>::parallelSend();
+template int Density<float,stringstream>::parallelReceive();
+template void Density<float,stringstream>::serialize(Serializer<stringstream>&);
+template void Density<float,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 

@@ -13,11 +13,27 @@
 
 struct TransWeight
 {
-	float linsert,lremove;
-	float rinsert,rremove;
-	float lmove,rmove;
+	float ga;
+	float dt;
+	float V0;
 
-	float lmc,rmc;
+	void display()
+	{
+		cout<<"===========================================================\n";
+		cout<<"Model Parameters\n";
+		cout<<"===========================================================\n";
+		cout<<"Gamma : "<<ga<<endl;
+		cout<<"dt: "<<dt<<endl;
+		cout<<"V0: "<<V0<<endl;
+		cout<<"===========================================================\n";
+	}
+
+	void load(ifstream &bf)
+	{
+		bf>>ga;
+		bf>>dt;
+		bf>>V0;
+	}
 };
 
 struct RunParameters
@@ -73,22 +89,14 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<nSteps<<endl;
-		cout<<"D-Steps (max time) (sweeps): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"E-Steps (max time) (sweeps): "<<eSteps*trans.dt<<" "<<nSteps<<endl;
+		cout<<"D-Steps (max time) (sweeps): "<<nSteps*trans.dt<<" "<<nSteps<<endl;
 		cout<<"===========================================================\n\n";
-
-		cout<<"===========================================================\n";
-		cout<<"Model Parameters\n";
-		cout<<"===========================================================\n";
 		cout<<"Mover name: "<<moverName<<endl;
+		cout<<"===========================================================\n\n";
 		cout<<endl;
-		cout<<"Left Insert: "<<trans.linsert<<endl;
-		cout<<"Left Remove: "<<trans.lremove<<endl;
-		cout<<"Right Insert: "<<trans.rinsert<<endl;
-		cout<<"Right Remove: "<<trans.rremove<<endl;
-		cout<<"Left Move: "<<trans.lmove<<endl;
-		cout<<"Right Move: "<<trans.rmove<<endl;
-		cout<<"===========================================================\n";
+
+		trans.display();
 	}
 
 	int loadFile(string baseFile)
@@ -130,20 +138,14 @@ struct RunParameters
 		bf>>bins;
 		bf>>eSteps;
 		bf>>nSteps;
-		eSteps *= (L+2); 
-		nSteps *= (L+2); //So that nSteps provided is time rather than sweeps
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;
-		bf>>trans.linsert;
-		bf>>trans.lremove;
-		bf>>trans.rinsert;
-		bf>>trans.rremove;
-		bf>>trans.lmove;
-		bf>>trans.rmove;
-		bf.close();
+		trans.load(bf);
 
-		trans.lmc = exp(beta);
-		trans.rmc = exp(-beta);
+		//We are specifying final time
+		eSteps /= trans.dt;
+		nSteps /= trans.dt;
+
 		return SUCCESS;
 	}
 

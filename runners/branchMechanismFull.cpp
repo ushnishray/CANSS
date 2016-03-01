@@ -572,3 +572,5 @@ void MPIBasicRunner<T,U>::masterBranchFull()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template void MPIBasicRunner<int,stringstream>::branchFull();
 template void MPIBasicRunner<int,stringstream>::masterBranchFull();
+template void MPIBasicRunner<float,stringstream>::branchFull();
+template void MPIBasicRunner<float,stringstream>::masterBranchFull();

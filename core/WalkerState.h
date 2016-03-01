@@ -22,7 +22,6 @@ public:
 	int particleCount;
 	PtclMap<T>* Rcurr;
 	vect<T> dQ;
-//	vect<Weight> Q;
 	unsigned int ltime;
 	double dweight;
 	Weight weight;
@@ -74,9 +73,6 @@ public:
 		dQ.y = _dQ.y;
 		dQ.z = _dQ.z;
 		dweight = 0.0;
-//		Q.x = _Q.x;
-//		Q.y = _Q.y;
-//		Q.z = _Q.z;
 
 		ltime = _time;
 		weight.copy(w);
@@ -93,9 +89,6 @@ public:
 		dQ.y = ws.dQ.y;
 		dQ.z = ws.dQ.z;
 		dweight = 0.0;
-//		Q.x = ws.Q.x;
-//		Q.y = ws.Q.y;
-//		Q.z = ws.Q.z;
 
 		ltime = ws.ltime;
 		weight.copy(ws.weight);
@@ -115,7 +108,7 @@ public:
 		for(typename PtclMap<T>::iterator it = w.Rcurr->begin(); it!=w.Rcurr->end();++it)
 				(*Rcurr)[it->first] = it->second;
 		dQ = w.dQ;
-//		Q = w.Q;
+
 		ltime = w.ltime;
 		dweight = w.dweight;
 		weight.copy(w.weight);
@@ -124,7 +117,6 @@ public:
 
 	WalkerState* duplicate()
 	{
-//		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,Q,ltime,weight);
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
 		a->dweight = this->dweight;
 		a->out = this->out;
@@ -136,7 +128,7 @@ public:
 		fprintf(out,"Dimension: %d\n",DIM);
 		fprintf(out,"Particle Count: %d\n",particleCount);
 		fprintf(out,"dQ = (%d,%d,%d)\n",(int) dQ.x,(int) dQ.y,(int) dQ.z);
-//		fprintf(out,"Q = (%10.6e,%10.6e,%10.6e)\n",Q.x.logValue(),Q.y.logValue(),Q.z.logValue());
+
 		fprintf(out,"time = %d\n",ltime);
 		weight.display(out);
 		fprintf(out,"State:\n");
@@ -154,9 +146,7 @@ public:
 		dQ.x = (T) 0.0;
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
-//		Q.x = 0.0;
-//		Q.y = 0.0;
-//		Q.z = 0.0;
+
 		ltime = 0;
 		dweight = 0.0;
 		weight.resetValue();	

@@ -11,7 +11,7 @@
 
 #include "dmc.h"
 #include "RunParameters.h"
-#include "SNSMover.h"
+#include "DBMMover.h"
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -25,8 +25,6 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	if(argc==3)
 	{
 		runParams.beta = atof(argv[2]);
-		runParams.trans.lmc = exp(runParams.beta);
-		runParams.trans.rmc = exp(-runParams.beta);
 	}
 
 	if(status == FILENOTFOUND)
@@ -50,15 +48,15 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	MPI_Comm_size(MPI_COMM_WORLD,&totalProcs);
 
 	//Time scaler
-	double dt = 1.0/(runParams.L+2);
+	double dt = runParams.trans.dt;
 
 	// All ranks need a collector
 	// For rank 0 the global collector and the mpi collector are used exclusively to receive
 	// For slave ranks, global collector and mpi-collector are used for local assembly (i.e. per node)
 
 	Weight* freeEnergy = new Weight(0.0);
-	WalkerState<int,stringstream>* gwstate = new WalkerState<int,stringstream>(runParams.dimension,*freeEnergy,log);
-	vector<Observable<int,stringstream>*> globalObs;
+	WalkerState<float,stringstream>* gwstate = new WalkerState<float,stringstream>(runParams.dimension,*freeEnergy,log);
+	vector<Observable<float,stringstream>*> globalObs;
 	//Parallel Observables
 	vector<MPIObservable*> mpiGlobalObs;
 
@@ -69,25 +67,25 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	{
 		if(runParams.observableType[i].compare("Basic")==0)
 		{
-			BasicObs<int,stringstream>* oo = new BasicObs<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			BasicObs<float,stringstream>* oo = new BasicObs<float,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Density")==0)
 		{
-			Density<int,stringstream>* oo = new Density<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			Density<float,stringstream>* oo = new Density<float,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Qhistogram")==0)
 		{
-			Qhistogram<int,stringstream>* oo = new Qhistogram<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			Qhistogram<float,stringstream>* oo = new Qhistogram<float,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Whistogram")==0)
 		{
-			Whistogram<int,stringstream>* oo = new Whistogram<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			Whistogram<float,stringstream>* oo = new Whistogram<float,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
@@ -97,10 +95,10 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	fflush(log);
 
 	//Other observables
-	NumMap<Walker<int,stringstream>> walkerCollection;
+	NumMap<Walker<float,stringstream>> walkerCollection;
 
 	//Setup MPI Runner
-	MPIBasicRunner<int,stringstream> *brunner;
+	MPIBasicRunner<float,stringstream> *brunner;
 
 	if(rank == 0) //Reserve Master
 	{
@@ -115,7 +113,7 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 		gsl_rng_set(rgenref,runParams.rinitseed + rank);
 		fprintf(log,"Seed: %d\n",runParams.rinitseed + rank);
 
-		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,
+		brunner = new MPIBasicRunner<float,stringstream>(log,totalProcs,
 				runParams.eSteps,runParams.bins,runParams.nSteps,runParams.branchStep,
 				runParams.walkerCount,globalObs,mpiGlobalObs,rgenref);
 		brunner->masterRun();
@@ -135,9 +133,9 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 		fflush(log);
 
 		//Setup Mover
-		SNSMover<int,stringstream>* mov;
-		if(runParams.moverName.compare("SNSMover")==0)
-			mov = new SNSMover<int,stringstream>(log,runParams);
+		DBMMover<float,stringstream>* mov;
+		if(runParams.moverName.compare("DBMMover")==0)
+			mov = new DBMMover<float,stringstream>(log,runParams);
 		else
 			return FAIL;
 
@@ -154,32 +152,33 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 
 			//State File
 			Weight* wt = new Weight(initweight);
-			WalkerState<int,stringstream>* wstate = new WalkerState<int,stringstream>(runParams.dimension,*wt,log);
+			WalkerState<float,stringstream>* wstate = new WalkerState<float,stringstream>(runParams.dimension,*wt,log);
 
 			//Observable Files
-			vector<Observable<int,stringstream>*>* localObs = new vector<Observable<int,stringstream>*>;
+			vector<Observable<float,stringstream>*>* localObs = new vector<Observable<float,stringstream>*>;
 			for(int i=0;i<runParams.observableCount;i++)
 			{
 				if(runParams.observableType[i].compare("Basic")==0)
-					localObs->push_back(new BasicObs<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
+					localObs->push_back(new BasicObs<float,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("Density")==0)
-					localObs->push_back(new Density<int,stringstream>(*wstate,runParams.observableName[i],log));
+					localObs->push_back(new Density<float,stringstream>(*wstate,runParams.observableName[i],log));
 				else if(runParams.observableType[i].compare("Qhistogram")==0)
-					localObs->push_back(new Qhistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
+					localObs->push_back(new Qhistogram<float,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("Whistogram")==0)
-					localObs->push_back(new Whistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
+					localObs->push_back(new Whistogram<float,stringstream>(*wstate,runParams.observableName[i],log,dt));
 			}
 
-			Walker<int,stringstream>* lwalker = new Walker<int,stringstream>(rgenref,*wstate,*localObs);
+			Walker<float,stringstream>* lwalker = new Walker<float,stringstream>(rgenref,*wstate,*localObs);
 			walkerCollection[w] = lwalker;
 			//////////////////////////////////////////////////////////////////////////////////////////
 		}
 
-		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,mov,runParams.eSteps,runParams.bins,
+		brunner = new MPIBasicRunner<float,stringstream>(log,totalProcs,mov,runParams.eSteps,runParams.bins,
 				runParams.nSteps,runParams.branchStep,
 				runParams.maxWalkerCount, runParams.maxBranchWeight,runParams.minBranchWeight,
 				&walkerCollection,globalObs,mpiGlobalObs);
 		fprintf(log,"Starting spawn runs.\n");
+		fflush(log);
 
 		//Now run
 		brunner->run();
@@ -189,3 +188,4 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 	fclose(log);
 }
+

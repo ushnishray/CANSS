@@ -189,3 +189,4 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 	fclose(log);
 }
+

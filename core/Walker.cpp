@@ -82,6 +82,8 @@ void Walker<T,U>::unserialize(Serializer<U>& obj)
 //////////////////////////////////////////////////////////////////////
 template void Walker<int,stringstream>::measure();
 template Walker<int,stringstream>* Walker<int,stringstream>::duplicate();
+template Walker<float,stringstream>* Walker<float,stringstream>::duplicate();
 template void Walker<int,stringstream>::display();
 template void Walker<int,stringstream>::copy(Walker<int,stringstream>&);
+template void Walker<float,stringstream>::copy(Walker<float,stringstream>&);
 }

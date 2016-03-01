@@ -155,6 +155,9 @@ public:
 	virtual This& operator<<(uint32_t x){return (*this).hton(x);}
 	virtual This& operator>>(uint32_t& x) { return (*this).ntoh(x);}
 
+	virtual This& operator<<(float d) { return (*this).rawwrite(d);}
+	virtual This& operator>>(float d) { return (*this).rawread(d);}
+
 	virtual This& operator<<(double d)
 	{
 //		long int i64 = *(reinterpret_cast<long int *>(&d)); /* Ugly, but works */

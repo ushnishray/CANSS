@@ -659,3 +659,5 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template void MPIBasicRunner<int,stringstream>::branchLimited();
 template void MPIBasicRunner<int,stringstream>::masterBranchLimited(float);
+template void MPIBasicRunner<float,stringstream>::branchLimited();
+template void MPIBasicRunner<float,stringstream>::masterBranchLimited(float);

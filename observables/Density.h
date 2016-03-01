@@ -19,7 +19,7 @@ template <class T, class U>
 class Density: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
 
-	vectToValue<int> rho;
+	vectToValue<T> rho;
 	int Zcount;
 
 	Density(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)

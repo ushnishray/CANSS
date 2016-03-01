@@ -35,6 +35,7 @@
 
 //Random number generator
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 //Optimization library
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_blas.h>

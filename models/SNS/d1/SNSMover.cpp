@@ -58,7 +58,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		if(it!=w->state.Rcurr->end())
 		{
 			double temp = rp.trans.lremove*rp.trans.lmc;
-			tweight = 1.0-rp.trans.lremove + temp;
+			tweight = 1.0-rp.trans.linsert + temp;
 			if(rd<temp/tweight)
 			{
 				w->state.Rcurr->erase(it);
@@ -69,7 +69,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		else
 		{
 			double temp = rp.trans.linsert*rp.trans.rmc;
-			tweight = 1.0-rp.trans.linsert + temp;
+			tweight = 1.0 - rp.trans.lremove + temp;
 			if(rd<temp/tweight)
 			{
 				(*w->state.Rcurr)[vect<int>(0,0,0)] = w->state.particleCount++;
@@ -83,7 +83,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		if(it!=w->state.Rcurr->end())
 		{
 			double temp = rp.trans.rremove*rp.trans.rmc;
-			tweight = 1.0-rp.trans.rremove + temp;
+			tweight = 1.0 - rp.trans.rinsert + temp;
 			if(rd<temp/tweight)
 			{
 				w->state.Rcurr->erase(it);
@@ -94,7 +94,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		else
 		{
 			double temp = rp.trans.rinsert*rp.trans.lmc;
-			tweight = 1.0-rp.trans.rinsert + temp;
+			tweight = 1.0-rp.trans.linsert + temp;
 			if(rd<temp/tweight)
 			{
 				(*w->state.Rcurr)[vect<int>(rp.L-1,0,0)] = w->state.particleCount++;
@@ -108,7 +108,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		int lhop = 0;
 		PtclMap<int>::iterator itl = w->state.Rcurr->find(vect<int>(siteloc.x-1,0,0));
 		if(itl!=w->state.Rcurr->end() || siteloc.x == 0) //Particle found at x-1 or at left edge
-			lweight = rp.trans.lmove;
+			lweight = 1.0-rp.trans.rmove;
 		else
 		{
 			lhop = -1;
@@ -119,7 +119,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 		int rhop = 0;
 		PtclMap<int>::iterator itr = w->state.Rcurr->find(vect<int>(siteloc.x+1,0,0));
 		if(itr!=w->state.Rcurr->end() || siteloc.x == rp.L-1) //Particle found at x+1 or at right edge
-			rweight = rp.trans.rmove;
+			rweight = 1.0-rp.trans.lmove;
 		else
 		{
 			rhop = 1;
@@ -142,7 +142,6 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 			(*w->state.Rcurr)[vect<int>(siteloc.x+1,0,0)] = ptclnum;
 		}
 	}
-#if 0
 	else if(w->state.particleCount>0)
 	{
 		double lweight = 0.0;
@@ -154,7 +153,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 			lweight = rp.trans.lmove*rp.trans.lmc;
 		}
 		else
-			lweight = rp.trans.lmove;
+			lweight = 1.0 - rp.trans.rmove;
 
 		double rweight = 0.0;
 		int rhop = 0;
@@ -165,7 +164,7 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 			rhop = 1;
 		}
 		else
-			rweight = rp.trans.rmove;
+			rweight = 1.0 - rp.trans.lmove;
 
 		tweight = lweight+rweight;
 
@@ -185,13 +184,13 @@ void SNSMover<T,U>::move(Walker<T,U>* w)
 			(*w->state.Rcurr)[siteloc] = ptclnum;
 		}
 	}
-#endif
 
 	w->state.dQ.x = newhop;
 	w->state.ltime++;
 
 //	fprintf(this->debugLog,"%d ================================\n",w->state.ltime);
 //	w->state.weight.display(this->debugLog);
+	w->state.dweight = tweight;
 	w->state.weight.multUpdate(tweight);
 //	w->state.weight.display(this->debugLog);
 //	fprintf(this->debugLog,"=================================\n");

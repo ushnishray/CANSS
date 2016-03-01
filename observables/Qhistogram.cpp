@@ -217,6 +217,16 @@ template int Qhistogram<int,stringstream>::parallelReceive();
 template void Qhistogram<int,stringstream>::serialize(Serializer<stringstream>&);
 template void Qhistogram<int,stringstream>::unserialize(Serializer<stringstream>&);
 
+template void Qhistogram<float,stringstream>::measure();
+template void Qhistogram<float,stringstream>::writeViaIndex(int idx);
+template void Qhistogram<float,stringstream>::clear();
+template void Qhistogram<float,stringstream>::gather(void* p);
+template Observable<float,stringstream>* Qhistogram<float,stringstream>::duplicate(core::WalkerState<float,stringstream>&);
+template void Qhistogram<float,stringstream>::copy(void* p);
+template int Qhistogram<float,stringstream>::parallelSend();
+template int Qhistogram<float,stringstream>::parallelReceive();
+template void Qhistogram<float,stringstream>::serialize(Serializer<stringstream>&);
+template void Qhistogram<float,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 

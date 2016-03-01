@@ -204,6 +204,16 @@ template int Whistogram<int,stringstream>::parallelReceive();
 template void Whistogram<int,stringstream>::serialize(Serializer<stringstream>&);
 template void Whistogram<int,stringstream>::unserialize(Serializer<stringstream>&);
 
+template void Whistogram<float,stringstream>::measure();
+template void Whistogram<float,stringstream>::writeViaIndex(int idx);
+template void Whistogram<float,stringstream>::clear();
+template void Whistogram<float,stringstream>::gather(void* p);
+template Observable<float,stringstream>* Whistogram<float,stringstream>::duplicate(core::WalkerState<float,stringstream>&);
+template void Whistogram<float,stringstream>::copy(void* p);
+template int Whistogram<float,stringstream>::parallelSend();
+template int Whistogram<float,stringstream>::parallelReceive();
+template void Whistogram<float,stringstream>::serialize(Serializer<stringstream>&);
+template void Whistogram<float,stringstream>::unserialize(Serializer<stringstream>&);
 } /* namespace measures */
 
 
