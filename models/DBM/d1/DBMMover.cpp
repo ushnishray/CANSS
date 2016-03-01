@@ -35,7 +35,7 @@ void DBMMover<T,U>::move(Walker<T,U>* w)
 	vect<float> vv = it->first;
 	float x0 = vv.x;
 	float noise = sqrt(2.0*rp.trans.dt)*gsl_ran_ugaussian(w->rgenref);
-	vv.x = rp.trans.dt*(rp.trans.ga + rp.trans.V0*sin(2.0*M_PI*vv.x)) + noise;
+	vv.x = rp.trans.dt*(rp.trans.ga + rp.trans.V0*amp*sin(amp*vv.x)) + noise;
 
 	w->state.dQ.x = vv.x*rp.trans.ga;
 	w->state.dweight = exp(-rp.beta*w->state.dQ.x);

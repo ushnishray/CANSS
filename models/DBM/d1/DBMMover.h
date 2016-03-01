@@ -18,12 +18,13 @@ protected:
 
 	RunParameters& rp;
 	unsigned int pidx;
-
+	float amp;
 public:
 
 	DBMMover(FILE* _dlog, RunParameters& _rp):core::Mover<T,U>(_dlog),rp(_rp)
 	{
 		pidx = 0;
+		amp = 2.0*M_PI;
 	}
 
 	~DBMMover()
