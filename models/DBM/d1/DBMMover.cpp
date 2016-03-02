@@ -46,7 +46,7 @@ void DBMMover<T,U>::move(Walker<T,U>* w)
 	w->state.Rcurr->erase(it);
 	vv.x += x0;
 
-//	fprintf(this->debugLog,"%d, %10.6e -> %10.6e, W: %10.6e\n",w->state.ltime,vv.x,x0,w->state.dweight);
+//	fprintf(this->debugLog,"%d, %10.6e -> %10.6e, Q*dt: %10.6e W: %10.6e\n",w->state.ltime,x0,vv.x,w->state.dQ.x,w->state.dweight);
 //	fflush(this->debugLog);
 
 	while(vv.x<0.0)
