@@ -31,8 +31,13 @@ for i in range(0,dn):
 	
 	for subd,d,files in os.walk(dd):
 		for ff in files:
-			if(ff[-4:] == '.cpp'):
-				print dd + '/' + ff[:-4] + '.o'	
+
+			sd = subd[len(dd)+1:]
+			
+			#Ignore sub-directory that contains test
+
+			if(ff[-4:] == '.cpp' and not('test' in sd)):
+				print dd + '/' + ff[:-4] + '.o',sd
 				objfile = ff[:-4] + '.o'
 								
 				cppff = dd + '/' + ff		

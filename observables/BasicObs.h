@@ -24,6 +24,13 @@ public:
 	unsigned int ltime;
 	Weight& freeEnergy;
 
+#ifdef NOBRANCH
+	//Just needed for collection
+	Weight Qx,Qy,Qz;
+	Weight Qx2,Qy2,Qz2;
+	Weight lfE;
+#endif
+
 	BasicObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log),freeEnergy(*(new Weight(_state.weight)))
 	{
 		dt = 0.0;

@@ -201,6 +201,12 @@ public:
 	void masterRun();
 	void masterFinalize();
 
+	//Running algorithm
+	void masterRunWB();
+	void runWB();
+	void masterRunNB();
+	void runNB();
+
 	//Branching
 	void branch(int);
 	void masterBranch();
