@@ -32,10 +32,11 @@ void MPIBasicRunner<T,U>::masterRunNB()
 			for(int o=0;o<this->MPIobservablesCollection.size();o++)
 				this->MPIobservablesCollection[o]->parallelReceive();
 
+#if DEBUG>=4
 			fprintf(this->log,"Parallel gather done.\n");
 			fprintf(this->log,"Beginning Write of %d observables.\n",this->observablesCollection.size());
 			fflush(this->log);
-
+#endif
 			MPI_Barrier(MPI_COMM_WORLD);
 		}
 
@@ -104,8 +105,14 @@ void MPIBasicRunner<T,U>::runNB()
 			for(int o=0;o<this->MPIobservablesCollection.size();o++)
 				this->MPIobservablesCollection[o]->parallelSend();
 
+#if DEBUG>=4
 			fprintf(this->log,"Parallel gather done\n");
 			fflush(this->log);
+#endif
+
+			//Reset walker state.
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				it->second->reset();
 
 			//Synchronize
 			MPI_Barrier(MPI_COMM_WORLD);

@@ -14,6 +14,7 @@ namespace measures {
 
 template <class T,class U>
 void BasicObs<T,U>::measure() {
+
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
@@ -91,13 +92,15 @@ void BasicObs<T,U>::gather(void* p)
 	//Store into global accumulator
 	double it = 1.0/(ltime*dt);
 	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
-	obj->ltime = ltime;
-	obj->Zcount += 1;
 
+	obj->ltime = ltime;
 	vect<T> lQ;
 	lQ.x = Q.x*it;
 	lQ.y = Q.y*it;
 	lQ.z = Q.z*it;
+
+#ifndef NOBRANCH
+	obj->Zcount += 1;
 
 	obj->Q.x += lQ.x;
 	obj->Q.y += lQ.y;
@@ -107,7 +110,7 @@ void BasicObs<T,U>::gather(void* p)
 	obj->Q2.y += lQ.y*lQ.y;
 	obj->Q2.z += lQ.z*lQ.z;
 
-#ifdef NOBRANCH
+#else
 	Weight temp = freeEnergy; temp.multUpdate(lQ.x);
 	obj->Qx.add(temp);
 	temp = freeEnergy; temp.multUpdate(lQ.y);
@@ -222,13 +225,14 @@ int BasicObs<T,U>::parallelSend()
 	fprintf(this->log,"BasicObs Received notification from master\n");
 	fflush(this->log);
 #endif
+
 	//send time
 	MPI_Send(&this->ltime,1,MPI_UNSIGNED,0,tag,MPI_COMM_WORLD);
 
+#ifndef NOBRANCH
 	//send Zcount
 	MPI_Send(&this->Zcount,1,MPI_INT,0,tag,MPI_COMM_WORLD);
 
-#ifndef NOBRANCH
 	//Q
 	MPI_Send(&this->Q.x,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 	MPI_Send(&this->Q.y,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
@@ -281,7 +285,9 @@ int BasicObs<T,U>::parallelReceive()
 	//Wait for all processes to get here
 	MPI_Barrier(MPI_COMM_WORLD);
 
+#ifndef NOBRANCH
 	this->Zcount = 0;
+#endif
 	for(int procId=1;procId<this->procCount;procId++)
 	{
 		int tag,recv;
@@ -292,13 +298,14 @@ int BasicObs<T,U>::parallelReceive()
 		fprintf(this->log,"BasicObs Sending notification to process:%d\n",procId);
 		fflush(this->log);
 #endif
+
+#ifndef NOBRANCH
 		MPI_Recv(&ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
 
 		int zcountrec;
 		MPI_Recv(&zcountrec,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
 		this->Zcount += zcountrec;
 
-#ifndef NOBRANCH
 		//Receive Q
 		double temp=0;
 		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
@@ -316,8 +323,11 @@ int BasicObs<T,U>::parallelReceive()
 		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		this->Q2.z += temp;
 #endif
-
 #ifdef NOBRANCH
+		unsigned int ttemp;
+		MPI_Recv(&ttemp,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
+		this->ltime += ttemp;
+
 		this->lfE.mpiReceive(procId);
 
 		this->Qx.mpiReceive(procId);
@@ -336,6 +346,9 @@ int BasicObs<T,U>::parallelReceive()
 	}
 
 #ifdef NOBRANCH
+
+	this->Zcount++;
+
 	//Compute observables
 	this->Q.x += (Qx/lfE).value();
 	this->Q.y += (Qy/lfE).value();
@@ -363,7 +376,7 @@ void BasicObs<T,U>::serialize(Serializer<U>& obj)
 {
 	obj<<dt<<Zcount<<ltime<<Q<<freeEnergy<<Q2;
 #ifdef NOBRANCH
-	obj<<Qx<<Qy<<Qz<<Qx2<<Qy2<<Qz2;
+	obj<<lfE<<Qx<<Qy<<Qz<<Qx2<<Qy2<<Qz2;
 #endif
 }
 
@@ -372,7 +385,7 @@ void BasicObs<T,U>::unserialize(Serializer<U>& obj)
 {
 	obj>>dt>>Zcount>>ltime>>Q>>freeEnergy>>Q2;
 #ifdef NOBRANCH
-	obj>>Qx>>Qy>>Qz>>Qx2>>Qy2>>Qz2;
+	obj>>lfE>>Qx>>Qy>>Qz>>Qx2>>Qy2>>Qz2;
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////

@@ -28,10 +28,6 @@ struct RunParameters
 	float beta;
 	/////////////////////////////////////////
 	int walkerCount;
-	int maxWalkerCount;
-	int branchStep;
-	long double minBranchWeight;
-	long double maxBranchWeight;
 	/////////////////////////////////////////
 	int rinitseed;
 	/////////////////////////////////////////
@@ -44,6 +40,7 @@ struct RunParameters
 	int bins;
 	int eSteps;
 	int nSteps;
+	int branchStep;
 	/////////////////////////////////////////
 	TransWeight trans;
 	string moverName;
@@ -59,10 +56,6 @@ struct RunParameters
 		cout<<"beta: "<<beta<<endl;
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Walker Count (per process): "<<walkerCount<<endl;
-		cout<<"Max. Walker Count (per process): "<<maxWalkerCount<<endl;
-		cout<<"Branch interval (sweeps): "<<branchStep<<endl;
-		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
-		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Random Seed: "<<rinitseed<<endl;
 		cout<<"-----------------------------------------------------------\n";
@@ -73,8 +66,9 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"E-Steps (max time) (sweeps): "<<eSteps/(L+2)<<" "<<nSteps<<endl;
-		cout<<"D-Steps (max time) (sweeps): "<<nSteps/(L+2)<<" "<<nSteps<<endl;
+		cout<<"E-Steps (sweeps): "<<eSteps<<endl;
+		cout<<"D-Steps (sweeps): "<<nSteps<<endl;
+		cout<<"Branch interval/Path Sample (sweeps): "<<branchStep<<endl;
 		cout<<"===========================================================\n\n";
 
 		cout<<"===========================================================\n";
@@ -113,10 +107,6 @@ struct RunParameters
 		bf>>beta;
 
 		bf>>walkerCount;
-		bf>>maxWalkerCount;
-		bf>>branchStep;
-		bf>>minBranchWeight; minBranchWeight = log(minBranchWeight);
-		bf>>maxBranchWeight; maxBranchWeight = log(maxBranchWeight);
 
 		bf>>rinitseed;
 		bf>>logFile;
@@ -130,8 +120,9 @@ struct RunParameters
 		bf>>bins;
 		bf>>eSteps;
 		bf>>nSteps;
-		eSteps *= (L+2); 
-		nSteps *= (L+2); //So that nSteps provided is time rather than sweeps
+		bf>>branchStep;
+
+		//So that nSteps provided is time rather than sweeps
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;
 		bf>>trans.linsert;

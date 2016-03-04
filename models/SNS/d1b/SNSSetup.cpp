@@ -177,7 +177,7 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 
 		brunner = new MPIBasicRunner<int,stringstream>(log,totalProcs,mov,runParams.eSteps,runParams.bins,
 				runParams.nSteps,runParams.branchStep,
-				runParams.maxWalkerCount, runParams.maxBranchWeight,runParams.minBranchWeight,
+				runParams.walkerCount, 1.0e8,1.0e-8,
 				&walkerCollection,globalObs,mpiGlobalObs);
 		fprintf(log,"Starting spawn runs.\n");
 
