@@ -32,7 +32,7 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	fprintf(this->log,"BasicObs Write\n");
 	fflush(this->log);
 #endif
-	double t = this->ltime*dt;
+	double t = this->ltime*dt*Zcount;
 	double it = 1.0/t;
 	double iZ = 1.0/Zcount;
 
