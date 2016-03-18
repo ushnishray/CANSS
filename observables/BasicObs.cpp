@@ -347,6 +347,8 @@ int BasicObs<T,U>::parallelReceive()
 
 #ifdef NOBRANCH
 
+	this->ltime /= this->procCount;
+
 	this->Zcount++;
 
 	//Compute observables
