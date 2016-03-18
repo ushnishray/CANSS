@@ -38,7 +38,7 @@ void DBMMover<T,U>::move(Walker<T,U>* w)
 	vv.x = rp.trans.dt*(rp.trans.ga + rp.trans.V0*amp*sin(amp*vv.x)) + noise;
 
 	w->state.dQ.x = vv.x*rp.trans.ga;
-	w->state.dweight = exp(-rp.beta*w->state.dQ.x);
+	w->state.dweight = exp(rp.beta*w->state.dQ.x);
 	w->state.weight.multUpdate(w->state.dweight);
 	w->state.ltime++;
 
