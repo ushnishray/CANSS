@@ -56,10 +56,9 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	Q2.y *= iZ;
 	Q2.z *= iZ;
 
-	Q2.x = t*(Q2.x-Q.x*Q.x);
-	Q2.y = t*(Q2.y-Q.x*Q.y);
-	Q2.z = t*(Q2.z-Q.x*Q.z);
-
+	Q2.x = (ltime*dt)*(Q2.x-Q.x*Q.x);
+	Q2.y = (ltime*dt)*(Q2.y-Q.x*Q.y);
+	Q2.z = (ltime*dt)*(Q2.z-Q.x*Q.z);
 
 	wif<<t<<" "<<(this->freeEnergy.value()*it);
 
