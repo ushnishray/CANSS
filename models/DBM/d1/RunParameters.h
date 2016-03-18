@@ -144,7 +144,11 @@ struct RunParameters
 
 		//We are specifying final time
 		eSteps /= trans.dt;
+#ifdef NOBRANCH
 		branchStep /= trans.dt;
+#else
+		nSteps /= trans.dt;
+#endif
 
 		return SUCCESS;
 	}

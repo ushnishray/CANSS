@@ -32,7 +32,13 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	fprintf(this->log,"BasicObs Write\n");
 	fflush(this->log);
 #endif
+
+#ifdef NOBRANCH
 	double t = this->ltime*dt*Zcount;
+#else
+	double t = this->ltime*dt;
+#endif
+
 	double it = 1.0/t;
 	double iZ = 1.0/Zcount;
 
