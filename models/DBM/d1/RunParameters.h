@@ -142,11 +142,11 @@ struct RunParameters
 
 		float temp;
 		bf>>temp;
-		branchStep = temp/trans.dt;
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;
 		trans.load(bf);
 
+		branchStep = temp/trans.dt;
 		return SUCCESS;
 	}
 
