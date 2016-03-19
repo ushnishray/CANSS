@@ -112,20 +112,19 @@ void MPIBasicRunner<T,U>::runWB()
 			fprintf(this->log,"Step: %d\n",i);
 			fflush(this->log);
 #endif
-
-			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-				mover->move(it->second);
-
-			//Now do measure for each walker
-			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-				it->second->measure();
-
-			//branch
-			if((i+1)%runParams.branchStep == 0)
+			for(int b=0;b<this->runParams.branchStep;b++)
 			{
-				nbranches++;
-				branch(i);
+
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					mover->move(it->second);
+
+				//Now do measure for each walker
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					it->second->measure();
 			}
+
+			nbranches++;
+			branch(i);
 		}
 
 		this->displayBranchStat(nbranches);

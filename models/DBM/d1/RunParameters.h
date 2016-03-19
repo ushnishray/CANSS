@@ -45,7 +45,7 @@ struct RunParameters
 	/////////////////////////////////////////
 	int walkerCount;
 	int maxWalkerCount;
-	int branchStep;
+
 	long double minBranchWeight;
 	long double maxBranchWeight;
 	/////////////////////////////////////////
@@ -60,6 +60,7 @@ struct RunParameters
 	int bins;
 	int eSteps;
 	int nSteps;
+	int branchStep;
 	/////////////////////////////////////////
 	TransWeight trans;
 	string moverName;
@@ -76,7 +77,6 @@ struct RunParameters
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Walker Count (per process): "<<walkerCount<<endl;
 		cout<<"Max. Walker Count (per process): "<<maxWalkerCount<<endl;
-		cout<<"Branch interval (sweeps): "<<branchStep<<endl;
 		cout<<"Log(Min. Branch Weight): "<<minBranchWeight<<endl;
 		cout<<"Log(Max. Branch Weight): "<<maxBranchWeight<<endl;
 		cout<<"-----------------------------------------------------------\n";
@@ -89,8 +89,9 @@ struct RunParameters
 			cout<<observableType[i]<<" "<<observableName[i]<<"\n";
 		cout<<"-----------------------------------------------------------\n";
 		cout<<"Bins: "<<bins<<endl;
-		cout<<"E-Steps (max time) (sweeps): "<<eSteps*trans.dt<<" "<<nSteps<<endl;
+		cout<<"E-Steps (sweeps): "<<eSteps<<endl;
 		cout<<"D-Steps (max time) (sweeps): "<<nSteps*trans.dt<<" "<<nSteps<<endl;
+		cout<<"Integration Time (time) (sweeps): "<<branchStep*trans.dt<<" "<<branchStep<<endl;
 		cout<<"===========================================================\n\n";
 		cout<<"Mover name: "<<moverName<<endl;
 		cout<<"===========================================================\n\n";
@@ -122,7 +123,7 @@ struct RunParameters
 
 		bf>>walkerCount;
 		bf>>maxWalkerCount;
-		bf>>branchStep;
+
 		bf>>minBranchWeight; minBranchWeight = log(minBranchWeight);
 		bf>>maxBranchWeight; maxBranchWeight = log(maxBranchWeight);
 
@@ -138,17 +139,13 @@ struct RunParameters
 		bf>>bins;
 		bf>>eSteps;
 		bf>>nSteps;
+
+		float temp;
+		bf>>temp;
+		branchStep = temp/trans.dt;
 		///////////////////////////////////////////////////////////////
 		bf>>moverName;
 		trans.load(bf);
-
-		//We are specifying final time
-		eSteps /= trans.dt;
-#ifdef NOBRANCH
-		branchStep /= trans.dt;
-#else
-		nSteps /= trans.dt;
-#endif
 
 		return SUCCESS;
 	}
