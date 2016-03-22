@@ -66,6 +66,11 @@ namespace core
 			return (a.state.weight.logValue()<b.state.weight.logValue());
 		}
 
+		void* getWalkerState()
+		{
+			return (&state);
+		}
+
 		virtual Walker* duplicate();
 		virtual void measure();
 		virtual void copy(Walker& w);
