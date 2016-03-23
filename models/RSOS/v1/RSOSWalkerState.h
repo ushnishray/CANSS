@@ -15,9 +15,8 @@ public:
 	int L;
 	int* height;
 
-	RSOSWalkerState(int _dim, Weight& _w, FILE* ot, int _L)
+	RSOSWalkerState(int _dim, Weight& _w, FILE* ot, int _L):WalkerState<T,U>(_dim,_w,ot)
 	{
-		WalkerState(_dim,_w,ot);
 		L = _L;
 		height = new int[L];
 		for(int i = 0;i<L;i++)
@@ -47,9 +46,9 @@ public:
 		memcpy(height,w.height,sizeof(int)*L);
 	}
 
-	WalkerState* duplicate()
+	RSOSWalkerState* duplicate()
 	{
-		RSOSWalkerState* a = new RSOSWalkerState(WalkerState<T,U>&(*this),this->L);
+		RSOSWalkerState* a = new RSOSWalkerState(*this,this->L);
 		memcpy(a,this->height,sizeof(int)*L);
 		return a;
 	}
@@ -57,21 +56,22 @@ public:
 	void reset()
 	{
 		core::WalkerState<T,U>::reset();
-		for(int i = 0;i<L;i++)
-			height[i] = 0;
+//		for(int i = 0;i<L;i++)
+//			height[i] = 0;
 	}
 
 	virtual void serialize(Serializer<U>& obj)
 	{
-		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight<<L;
+		core::WalkerState<T,U>::serialize(obj);
+		obj<<L;
 		for(int i = 0;i<L;i++)
 			obj<<height[i];
 	}
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
-		Rcurr->clear();
-		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight>>L;
+		core::WalkerState<T,U>::unserialize(obj);
+		obj>>L;
 		for(int i = 0;i<L;i++)
 			obj>>height[i];
 	}

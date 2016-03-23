@@ -31,7 +31,7 @@
 #define DEBUG 1
 
 //Turnoff Branching - on by default
-//#define NOBRANCH
+#define NOBRANCH
 
 //Do local branching usually
 //#define LOCALBRANCH

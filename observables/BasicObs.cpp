@@ -33,12 +33,7 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	fflush(this->log);
 #endif
 
-#ifdef NOBRANCH
-	double t = this->ltime*dt*Zcount;
-#else
 	double t = this->ltime*dt;
-#endif
-
 	double it = 1.0/t;
 	double iZ = 1.0/Zcount;
 
@@ -56,11 +51,11 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	Q2.y *= iZ;
 	Q2.z *= iZ;
 
-	Q2.x = (ltime*dt)*(Q2.x-Q.x*Q.x);
-	Q2.y = (ltime*dt)*(Q2.y-Q.x*Q.y);
-	Q2.z = (ltime*dt)*(Q2.z-Q.x*Q.z);
+	Q2.x = t*(Q2.x-Q.x*Q.x);
+	Q2.y = t*(Q2.y-Q.x*Q.y);
+	Q2.z = t*(Q2.z-Q.x*Q.z);
 
-	wif<<t<<" "<<(this->freeEnergy.value()*it);
+	wif<<t<<" "<<(this->freeEnergy.value()*iZ);
 
 	wif<<" "<<setfill(' ')<<Q.x<<" "<<setfill(' ')<<Q.y<<" "<<setfill(' ')
 			<<Q.z<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z<<endl;
@@ -329,9 +324,8 @@ int BasicObs<T,U>::parallelReceive()
 		this->Q2.z += temp;
 #endif
 #ifdef NOBRANCH
-		unsigned int ttemp;
-		MPI_Recv(&ttemp,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
-		this->ltime += ttemp;
+
+		MPI_Recv(&this->ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
 
 		this->lfE.mpiReceive(procId);
 
@@ -351,9 +345,7 @@ int BasicObs<T,U>::parallelReceive()
 	}
 
 #ifdef NOBRANCH
-
-	this->ltime /= this->procCount;
-
+	double it = 1.0/(this->ltime*this->dt);
 	this->Zcount++;
 
 	//Compute observables
@@ -365,7 +357,7 @@ int BasicObs<T,U>::parallelReceive()
 	this->Q2.y += (Qy2/lfE).value();
 	this->Q2.z += (Qz2/lfE).value();
 
-	freeEnergy.addUpdate(lfE.logValue());
+	freeEnergy.addUpdate(it*lfE.logValue());
 
 	//Reset for next collection
 	lfE.resetValue();

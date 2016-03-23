@@ -10,6 +10,7 @@
 
 #include "dmc.h"
 #include "RunParameters.h"
+#include "RSOSWalkerState.h"
 #include "RSOSMover.h"
 
 template <class T, class U>
@@ -21,10 +22,10 @@ void RSOSMover<T,U>::initialize(Walker<T,U>* w)
 
 	for(int i = 0;i<this->rp.L;i++)
 	{
-		vect<float> vv(i,0,0);
+		vect<int> vv(i,1,0);
 		(*w->state.Rcurr)[vv] = 1;
 
-		RSOSWalkerState<T,U>& ws = *(RSOSWalkerState<T,U>*(w->getWalkerState()));
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w->state));
 		ws.height[i] = 1;
 	}
 	w->state.ltime = 0;
@@ -37,21 +38,20 @@ void RSOSMover<T,U>::initialize(Walker<T,U>* w)
 template <class T, class U>
 void RSOSMover<T,U>::move(Walker<T,U>* w)
 {
-	RSOSWalkerState<T,U>& ws = *(RSOSWalkerState<T,U>*(w->getWalkerState()));
+	RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w->state));
 
 	int site = gsl_rng_uniform_int(w->rgenref,rp.L);
 	float rd = gsl_rng_uniform(w->rgenref);
-	char species = (gsl_rng_uniform_int(w->regenref,2) == 0) ? 1:-1;
 
-	int ht = ws.height[site];
-	vect<int> siteloc(site,ht,0);
-
+	w->state.ltime++;
 	if(rd<0.5)
 	{
-		//Attempt to add
-		PtclMap<int>::iterator it = w->state.Rcurr->find(siteloc);
+		int ht = ws.height[site]+1;
+		vect<int> siteloc(site,ht,0);
 
-		if(it != w->state.Rcurr->end()) //no particle at current location so can add
+		int species = (gsl_rng_uniform_int(w->rgenref,2) == 0) ? 1:-1;
+
+		//Attempt to add
 		{
 			//nearest neighbors
 			vect<int> s1((site-1)%rp.L,ht,0);
@@ -74,12 +74,12 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 
 			double cost = (-rp.trans.J*(s1v*species + s2v*species + s3v*species) + rp.trans.mu);
 			double wt = exp(cost);
-			if(gsl_rng_uniform(w->rgenref) < wt && abs(ws.height[(site-1)%rp.L]-(ht+1))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht+1))<= 1)
+			if(gsl_rng_uniform(w->rgenref) < wt && abs(ws.height[(site-1)%rp.L]-(ht))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht))<= 1)
 			{
-				w->state.Rcurr[siteloc] = species;
+				(*w->state.Rcurr)[siteloc] = species;
 				ws.height[site]++;
-				w->state.dQ.x = cost;
-				w->state.dweight = wt;
+				w->state.dQ.x = species; //+1/-1 depending on spin; total spin increases by current spin being added
+				w->state.dweight = (species == 1) ? rp.trans.rmc : rp.trans.lmc;
 				w->state.weight.multUpdate(w->state.dweight);
 				w->state.particleCount++;
 			}
@@ -87,11 +87,15 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 	}
 	else
 	{
+		int ht = ws.height[site];
+		vect<int> siteloc(site,ht,0);
 		//Attempt to remove
 		PtclMap<int>::iterator it = w->state.Rcurr->find(siteloc);
 
-		if(it == w->state.Rcurr->end()) //particle found at current location so can remove
+		if(it != w->state.Rcurr->end()) //particle found at current location so can remove
 		{
+			int species = it->second; //Get species
+
 			//nearest neighbors
 			vect<int> s1((site-1)%rp.L,ht,0);
 			PtclMap<int>::iterator it1 = w->state.Rcurr->find(s1);
@@ -118,13 +122,15 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;
 				ws.height[site]--;
-				w->state.dQ.x = cost;
-				w->state.dweight = wt;
+				w->state.dQ.x = -species; //Since we are removing total spin reduces by current spin
+				w->state.dweight = (species == -1) ? rp.trans.rmc : rp.trans.lmc;
 				w->state.weight.multUpdate(w->state.dweight);
 			}
 		}
 	}
 
+	fprintf(w->state.out,"Moved\n");
+	fflush(w->state.out);
 }
 
 /////////////////////////////////////////////////

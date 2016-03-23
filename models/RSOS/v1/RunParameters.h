@@ -17,6 +17,8 @@ struct TransWeight
 	float mu;
 	float dt;
 
+	float lmc,rmc;
+
 	void display()
 	{
 		cout<<"===========================================================\n";
@@ -135,6 +137,10 @@ struct RunParameters
 		trans.dt = 1.0/L;
 
 		branchStep = temp/trans.dt;
+
+		trans.lmc = exp(beta);
+		trans.rmc = exp(-beta);
+
 		return SUCCESS;
 	}
 

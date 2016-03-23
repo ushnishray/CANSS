@@ -89,6 +89,12 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
+		else if(runParams.observableType[i].compare("AutoCorr")==0)
+		{
+			AutoCorr<float,stringstream>* oo = new AutoCorr<float,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
 	}
 
 	fprintf(log,"Observables setup.\n");
@@ -166,6 +172,8 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 					localObs->push_back(new Qhistogram<float,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("Whistogram")==0)
 					localObs->push_back(new Whistogram<float,stringstream>(*wstate,runParams.observableName[i],log,dt));
+				else if(runParams.observableType[i].compare("AutoCorr")==0)
+					localObs->push_back(new AutoCorr<float,stringstream>(*wstate,runParams.observableName[i],log));
 			}
 
 			Walker<float,stringstream>* lwalker = new Walker<float,stringstream>(rgenref,*wstate,*localObs);
