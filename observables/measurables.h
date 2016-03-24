@@ -20,6 +20,7 @@
 #include "Density.h"
 #include "Qhistogram.h"
 #include "Whistogram.h"
+#include "Phistogram.h"
 #include "AutoCorr.h"
 
 using namespace measures;

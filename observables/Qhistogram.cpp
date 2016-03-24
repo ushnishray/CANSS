@@ -171,8 +171,9 @@ int Qhistogram<T,U>::parallelReceive()
 		psizes[procId-1] = lsize;
 	}
 
-	this->Qcollection.resize(tsize); //need to resize first
-	vect<double>* data = this->Qcollection.data();
+	vector<vect<double>> lQcollection;
+	lQcollection.resize(tsize); //need to resize first
+	vect<double>* data = lQcollection.data();
 
 	for(int procId=1;procId<this->procCount;procId++)
 	{
@@ -189,6 +190,15 @@ int Qhistogram<T,U>::parallelReceive()
 	}
 	
 	delete[] psizes;
+
+	//Local gathering done
+	//Now put into global collector
+	int osize = Qcollection.size();
+	this->Qcollection.resize(osize+tsize);
+	data = Qcollection.data() + osize;
+	memcpy(data,lQcollection.data(),sizeof(double)*tsize*3);
+
+	lQcollection.clear();
 	return SUCCESS;
 }
 

@@ -359,6 +359,9 @@ int BasicObs<T,U>::parallelReceive()
 
 	freeEnergy.addUpdate(it*lfE.logValue());
 
+	//Do local dumps?
+
+
 	//Reset for next collection
 	lfE.resetValue();
 	Qx.resetValue();

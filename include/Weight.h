@@ -281,22 +281,7 @@ public:
 
 	void addUpdate(double a)
 	{
-		val += a;
-		if(fabs(val)>DBL_EPSILON)
-		{
-			//printf("%10.6e %10.6Le %10.6Le %10.6e\n",DBL_EPSILON,minvalue,maxvalue,val);
-			while(fabs(val)>maxvalue)
-			{
-				val /= divisor;
-				exponent++;
-			}
-
-			while(fabs(val)<minvalue)
-			{
-				val *= divisor;
-				exponent--;
-			}
-		}
+		this->add(Weight(a));
 	}
 
 	void multUpdate(double a)

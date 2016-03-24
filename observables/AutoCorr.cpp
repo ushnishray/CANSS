@@ -97,20 +97,29 @@ void AutoCorr<T,U>::gather(void* p)
 			obj->autocorr[i] = obj->autocorr2[i] = 0.0;
 	}
 
+	/*
 	double avg = 0.0;
 	for(int i = 0;i<l;i++)
 		avg += this->Wcollection[i];
-	avg /= l;
+	avg /= l;*/
 
 	for(int i = 0;i<l;i++)
 	{
 		//Compute local a/c
+		double lavg1 = 0.0, lavg2 = 0.0;
 		double lval = 0.0;
 		for(int j = i;j<l;j++)
+		{
 			lval += this->Wcollection[j-i]*this->Wcollection[j];
+			lavg1 += this->Wcollection[j-i];
+			lavg2 += this->Wcollection[j];
+		}
+		lavg1 /= (l-i);
+		lavg2 /= (l-i);
 		lval /= (l-i);
 
-		double t = (lval-avg*avg);
+		double t = (lval-lavg1*lavg2);
+		//double t = lval;
 		obj->autocorr[i] += t;
 		obj->autocorr2[i] += t*t;
 	}

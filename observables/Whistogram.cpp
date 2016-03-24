@@ -71,7 +71,7 @@ void Whistogram<T,U>::gather(void* p)
 	Whistogram<T,U>* obj = (Whistogram<T,U>*)p;
 	obj->ltime = ltime;
 	double it = 1.0/(ltime*dt);
-	obj->Wcollection.push_back(localWeight.logValue());
+	obj->Wcollection.push_back(localWeight.value());
 
 	localWeight.resetValue();	
 	ltime = 0;
@@ -157,8 +157,9 @@ int Whistogram<T,U>::parallelReceive()
 		psizes[procId-1] = lsize;
 	}
 
-	this->Wcollection.resize(tsize); //need to resize first
-	double* data = this->Wcollection.data();
+	vector<double> lWcollection;
+	lWcollection.resize(tsize); //need to resize first
+	double* data = lWcollection.data();
 
 	for(int procId=1;procId<this->procCount;procId++)
 	{
@@ -175,6 +176,14 @@ int Whistogram<T,U>::parallelReceive()
 	}
 	
 	delete[] psizes;
+
+	//Local gathering done
+	//Now put into global collector
+	int osize = Wcollection.size();
+	this->Wcollection.resize(osize+tsize);
+	data = Wcollection.data() + osize;
+	memcpy(data,lWcollection.data(),sizeof(double)*tsize);
+
 	return SUCCESS;
 }
 
