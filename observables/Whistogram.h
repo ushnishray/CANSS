@@ -24,6 +24,7 @@ public:
 
 	//For gathering
 	vector<double> Wcollection;
+	vector<double> Wacollection;
 
 	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
@@ -46,12 +47,14 @@ public:
 	~Whistogram()
 	{
 		Wcollection.clear();
+		Wacollection.clear();
 		delete &localWeight;	
 	}
 
 	void measure();
 	void writeViaIndex(int idx);
 	void gather(void*);
+	void branchGather(void*);
 	void clear();
 	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);

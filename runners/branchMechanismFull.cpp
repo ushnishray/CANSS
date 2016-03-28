@@ -382,9 +382,6 @@ void MPIBasicRunner<T,U>::masterBranchFull()
 	}
 	Z.mpiBcast(0);
 
-	//Update master's estimation of C.G.F.
-	this->FreeEnergy.add(Z.logValue());
-
 #if DEBUG >= 3
 	fprintf(this->log,"BCast Z information.\n");
 	fflush(this->log);

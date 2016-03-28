@@ -97,6 +97,18 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
+		else if(runParams.observableType[i].compare("AutoCorrFull")==0)
+		{
+			AutoCorrFull<int,stringstream>* oo = new AutoCorrFull<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
+		else if(runParams.observableType[i].compare("AutoCorrI")==0)
+		{
+			AutoCorrI<int,stringstream>* oo = new AutoCorrI<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
 		else if(runParams.observableType[i].compare("Phistogram")==0)
 		{
 			Phistogram<int,stringstream>* oo = new Phistogram<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
@@ -182,6 +194,10 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 					localObs->push_back(new Whistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("AutoCorr")==0)
 					localObs->push_back(new AutoCorr<int,stringstream>(*wstate,runParams.observableName[i],log));
+				else if(runParams.observableType[i].compare("AutoCorrFull")==0)
+					localObs->push_back(new AutoCorrFull<int,stringstream>(*wstate,runParams.observableName[i],log));
+				else if(runParams.observableType[i].compare("AutoCorrI")==0)
+					localObs->push_back(new AutoCorrI<int,stringstream>(*wstate,runParams.observableName[i],log));
 				else if(runParams.observableType[i].compare("Phistogram")==0)
 					localObs->push_back(new Phistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
 			}

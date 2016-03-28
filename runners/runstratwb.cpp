@@ -47,27 +47,23 @@ void MPIBasicRunner<T,U>::masterRunWB()
 
 			if(msg==MPIBRANCH)
 				masterBranch();
+			if(msg==MPIPARALLELRECV)
+			{
+				//Global Gather
+				for(int o=0;o<this->MPIobservablesCollection.size();o++)
+					this->MPIobservablesCollection[o]->parallelReceive();
+				fprintf(this->log,"Parallel gather done.\n");
+			}
 		}while(msg != MPIBINDONE);
 
-		//Global Gather
-		for(int o=0;o<this->MPIobservablesCollection.size();o++)
-			this->MPIobservablesCollection[o]->parallelReceive();
 
-		fprintf(this->log,"Parallel gather done.\n");
 		fprintf(this->log,"Beginning Write of %d observables.\n",this->observablesCollection.size());
 		fflush(this->log);
-
 		//Write to file
 		for(int o=0;o<this->observablesCollection.size();o++)
 		{
-			//Ugly but easy
-			if( BasicObs<T,U>* obj = dynamic_cast<BasicObs<T,U>*>(this->observablesCollection[o]))
-				obj->freeEnergy.copy(FreeEnergy);
-
 			this->observablesCollection[o]->writeViaIndex(m);
 		}
-
-		FreeEnergy.resetValue(); //IMPORTANT
 		fprintf(this->log,"Write Done.\n");
 		fflush(this->log);
 
@@ -123,8 +119,52 @@ void MPIBasicRunner<T,U>::runWB()
 					it->second->measure();
 			}
 
+			//Need to get pend
+			//Local Gather
+			//Trace over all observables
+			for(int o=0;o<this->observablesCollection.size();o++)
+			{
+				//Trace over all walkers and accumulate required observable
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					it->second->observablesCollection[o]->gather((void *) this->observablesCollection[o]);
+			}
+
+			fprintf(this->log,"Local gather done\n");
+			fflush(this->log);
+
+#if 0
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				fprintf(this->log,"Before Walker weight: %10.6le\n",(double) it->second->state.weight.value());
+			fprintf(this->log,"-----------------------\n");
+#endif
 			nbranches++;
 			branch(i);
+#if 0
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				fprintf(this->log,"After Walker weight: %10.6le\n",(double) it->second->state.weight.value());
+			fprintf(this->log,"-----------------------\n");
+#endif
+			//Local Gather for pavg
+			//Trace over all observables
+			for(int o=0;o<this->observablesCollection.size();o++)
+			{
+				//Trace over all walkers and accumulate required observable
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					it->second->observablesCollection[o]->branchGather((void *) this->observablesCollection[o]);
+			}
+
+			//Notify master of global collect
+			this->globalMsgSend(MPIPARALLELRECV);
+			//Global Gather
+			for(int o=0;o<this->MPIobservablesCollection.size();o++)
+				this->MPIobservablesCollection[o]->parallelSend();
+
+			fprintf(this->log,"Parallel gather done\n");
+			fflush(this->log);
+
+			//Reset walker state.
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				it->second->reset();
 		}
 
 		this->displayBranchStat(nbranches);
@@ -132,29 +172,10 @@ void MPIBasicRunner<T,U>::runWB()
 		fprintf(this->log,"\nPerforming local gather\n");
 		fflush(this->log);
 
-		//Local Gather
-		//Trace over all observables
-		for(int o=0;o<this->observablesCollection.size();o++)
-		{
-			//Trace over all walkers and accumulate required observable
-			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-				it->second->observablesCollection[o]->gather((void *) this->observablesCollection[o]);
-		}
-
-		fprintf(this->log,"Local gather done\n");
-		fflush(this->log);
-
 		//Master needs to be notified that process has finished a bin
 		int tag, smsg = MPIBINDONE, rmsg = 0;
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
-
-		//Global Gather
-		for(int o=0;o<this->MPIobservablesCollection.size();o++)
-			this->MPIobservablesCollection[o]->parallelSend();
-
-		fprintf(this->log,"Parallel gather done\n");
-		fflush(this->log);
 
 		fprintf(this->log,"Ending Bin: %d with %d walkers\n",m,walkers.walkerCount);
 		fflush(this->log);

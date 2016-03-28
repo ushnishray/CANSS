@@ -14,16 +14,9 @@ namespace measures {
 
 template <class T,class U>
 void BasicObs<T,U>::measure() {
-
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
-
-	ltime = this->state.ltime;
-
-#if defined NOBRANCH
-	this->freeEnergy.copy(this->state.weight);
-#endif
 }
 
 template <class T, class U>
@@ -51,14 +44,48 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	Q2.y *= iZ;
 	Q2.z *= iZ;
 
+	double Qxe = sqrt((Q2.x - Q.x*Q.x)*iZ);
+	double Qye = sqrt((Q2.y - Q.y*Q.y)*iZ);
+	double Qze = sqrt((Q2.z - Q.z*Q.z)*iZ);
+
 	Q2.x = t*(Q2.x-Q.x*Q.x);
 	Q2.y = t*(Q2.y-Q.x*Q.y);
 	Q2.z = t*(Q2.z-Q.x*Q.z);
 
-	wif<<t<<" "<<(this->freeEnergy.value()*iZ);
+	double afE = fe*iZ;
+	double afE2 = sqrt((this->fe2*iZ - afE*afE)*iZ);
 
-	wif<<" "<<setfill(' ')<<Q.x<<" "<<setfill(' ')<<Q.y<<" "<<setfill(' ')
-			<<Q.z<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z<<endl;
+	wif<<t*Zcount<<" "<<afE<<" "<<afE2;
+
+	wif<<" "<<setfill(' ')<<Q.x<<" "<<Qxe<<" "<<setfill(' ')<<Q.y<<" "<<Qye<<" "<<setfill(' ')
+			<<Q.z<<" "<<Qze<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z;
+
+#ifndef NOBRANCH
+	Qa.x *= iZ;
+	Qa.y *= iZ;
+	Qa.z *= iZ;
+
+	Qa2.x *= iZ;
+	Qa2.y *= iZ;
+	Qa2.z *= iZ;
+
+	Qxe = sqrt((Qa2.x - Qa.x*Qa.x)*iZ);
+	Qye = sqrt((Qa2.y - Qa.y*Qa.y)*iZ);
+	Qze = sqrt((Qa2.z - Qa.z*Qa.z)*iZ);
+
+	Qa2.x = t*(Qa2.x-Qa.x*Qa.x);
+	Qa2.y = t*(Qa2.y-Qa.x*Qa.y);
+	Qa2.z = t*(Qa2.z-Qa.x*Qa.z);
+
+	afE = fea*iZ;
+	afE2 = sqrt((this->fea2*iZ - afE*afE)*iZ);
+
+	wif<<" # "<<afE<<" "<<afE2;
+	wif<<" "<<setfill(' ')<<Qa.x<<" "<<Qxe<<" "<<setfill(' ')<<Qa.y<<" "<<Qye<<" "<<setfill(' ')
+					<<Qa.z<<" "<<Qze<<" "<<Qa2.x<<" "<<Qa2.y<<" "<<Qa2.z<<endl;
+#else
+	wif<<endl;
+#endif
 	wif.close();
 
 	clear();
@@ -70,19 +97,59 @@ void BasicObs<T,U>::clear()
 	Zcount = 0;
 	Q.x = 0.0; Q2.x = 0.0;
 	Q.y = 0.0; Q2.y = 0.0;
-	Q.z = 0.0; Q2.z = 0.0;	ltime = 0;
-	freeEnergy.resetValue();
+	Q.z = 0.0; Q2.z = 0.0;
+	ltime = 0;
 
-#ifdef NOBRANCH
+	freeEnergy.resetValue();
 	Qx.resetValue();
 	Qy.resetValue();
 	Qz.resetValue();
-
 	Qx2.resetValue();
 	Qy2.resetValue();
 	Qz2.resetValue();
+	fe = fe2 = 0.0;
 
-	lfE.resetValue();
+#ifndef NOBRANCH
+	freeEnergya.resetValue();
+	Qax.resetValue();
+	Qay.resetValue();
+	Qaz.resetValue();
+	Qax2.resetValue();
+	Qay2.resetValue();
+	Qaz2.resetValue();
+	fea = fea2 = 0.0;
+#endif
+}
+
+template <class T, class U>
+void BasicObs<T,U>::branchGather(void* p)
+{
+#ifndef NOBRANCH
+	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
+
+	double it = 1.0/(this->state.ltime*dt);
+	vect<T> lQ;
+	lQ.x = Q.x*it;
+	lQ.y = Q.y*it;
+	lQ.z = Q.z*it;
+
+	Weight temp = this->state.weight; temp.multUpdate(lQ.x);
+	obj->Qax.add(temp);
+	temp = this->state.weight; temp.multUpdate(lQ.y);
+	obj->Qay.add(temp);
+	temp = this->state.weight; temp.multUpdate(lQ.z);
+	obj->Qaz.add(temp);
+
+	temp = this->state.weight; temp.multUpdate(lQ.x*lQ.x);
+	obj->Qax2.add(temp);
+	temp = this->state.weight; temp.multUpdate(lQ.y*lQ.y);
+	obj->Qay2.add(temp);
+	temp = this->state.weight; temp.multUpdate(lQ.z*lQ.z);
+	obj->Qaz2.add(temp);
+
+	obj->freeEnergya.add(this->state.weight);
+
+	Q.x = Q.y = Q.z = 0;
 #endif
 }
 
@@ -90,76 +157,49 @@ template <class T, class U>
 void BasicObs<T,U>::gather(void* p)
 {
 	//Store into global accumulator
-	double it = 1.0/(ltime*dt);
 	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 
-	obj->ltime = ltime;
+	//Perform local adjustment
+	double it = 1.0/(this->state.ltime*dt);
 	vect<T> lQ;
 	lQ.x = Q.x*it;
 	lQ.y = Q.y*it;
 	lQ.z = Q.z*it;
 
-#ifndef NOBRANCH
-	obj->Zcount += 1;
+	//Global gather
+	obj->ltime = this->state.ltime;
 
-	obj->Q.x += lQ.x;
-	obj->Q.y += lQ.y;
-	obj->Q.z += lQ.z;
-
-	obj->Q2.x += lQ.x*lQ.x;
-	obj->Q2.y += lQ.y*lQ.y;
-	obj->Q2.z += lQ.z*lQ.z;
-
-#else
-	Weight temp = freeEnergy; temp.multUpdate(lQ.x);
+	Weight temp = this->state.weight; temp.multUpdate(lQ.x);
 	obj->Qx.add(temp);
-	temp = freeEnergy; temp.multUpdate(lQ.y);
+	temp = this->state.weight; temp.multUpdate(lQ.y);
 	obj->Qy.add(temp);
-	temp = freeEnergy; temp.multUpdate(lQ.z);
+	temp = this->state.weight; temp.multUpdate(lQ.z);
 	obj->Qz.add(temp);
 
-	temp = freeEnergy; temp.multUpdate(lQ.x*lQ.x);
+	temp = this->state.weight; temp.multUpdate(lQ.x*lQ.x);
 	obj->Qx2.add(temp);
-	temp = freeEnergy; temp.multUpdate(lQ.y*lQ.y);
+	temp = this->state.weight; temp.multUpdate(lQ.y*lQ.y);
 	obj->Qy2.add(temp);
-	temp = freeEnergy; temp.multUpdate(lQ.z*lQ.z);
+	temp = this->state.weight; temp.multUpdate(lQ.z*lQ.z);
 	obj->Qz2.add(temp);
 
-	obj->freeEnergy.add(freeEnergy);
-	freeEnergy.resetValue();
-#endif
+	obj->freeEnergy.add(this->state.weight);
 
-	//Reset walker observables
-	Zcount = 0;
+#ifdef NOBRANCH
+	//Reset walker observables for next gather event
 	Q.x = Q.y = Q.z = 0;
-	ltime = 0;
+#endif
 }
+
 
 template <class T, class U>
 void BasicObs<T,U>::copy(void* p)
 {
 	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 	this->ltime = obj->ltime;
-	this->Zcount = obj->Zcount;
 	this->Q.x = obj->Q.x;
 	this->Q.y = obj->Q.y;
 	this->Q.z = obj->Q.z;
-
-	this->Q2.x = obj->Q2.x;
-	this->Q2.y = obj->Q2.y;
-	this->Q2.z = obj->Q2.z;
-
-	this->freeEnergy.copy(obj->freeEnergy);
-
-#ifdef NOBRANCH
-	this->lfE = obj->lfE;
-	this->Qx = obj->Qx;
-	this->Qy = obj->Qy;
-	this->Qz = obj->Qz;
-	this->Qx2 = obj->Qx;
-	this->Qy2 = obj->Qy;
-	this->Qz2 = obj->Qz;
-#endif
 }
 
 template <class T, class U>
@@ -168,27 +208,9 @@ Observable<T,U>* BasicObs<T,U>::duplicate(core::WalkerState<T,U>& ws)
 	BasicObs<T,U>* newo = new BasicObs<T,U>(this->processId,this->procCount,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
-	newo->Zcount = this->Zcount;
 	newo->Q.x = this->Q.x;
 	newo->Q.y = this->Q.y;
 	newo->Q.z = this->Q.z;
-
-	newo->Q2.x = this->Q2.x;
-	newo->Q2.y = this->Q2.y;
-	newo->Q2.z = this->Q2.z;
-
-	newo->freeEnergy.copy(this->freeEnergy);
-
-#ifdef NOBRANCH
-	newo->lfE = this->lfE;
-	newo->Qx = this->Qx;
-	newo->Qy = this->Qy;
-	newo->Qz = this->Qz;
-	newo->Qx2 = this->Qx2;
-	newo->Qy2 = this->Qy2;
-	newo->Qz2 = this->Qz2;
-#endif
-
 	return newo;
 }
 
@@ -199,10 +221,9 @@ void BasicObs<T,U>::display()
 	fprintf(this->log,"Basic Observable\n");
 	fprintf(this->log,"==============================================\n");
 	fprintf(this->log,"dt: %f\n",dt);
-	fprintf(this->log,"Zcount: %d\n",Zcount);
-	fprintf(this->log,"Bias Free Q.x: %9.6e\tQ.y: %9.6e\tQ.z: %9.6e\n",Q.x,Q.y,Q.z);
-	fprintf(this->log,"With Bias Q2.x: %9.6e\tQ2.y: %9.6e\tQ2.z: %9.6e\n",Q2.x,Q2.y,Q2.z);
-	fprintf(this->log,"Free Energy: %9.6e\n",freeEnergy.logValue());
+	fprintf(this->log,"Q.x: %9.6e\tQ.y: %9.6e\tQ.z: %9.6e\n",Q.x,Q.y,Q.z);
+	fprintf(this->log,"Q2.x: %9.6e\tQ2.y: %9.6e\tQ2.z: %9.6e\n",Q2.x,Q2.y,Q2.z);
+
 	fprintf(this->log,"==============================================\n");
 	fflush(this->log);
 }
@@ -226,34 +247,9 @@ int BasicObs<T,U>::parallelSend()
 	fflush(this->log);
 #endif
 
-	//send time
 	MPI_Send(&this->ltime,1,MPI_UNSIGNED,0,tag,MPI_COMM_WORLD);
-
-#ifndef NOBRANCH
-	//send Zcount
-	MPI_Send(&this->Zcount,1,MPI_INT,0,tag,MPI_COMM_WORLD);
-
-	//Q
-	MPI_Send(&this->Q.x,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q.y,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q.z,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-
-	//Q2
-	MPI_Send(&this->Q2.x,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q2.y,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->Q2.z,1,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-#endif
-
-#if DEBUG >= 2
-	fprintf(this->log,"BasicObs Transfer Complete\n");
-	fflush(this->log);
-#endif
-	Zcount = 0;
 	ltime = 0;
-	Q.x = Q.y = Q.z = 0;
-	Q2.x = Q2.y = Q2.z = 0.0;
 
-#ifdef NOBRANCH
 	//Free Energy
 	freeEnergy.mpiSend(0);
 	freeEnergy.resetValue();
@@ -271,6 +267,29 @@ int BasicObs<T,U>::parallelSend()
 	Qy2.resetValue();
 	Qz2.mpiSend(0);
 	Qz2.resetValue();
+
+#ifndef NOBRANCH
+	freeEnergya.mpiSend(0);
+	freeEnergya.resetValue();
+
+	Qax.mpiSend(0);
+	Qax.resetValue();
+	Qay.mpiSend(0);
+	Qay.resetValue();
+	Qaz.mpiSend(0);
+	Qaz.resetValue();
+
+	Qax2.mpiSend(0);
+	Qax2.resetValue();
+	Qay2.mpiSend(0);
+	Qay2.resetValue();
+	Qaz2.mpiSend(0);
+	Qaz2.resetValue();
+#endif
+
+#if DEBUG >= 2
+	fprintf(this->log,"BasicObs Transfer Complete\n");
+	fflush(this->log);
 #endif
 
 	return SUCCESS;
@@ -284,10 +303,6 @@ int BasicObs<T,U>::parallelReceive()
 
 	//Wait for all processes to get here
 	MPI_Barrier(MPI_COMM_WORLD);
-
-#ifndef NOBRANCH
-	this->Zcount = 0;
-#endif
 	for(int procId=1;procId<this->procCount;procId++)
 	{
 		int tag,recv;
@@ -299,35 +314,9 @@ int BasicObs<T,U>::parallelReceive()
 		fflush(this->log);
 #endif
 
-#ifndef NOBRANCH
-		MPI_Recv(&ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
-
-		int zcountrec;
-		MPI_Recv(&zcountrec,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Zcount += zcountrec;
-
-		//Receive Q
-		double temp=0;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q.x += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q.y += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q.z += temp;
-
-		//Receive Q2
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.x += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.y += temp;
-		MPI_Recv(&temp,1,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		this->Q2.z += temp;
-#endif
-#ifdef NOBRANCH
-
 		MPI_Recv(&this->ltime,1,MPI_UNSIGNED,procId,tag,MPI_COMM_WORLD,&stat);
 
-		this->lfE.mpiReceive(procId);
+		this->freeEnergy.mpiReceive(procId);
 
 		this->Qx.mpiReceive(procId);
 		this->Qy.mpiReceive(procId);
@@ -336,59 +325,91 @@ int BasicObs<T,U>::parallelReceive()
 		this->Qx2.mpiReceive(procId);
 		this->Qy2.mpiReceive(procId);
 		this->Qz2.mpiReceive(procId);
+
+#ifndef NOBRANCH
+		this->freeEnergya.mpiReceive(procId);
+
+		this->Qax.mpiReceive(procId);
+		this->Qay.mpiReceive(procId);
+		this->Qaz.mpiReceive(procId);
+
+		this->Qax2.mpiReceive(procId);
+		this->Qay2.mpiReceive(procId);
+		this->Qaz2.mpiReceive(procId);
 #endif
-		//fprintf(this->log,"MPI Check %10.6Le %10.6Le %10.6Le\n",freeEnergy.value(),Qx.value(),Q2x.value());
+
 #if DEBUG >= 2
 		fprintf(this->log,"BasicObs Finished receiving from process:%d\n",procId);
 		fflush(this->log);
 #endif
 	}
 
-#ifdef NOBRANCH
-	double it = 1.0/(this->ltime*this->dt);
-	this->Zcount++;
-
 	//Compute observables
-	this->Q.x += (Qx/lfE).value();
-	this->Q.y += (Qy/lfE).value();
-	this->Q.z += (Qz/lfE).value();
+	this->Zcount++;
+	double it = 1.0/(this->ltime*this->dt);
 
-	this->Q2.x += (Qx2/lfE).value();
-	this->Q2.y += (Qy2/lfE).value();
-	this->Q2.z += (Qz2/lfE).value();
+	this->Q.x += (Qx/freeEnergy).value();
+	this->Q.y += (Qy/freeEnergy).value();
+	this->Q.z += (Qz/freeEnergy).value();
 
-	freeEnergy.addUpdate(it*lfE.logValue());
+	this->Q2.x += (Qx2/freeEnergy).value();
+	this->Q2.y += (Qy2/freeEnergy).value();
+	this->Q2.z += (Qz2/freeEnergy).value();
 
-	//Do local dumps?
+	double temp = it*freeEnergy.logValue();
+	this->fe += temp;
+	this->fe2 += temp*temp;
 
+#ifndef NOBRANCH
+	this->Qa.x += (Qax/freeEnergya).value();
+	this->Qa.y += (Qay/freeEnergya).value();
+	this->Qa.z += (Qaz/freeEnergya).value();
+
+	this->Qa2.x += (Qax2/freeEnergya).value();
+	this->Qa2.y += (Qay2/freeEnergya).value();
+	this->Qa2.z += (Qaz2/freeEnergya).value();
+
+	temp = it*freeEnergya.logValue();
+	this->fea += temp;
+	this->fea2 += temp*temp;
+#endif
+
+#if 1
+	ofstream wif(this->baseFileName + "P",std::ofstream::app);
+	wif<<it<<" "<<freeEnergy.value()<<" "<<freeEnergya.value()<<endl;
+	wif.close();
+#endif
 
 	//Reset for next collection
-	lfE.resetValue();
+	freeEnergy.resetValue();
 	Qx.resetValue();
 	Qy.resetValue();
 	Qz.resetValue();
 	Qx2.resetValue();
 	Qy2.resetValue();
 	Qz2.resetValue();
+#ifndef NOBRANCH
+	freeEnergya.resetValue();
+	Qax.resetValue();
+	Qay.resetValue();
+	Qaz.resetValue();
+	Qax2.resetValue();
+	Qay2.resetValue();
+	Qaz2.resetValue();
 #endif
+
 }
 
 template <class T, class U>
 void BasicObs<T,U>::serialize(Serializer<U>& obj)
 {
-	obj<<dt<<Zcount<<ltime<<Q<<freeEnergy<<Q2;
-#ifdef NOBRANCH
-	obj<<lfE<<Qx<<Qy<<Qz<<Qx2<<Qy2<<Qz2;
-#endif
+	obj<<dt<<Q;
 }
 
 template <class T, class U>
 void BasicObs<T,U>::unserialize(Serializer<U>& obj)
 {
-	obj>>dt>>Zcount>>ltime>>Q>>freeEnergy>>Q2;
-#ifdef NOBRANCH
-	obj>>lfE>>Qx>>Qy>>Qz>>Qx2>>Qy2>>Qz2;
-#endif
+	obj>>dt>>Q;
 }
 ///////////////////////////////////////////////////////////////////////////
 

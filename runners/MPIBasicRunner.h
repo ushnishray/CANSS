@@ -143,7 +143,6 @@ private:
 	FILE* log;
 
 	//Local statistical variables
-	Weight FreeEnergy; //Need master to know what the C.G.F. is
 	unsigned int branchcount;
 	long nclones;
 	long nelims;
@@ -218,7 +217,6 @@ public:
 	void branchFull();
 	void masterBranchFull();
 
-
 	//Helpers
 	void shortWalkerDisplay()
 	{
@@ -229,6 +227,15 @@ public:
 			fprintf(this->log,"Walker %d Current %10.6e\n",it->first,it->second->state.weight.logValue());
 		fprintf(this->log,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 		fflush(this->log);
+	}
+
+	void globalMsgSend(char smsg)
+	{
+		char rmsg = 0;
+		int tag = 0;
+		MPI_Status stat;
+		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
 	}
 };
 

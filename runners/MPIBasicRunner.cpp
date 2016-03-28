@@ -78,12 +78,7 @@ void MPIBasicRunner<T,U>::branch(int step)
 	//dispatch of masterRun.
 	////////////////////////////////////////////////////////////
 	fprintf(this->log,"\nBranching started: %d\n",branchcount++);
-	char smsg = MPIBRANCH, rmsg = 0;
-	int tag = 0;
-	MPI_Status stat;
-
-	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+	this->globalMsgSend(MPIBRANCH);
 //#if DEBUG >= 3
 	fprintf(this->log,"Notified master to start expecting data.\n");
 	fflush(this->log);
@@ -92,6 +87,10 @@ void MPIBasicRunner<T,U>::branch(int step)
 
 	////////////////////////////////////////////////////////////
 	//Only one process needs to tell master what the current sweep is
+	char rmsg = 0;
+	int tag = 0;
+	MPI_Status stat;
+
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	fprintf(this->log,"Rank %d.\n",rank);

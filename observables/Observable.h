@@ -35,6 +35,7 @@ public:
 	virtual void writeViaIndex(int idx) = 0;
 	virtual void clear() = 0;
 	virtual void gather(void*) = 0;
+	virtual void branchGather(void*) {}
 
 	virtual void display() {}
 
