@@ -24,6 +24,9 @@ public:
 
 	//For gathering
 	vector<vect<double>> Qcollection;
+#ifndef NOBRANCH
+	vector<vect<double>> Qacollection;
+#endif
 
 	Qhistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
@@ -60,6 +63,7 @@ public:
 	void measure();
 	void writeViaIndex(int idx);
 	void gather(void*);
+	void branchGather(void*);
 	void clear();
 	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);

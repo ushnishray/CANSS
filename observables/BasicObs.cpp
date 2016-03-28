@@ -347,8 +347,8 @@ int BasicObs<T,U>::parallelReceive()
 	//Compute observables
 	this->Zcount++;
 	double it = 1.0/(this->ltime*this->dt);
-
-	this->Q.x += (Qx/freeEnergy).value();
+	double lqx = (Qx/freeEnergy).value();
+	this->Q.x += lqx;
 	this->Q.y += (Qy/freeEnergy).value();
 	this->Q.z += (Qz/freeEnergy).value();
 
@@ -361,7 +361,8 @@ int BasicObs<T,U>::parallelReceive()
 	this->fe2 += temp*temp;
 
 #ifndef NOBRANCH
-	this->Qa.x += (Qax/freeEnergya).value();
+	double lqax = (Qax/freeEnergya).value();
+	this->Qa.x += lqax;
 	this->Qa.y += (Qay/freeEnergya).value();
 	this->Qa.z += (Qaz/freeEnergya).value();
 
@@ -369,14 +370,14 @@ int BasicObs<T,U>::parallelReceive()
 	this->Qa2.y += (Qay2/freeEnergya).value();
 	this->Qa2.z += (Qaz2/freeEnergya).value();
 
-	temp = it*freeEnergya.logValue();
-	this->fea += temp;
-	this->fea2 += temp*temp;
+	double temp1 = it*freeEnergya.logValue();
+	this->fea += temp1;
+	this->fea2 += temp1*temp1;
 #endif
 
 #if 1
 	ofstream wif(this->baseFileName + "P",std::ofstream::app);
-	wif<<it<<" "<<freeEnergy.value()<<" "<<freeEnergya.value()<<endl;
+	wif<<it<<" "<<temp<<" "<<temp1<<" "<<lqx<<" "<<lqax<<endl;
 	wif.close();
 #endif
 
