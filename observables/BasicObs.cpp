@@ -39,50 +39,58 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	Q.x *= iZ;
 	Q.y *= iZ;
 	Q.z *= iZ;
-
 	Q2.x *= iZ;
 	Q2.y *= iZ;
 	Q2.z *= iZ;
-
 	double Qxe = sqrt((Q2.x - Q.x*Q.x)*iZ);
 	double Qye = sqrt((Q2.y - Q.y*Q.y)*iZ);
 	double Qze = sqrt((Q2.z - Q.z*Q.z)*iZ);
 
-	Q2.x = t*(Q2.x-Q.x*Q.x);
-	Q2.y = t*(Q2.y-Q.x*Q.y);
-	Q2.z = t*(Q2.z-Q.x*Q.z);
+	V.x *= iZ;
+	V.y *= iZ;
+	V.z *= iZ;
+	V2.x *= iZ;
+	V2.y *= iZ;
+	V2.z *= iZ;
+	double Vxe = sqrt((V2.x - V.x*V.x)*iZ);
+	double Vye = sqrt((V2.y - V.y*V.y)*iZ);
+	double Vze = sqrt((V2.z - V.z*V.z)*iZ);
 
 	double afE = fe*iZ;
 	double afE2 = sqrt((this->fe2*iZ - afE*afE)*iZ);
 
 	wif<<t*Zcount<<" "<<afE<<" "<<afE2;
 
-	wif<<" "<<setfill(' ')<<Q.x<<" "<<Qxe<<" "<<setfill(' ')<<Q.y<<" "<<Qye<<" "<<setfill(' ')
-			<<Q.z<<" "<<Qze<<" "<<Q2.x<<" "<<Q2.y<<" "<<Q2.z;
+	wif<<" "<<setfill(' ')<<Q.x<<" "<<Qxe<<" "<<setfill(' ')<<Q.y<<" "<<Qye<<" "<<setfill(' ')<<Q.z<<" "<<Qze
+			<<" "<<V.x<<" "<<Vxe<<" "<<V.y<<" "<<Vye<<" "<<V.z<<" "<<Vze;
 
 #ifndef NOBRANCH
 	Qa.x *= iZ;
 	Qa.y *= iZ;
 	Qa.z *= iZ;
-
 	Qa2.x *= iZ;
 	Qa2.y *= iZ;
 	Qa2.z *= iZ;
-
 	Qxe = sqrt((Qa2.x - Qa.x*Qa.x)*iZ);
 	Qye = sqrt((Qa2.y - Qa.y*Qa.y)*iZ);
 	Qze = sqrt((Qa2.z - Qa.z*Qa.z)*iZ);
 
-	Qa2.x = t*(Qa2.x-Qa.x*Qa.x);
-	Qa2.y = t*(Qa2.y-Qa.x*Qa.y);
-	Qa2.z = t*(Qa2.z-Qa.x*Qa.z);
+	Va.x *= iZ;
+	Va.y *= iZ;
+	Va.z *= iZ;
+	Va2.x *= iZ;
+	Va2.y *= iZ;
+	Va2.z *= iZ;
+	Vxe = sqrt((Va2.x - Va.x*Va.x)*iZ);
+	Vye = sqrt((Va2.y - Va.y*Va.y)*iZ);
+	Vze = sqrt((Va2.z - Va.z*Va.z)*iZ);
 
 	afE = fea*iZ;
 	afE2 = sqrt((this->fea2*iZ - afE*afE)*iZ);
 
 	wif<<" # "<<afE<<" "<<afE2;
-	wif<<" "<<setfill(' ')<<Qa.x<<" "<<Qxe<<" "<<setfill(' ')<<Qa.y<<" "<<Qye<<" "<<setfill(' ')
-					<<Qa.z<<" "<<Qze<<" "<<Qa2.x<<" "<<Qa2.y<<" "<<Qa2.z<<endl;
+	wif<<" "<<setfill(' ')<<Qa.x<<" "<<Qxe<<" "<<setfill(' ')<<Qa.y<<" "<<Qye<<" "<<setfill(' ')<<Qa.z<<" "<<Qze
+			<<" "<<Va.x<<" "<<Vxe<<" "<<Va.y<<" "<<Vye<<" "<<Va.z<<" "<<Vze<<endl;
 #else
 	wif<<endl;
 #endif
@@ -127,24 +135,18 @@ void BasicObs<T,U>::branchGather(void* p)
 #ifndef NOBRANCH
 	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 
-	double it = 1.0/(this->state.ltime*dt);
-	vect<T> lQ;
-	lQ.x = Q.x*it;
-	lQ.y = Q.y*it;
-	lQ.z = Q.z*it;
-
-	Weight temp = this->state.weight; temp.multUpdate(lQ.x);
+	Weight temp = this->state.weight; temp.multUpdate(Q.x);
 	obj->Qax.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.y);
+	temp = this->state.weight; temp.multUpdate(Q.y);
 	obj->Qay.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.z);
+	temp = this->state.weight; temp.multUpdate(Q.z);
 	obj->Qaz.add(temp);
 
-	temp = this->state.weight; temp.multUpdate(lQ.x*lQ.x);
+	temp = this->state.weight; temp.multUpdate(Q.x*Q.x);
 	obj->Qax2.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.y*lQ.y);
+	temp = this->state.weight; temp.multUpdate(Q.y*Q.y);
 	obj->Qay2.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.z*lQ.z);
+	temp = this->state.weight; temp.multUpdate(Q.z*Q.z);
 	obj->Qaz2.add(temp);
 
 	obj->freeEnergya.add(this->state.weight);
@@ -159,28 +161,21 @@ void BasicObs<T,U>::gather(void* p)
 	//Store into global accumulator
 	BasicObs<T,U>* obj = (BasicObs<T,U>*)p;
 
-	//Perform local adjustment
-	double it = 1.0/(this->state.ltime*dt);
-	vect<T> lQ;
-	lQ.x = Q.x*it;
-	lQ.y = Q.y*it;
-	lQ.z = Q.z*it;
-
 	//Global gather
 	obj->ltime = this->state.ltime;
 
-	Weight temp = this->state.weight; temp.multUpdate(lQ.x);
+	Weight temp = this->state.weight; temp.multUpdate(Q.x);
 	obj->Qx.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.y);
+	temp = this->state.weight; temp.multUpdate(Q.y);
 	obj->Qy.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.z);
+	temp = this->state.weight; temp.multUpdate(Q.z);
 	obj->Qz.add(temp);
 
-	temp = this->state.weight; temp.multUpdate(lQ.x*lQ.x);
+	temp = this->state.weight; temp.multUpdate(Q.x*Q.x);
 	obj->Qx2.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.y*lQ.y);
+	temp = this->state.weight; temp.multUpdate(Q.y*Q.y);
 	obj->Qy2.add(temp);
-	temp = this->state.weight; temp.multUpdate(lQ.z*lQ.z);
+	temp = this->state.weight; temp.multUpdate(Q.z*Q.z);
 	obj->Qz2.add(temp);
 
 	obj->freeEnergy.add(this->state.weight);
@@ -348,13 +343,24 @@ int BasicObs<T,U>::parallelReceive()
 	this->Zcount++;
 	double it = 1.0/(this->ltime*this->dt);
 	double lqx = (Qx/freeEnergy).value();
-	this->Q.x += lqx;
-	this->Q.y += (Qy/freeEnergy).value();
-	this->Q.z += (Qz/freeEnergy).value();
+	double lqy = (Qy/freeEnergy).value();
+	double lqz = (Qz/freeEnergy).value();
+	this->Q.x += it*lqx;
+	this->Q.y += it*lqy;
+	this->Q.z += it*lqz;
+	this->Q2.x += it*it*lqx*lqx;
+	this->Q2.y += it*it*lqy*lqy;
+	this->Q2.z += it*it*lqz*lqz;
 
-	this->Q2.x += (Qx2/freeEnergy).value();
-	this->Q2.y += (Qy2/freeEnergy).value();
-	this->Q2.z += (Qz2/freeEnergy).value();
+	double lvx = it*((Qx2/freeEnergy).value() - lqx*lqx);
+	double lvy = it*((Qy2/freeEnergy).value() - lqy*lqy);
+	double lvz = it*((Qz2/freeEnergy).value() - lqz*lqz);
+	this->V.x += lvx;
+	this->V.y += lvy;
+	this->V.z += lvz;
+	this->V2.x += lvx*lvx;
+	this->V2.y += lvy*lvy;
+	this->V2.z += lvz*lvz;
 
 	double temp = it*freeEnergy.logValue();
 	this->fe += temp;
@@ -362,22 +368,40 @@ int BasicObs<T,U>::parallelReceive()
 
 #ifndef NOBRANCH
 	double lqax = (Qax/freeEnergya).value();
-	this->Qa.x += lqax;
-	this->Qa.y += (Qay/freeEnergya).value();
-	this->Qa.z += (Qaz/freeEnergya).value();
+	double lqay = (Qay/freeEnergya).value();
+	double lqaz = (Qaz/freeEnergya).value();
+	this->Qa.x += it*lqax;
+	this->Qa.y += it*lqay;
+	this->Qa.z += it*lqaz;
+	this->Qa2.x += it*it*lqax*lqax;
+	this->Qa2.y += it*it*lqay*lqay;
+	this->Qa2.z += it*it*lqaz*lqaz;
 
-	this->Qa2.x += (Qax2/freeEnergya).value();
-	this->Qa2.y += (Qay2/freeEnergya).value();
-	this->Qa2.z += (Qaz2/freeEnergya).value();
+	double lvax = it*((Qax2/freeEnergya).value() - lqax*lqax);
+	double lvay = it*((Qay2/freeEnergya).value() - lqay*lqay);
+	double lvaz = it*((Qaz2/freeEnergya).value() - lqaz*lqaz);
+	this->Va.x += lvax;
+	this->Va.y += lvay;
+	this->Va.z += lvaz;
+	this->Va2.x += lvax*lvax;
+	this->Va2.y += lvay*lvay;
+	this->Va2.z += lvaz*lvaz;
 
 	double temp1 = it*freeEnergya.logValue();
 	this->fea += temp1;
 	this->fea2 += temp1*temp1;
 #endif
 
-#if 1
+#ifndef NOBRANCH
+	lqx*=it;
+	lqax*=it;
 	ofstream wif(this->baseFileName + "P",std::ofstream::app);
 	wif<<it<<" "<<temp<<" "<<temp1<<" "<<lqx<<" "<<lqax<<endl;
+	wif.close();
+#else
+	lqx*=it;
+	ofstream wif(this->baseFileName + "P",std::ofstream::app);
+	wif<<it<<" "<<temp<<" "<<lqx<<endl;
 	wif.close();
 #endif
 

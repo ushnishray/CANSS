@@ -52,7 +52,7 @@ void Qhistogram<T,U>::writeViaIndex(int idx) {
 
 	for(int i=0;i<Qcollection.size();i++)
 	{
-#ifdef ZEROBRANCH
+#ifdef NOBRANCH
 		wif<<Qcollection[i].x<<" "<<Qcollection[i].y<<" "<<Qcollection[i].z<<endl;
 #else
 		wif<<Qcollection[i].x<<" "<<Qcollection[i].y<<" "<<Qcollection[i].z<<"\t#\t"<<

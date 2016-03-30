@@ -132,7 +132,7 @@ public:
 		fprintf(out,"time = %d\n",ltime);
 		weight.display(out);
 		fprintf(out,"State:\n");
-		PtclMap<int>::iterator it;
+		typename PtclMap<T>::iterator it;
 		for(it=Rcurr->begin();it!=Rcurr->end();++it)
 		{
 			fprintf(out,"(%d,%d,%d) = %d\n",it->first.x,it->first.y,it->first.z,it->second);

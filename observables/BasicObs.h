@@ -39,10 +39,14 @@ public:
 	//For global collection into master
 	int Zcount;
 	vect<double> Q2;
+	vect<double> V;
+	vect<double> V2;
 	double fe, fe2;
 #ifndef NOBRANCH
 	vect<double> Qa;
 	vect<double> Qa2;
+	vect<double> Va;
+	vect<double> Va2;
 	double fea, fea2;
 #endif
 
