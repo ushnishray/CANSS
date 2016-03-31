@@ -36,8 +36,9 @@ for i in range(0,nf):
 
 fhist = [float(x)/nf for x in thist]
 
+total = np.sum(fhist)
 l = len(fhist)
 for j in range(l):
-	print '%6.3e %6.3e' % (bedge[j],fhist[j])
+	print '%6.3e %6.3e' % (bedge[j],fhist[j]/total)
 
 

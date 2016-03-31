@@ -1,9 +1,12 @@
 
 import sys
 import numpy as np
+import re
 
 bf = sys.argv[1]
 nbins = int(sys.argv[2])
+field = int(sys.argv[3])
+
 
 fn = bf 
 f = open(fn,'r')
@@ -11,8 +14,9 @@ datar = f.read().split('\n')
 
 data = []
 for j in range(len(datar)):
+	lsp = re.split(' |\t',datar[j])
 	try:
-		data.insert(j,float(datar[j]))
+		data.insert(j,float(lsp[field]))
 	except:
 		pass
 
