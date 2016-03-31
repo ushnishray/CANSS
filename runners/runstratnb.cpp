@@ -68,6 +68,12 @@ void MPIBasicRunner<T,U>::runNB()
 		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 			mover->initialize(it->second);
 
+#if 0
+		//Display Init State
+		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			it->second->display();
+#endif
+
 		//Do equilibration which is about reaching stead state
 		for(int i=0;i<this->runParams.eSteps;i++)
 		{

@@ -27,8 +27,8 @@ void Walker<T,U>::display()
 	fprintf(state.out,"Walker Display\n");
 	fprintf(state.out,"======================================================\n");
 	state.display();
-	for(int i=0;i<observablesCollection.size();i++)
-		observablesCollection[i]->display();
+//	for(int i=0;i<observablesCollection.size();i++)
+//		observablesCollection[i]->display();
 	fprintf(state.out,"======================================================\n");
 }
 
@@ -81,9 +81,11 @@ void Walker<T,U>::unserialize(Serializer<U>& obj)
 }
 //////////////////////////////////////////////////////////////////////
 template void Walker<int,stringstream>::measure();
+template void Walker<float,stringstream>::measure();
 template Walker<int,stringstream>* Walker<int,stringstream>::duplicate();
 template Walker<float,stringstream>* Walker<float,stringstream>::duplicate();
 template void Walker<int,stringstream>::display();
+template void Walker<float,stringstream>::display();
 template void Walker<int,stringstream>::copy(Walker<int,stringstream>&);
 template void Walker<float,stringstream>::copy(Walker<float,stringstream>&);
 }

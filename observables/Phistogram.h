@@ -1,5 +1,5 @@
 /*
- * Qhistogram.h
+ * Phistogram.h
  *
  *  Created on: Aug 20, 2014
  *      Author: ushnish
@@ -8,62 +8,50 @@
  All rights reserved.
  */
 
-#ifndef Qhistogram_H_
-#define Qhistogram_H_
+#ifndef Phistogram_H_
+#define Phistogram_H_
 
 #include "Observable.h"
 
 namespace measures {
 
 template <class T, class U>
-class Qhistogram: public measures::Observable<T,U>, public measures::MPIObservable {
+class Phistogram: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
 	double dt;
-	vect<double> Q;
+	Weight& localWeight; 
 	unsigned int ltime;
 
 	//For gathering
-	vector<vect<double>> Qcollection;
-#ifndef NOBRANCH
-	vector<vect<double>> Qacollection;
-#endif
+	vector<double> Pcollection;
 
-	Qhistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
+	Phistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
 		dt = 0.0;
 		ltime = 0;
-		Q.x = 0.0;
-		Q.y = 0.0;
-		Q.z = 0.0;
 	}
 
-	Qhistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
+	Phistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		ltime = 0;
-		Q.x = 0.0;
-		Q.y = 0.0;
-		Q.z = 0.0;
 	}
 
-	Qhistogram(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log)
+	Phistogram(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		ltime = 0;
-		Q.x = 0.0;
-		Q.y = 0.0;
-		Q.z = 0.0;
 	}
 
-	~Qhistogram()
+	~Phistogram()
 	{
-		Qcollection.clear();
+		Pcollection.clear();
+		delete &localWeight;	
 	}
 
 	void measure();
 	void writeViaIndex(int idx);
 	void gather(void*);
-	void branchGather(void*);
 	void clear();
 	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);
@@ -82,4 +70,4 @@ public:
 	virtual void unserialize(Serializer<U>&);
 };
 } /* namespace measures */
-#endif /* Qhistogram_H_ */
+#endif /* Phistogram_H_ */

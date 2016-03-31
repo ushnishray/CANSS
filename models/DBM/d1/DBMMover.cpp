@@ -57,6 +57,8 @@ void DBMMover<T,U>::move(Walker<T,U>* w)
 
 	//Insert particle back
 	(*w->state.Rcurr)[vv] = 0;
+
+//	fprintf(w->state.out,"%d\t%10.6e\t%10.6e\n",w->state.ltime-1,vv.x,w->state.dQ.x);
 }
 
 /////////////////////////////////////////////////

@@ -51,11 +51,17 @@ void Qhistogram<T,U>::writeViaIndex(int idx) {
 	wif.fill(' ');
 
 	for(int i=0;i<Qcollection.size();i++)
+	{
+#ifdef NOBRANCH
 		wif<<Qcollection[i].x<<" "<<Qcollection[i].y<<" "<<Qcollection[i].z<<endl;
+#else
+		wif<<Qcollection[i].x<<" "<<Qcollection[i].y<<" "<<Qcollection[i].z<<"\t#\t"<<
+				Qacollection[i].x<<" "<<Qacollection[i].y<<" "<<Qacollection[i].z<<endl;
+#endif
+	}
 	wif.close();
 
 	//Reset for next bin
-	Qcollection.clear();
 	clear();
 }
 
@@ -67,6 +73,9 @@ void Qhistogram<T,U>::clear()
 	Q.z = 0.0;
 	ltime = 0;
 	this->Qcollection.clear();
+#ifndef NOBRANCH
+	this->Qacollection.clear();
+#endif
 }
 
 template <class T,class U>
@@ -80,8 +89,27 @@ void Qhistogram<T,U>::gather(void* p)
 	Q.z *= it;
 	obj->Qcollection.push_back(Q);
 	
+#ifdef NOBRANCH
 	Q.x = Q.y = Q.z = 0;
 	ltime = 0;
+#endif
+}
+
+template <class T,class U>
+void Qhistogram<T,U>::branchGather(void* p)
+{
+#ifndef NOBRANCH
+	Qhistogram<T,U>* obj = (Qhistogram<T,U>*)p;
+	obj->ltime = ltime;
+	double it = 1.0/(ltime*dt);
+	Q.x *= it;
+	Q.y *= it;
+	Q.z *= it;
+	obj->Qacollection.push_back(Q);
+
+	Q.x = Q.y = Q.z = 0;
+	ltime = 0;
+#endif
 }
 
 template <class T,class U>
@@ -94,6 +122,9 @@ Observable<T,U>* Qhistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 	newo->Q.y = this->Q.y;
 	newo->Q.z = this->Q.z;
 	newo->Qcollection = this->Qcollection;
+#ifndef NOBRANCH
+	newo->Qacollection = this->Qacollection;
+#endif
 	return newo;
 }
 
@@ -101,7 +132,6 @@ template <class T,class U>
 void Qhistogram<T,U>::copy(void* p)
 {
 	Qhistogram<T,U>* obj = (Qhistogram<T,U>*) p;
-	this->Qcollection.clear();
 
 	this->ltime = obj->ltime;
 	this->Q.x = obj->Q.x;
@@ -110,6 +140,10 @@ void Qhistogram<T,U>::copy(void* p)
 
 	this->Qcollection.clear();
 	this->Qcollection = obj->Qcollection;
+#ifndef NOBRANCH
+	this->Qacollection.clear();
+	this->Qacollection = obj->Qacollection;
+#endif
 }
 
 template <class T,class U>
@@ -137,10 +171,16 @@ int Qhistogram<T,U>::parallelSend()
 	//Then wait for notification to send data
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 	MPI_Send(&this->Qcollection.front(),this->Qcollection.size()*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);	
+#ifndef NOBRANCH
+	MPI_Send(&this->Qacollection.front(),this->Qacollection.size()*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
+#endif
 
 	ltime = 0;
 	Q.x = Q.y = Q.z = 0;
 	Qcollection.clear();
+#ifndef NOBRANCH
+	Qacollection.clear();
+#endif
 	return SUCCESS;
 }
 
@@ -171,8 +211,14 @@ int Qhistogram<T,U>::parallelReceive()
 		psizes[procId-1] = lsize;
 	}
 
-	this->Qcollection.resize(tsize); //need to resize first
-	vect<double>* data = this->Qcollection.data();
+	vector<vect<double>> lQcollection;
+	lQcollection.resize(tsize); //need to resize first
+	vect<double>* data = lQcollection.data();
+#ifndef NOBRANCH
+	vector<vect<double>> lQacollection;
+	lQacollection.resize(tsize); //need to resize first
+	vect<double>* data1 = lQacollection.data();
+#endif
 
 	for(int procId=1;procId<this->procCount;procId++)
 	{
@@ -186,9 +232,29 @@ int Qhistogram<T,U>::parallelReceive()
 #endif
 		MPI_Recv(data,psizes[procId-1]*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		data += psizes[procId-1];
+#ifndef NOBRANCH
+		MPI_Recv(data1,psizes[procId-1]*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
+		data1 += psizes[procId-1];
+#endif
 	}
 	
 	delete[] psizes;
+
+	//Local gathering done
+	//Now put into global collector
+	int osize = Qcollection.size();
+	this->Qcollection.resize(osize+tsize);
+	data = Qcollection.data() + osize;
+	memcpy(data,lQcollection.data(),sizeof(double)*tsize*3);
+	lQcollection.clear();
+
+#ifndef NOBRANCH
+	this->Qacollection.resize(osize+tsize);
+	data1 = Qacollection.data() + osize;
+	memcpy(data1,lQacollection.data(),sizeof(double)*tsize*3);
+	lQacollection.clear();
+#endif
+
 	return SUCCESS;
 }
 
@@ -196,6 +262,9 @@ template <class T,class U>
 void Qhistogram<T,U>::serialize(Serializer<U>& obj)
 {
 	obj<<dt<<ltime<<Q<<Qcollection;
+#ifndef NOBRANCH
+	obj<<Qacollection;
+#endif
 }
 
 template <class T,class U>
@@ -203,6 +272,9 @@ void Qhistogram<T,U>::unserialize(Serializer<U>& obj)
 {
 	Qcollection.clear();
 	obj>>dt>>ltime>>Q>>Qcollection;
+#ifndef NOBRANCH
+	obj>>Qacollection;
+#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 

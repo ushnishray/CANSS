@@ -58,7 +58,7 @@ void MPIBasicRunner<T,U>::branchLimited()
 	{
 		idx[i] = it->first;
 		float probi = (it->second->state.weight/lw).value();
-		it->second->state.weight.resetValue();
+		//it->second->state.weight.resetValue();
 		//it->second->state.weight.setValue(1.0,0.0); // For next round
 
 		probs[i] = probi;
@@ -106,6 +106,12 @@ void MPIBasicRunner<T,U>::branchLimited()
 		//Keep track of zero values
 		if(ni[i]==0)
 			zvals[zc++] = idx[i];
+		else
+		{
+			//Re-weight
+			double norm = 1.0/ni[i];
+			(*walkers[idx[i]]).state.weight.multUpdate(norm);
+		}
 		ccount += ni[i++];
 	}
 
@@ -403,13 +409,10 @@ void MPIBasicRunner<T,U>::masterBranchLimited(float maxpercent)
 	fflush(this->log);
 #endif
 
-	//Update master's estimation of C.G.F.
-	this->FreeEnergy.add(Z.logValue());
-
 #if DEBUG >= 1
 	//This debug is particularly useful to see how the total weight of walkers
 	//changes over the course of the sampling. We always want this to increase
-	fprintf(this->log,"BCast from 0. log(Value) is %10.6e (Accum: %10.6Le)\n",Z.logValue(),FreeEnergy.value());
+	fprintf(this->log,"BCast from 0. log(Value) is %10.6e\n",Z.logValue());
 	fflush(this->log);
 #endif
 

@@ -38,6 +38,7 @@ typedef int Integer;
 //MPI Message
 #define MPIBRANCH 1
 #define MPIBINDONE 2
+#define MPIPARALLELRECV 3
 
 //debug flags
 //#define DEBUG

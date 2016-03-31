@@ -18,6 +18,7 @@ void SNSMover<T,U>::initialize(Walker<T,U>* w)
 	w->state.Rcurr->clear();
 	w->state.particleCount = 0;
 
+	//int initptclcount = gsl_rng_uniform_int(w->rgenref,this->rp.L/2*(this->rp.trans.linsert+this->rp.trans.rinsert));
 	int initptclcount = this->rp.L/2*(this->rp.trans.linsert+this->rp.trans.rinsert);
 	int pp = 0;
 	while(pp<initptclcount)
