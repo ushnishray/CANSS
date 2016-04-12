@@ -93,12 +93,8 @@ void MPIBasicRunner<T,U>::runWB()
 		//Do equilibration which is about reaching stead state
 		for(int i=0;i<this->runParams.eSteps*this->runParams.branchStep;i++)
 		{
-				int w = 0;
-#pragma omp parallel for default(shared) private(w)
-				for(w = 0;w<walkers.walkerCount;w++)
-				{
-					mover->move(walkers[w]);
-				}
+			for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+				mover->move(it->second);
 		}
 
 		//Reset walker times etc. equilibration is just about eliminating crazy transients.
@@ -112,19 +108,15 @@ void MPIBasicRunner<T,U>::runWB()
 			fprintf(this->log,"Step: %d\n",i);
 			fflush(this->log);
 #endif
-
-			int b = 0;
-			for(b=0;b<this->runParams.branchStep;b++)
+			for(int b=0;b<this->runParams.branchStep;b++)
 			{
 
-//				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
-				int w = 0;
-#pragma omp parallel for default(shared) private(w)
-				for(w = 0;w<walkers.walkerCount;w++)
-				{
-					mover->move(walkers[w]);
-					walkers[w]->measure();
-				}
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					mover->move(it->second);
+
+				//Now do measure for each walker
+				for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					it->second->measure();
 			}
 
 			//Need to get pend
