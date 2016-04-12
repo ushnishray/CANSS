@@ -115,7 +115,7 @@ void Qhistogram<T,U>::branchGather(void* p)
 template <class T,class U>
 Observable<T,U>* Qhistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Qhistogram<T,U>* newo = new Qhistogram<T,U>(this->processId,this->procCount,ws,
+	Qhistogram<T,U>* newo = new Qhistogram<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Q.x = this->Q.x;

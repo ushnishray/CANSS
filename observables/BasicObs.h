@@ -84,7 +84,7 @@ public:
 #endif
 	}
 
-	BasicObs(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log)
+	BasicObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
 		dt = _dt;
 		Zcount = 0;

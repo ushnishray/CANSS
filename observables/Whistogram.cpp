@@ -106,7 +106,7 @@ void Whistogram<T,U>::branchGather(void* p)
 template <class T,class U>
 Observable<T,U>* Whistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Whistogram<T,U>* newo = new Whistogram<T,U>(this->processId,this->procCount,ws,
+	Whistogram<T,U>* newo = new Whistogram<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->localWeight.copy(this->localWeight);

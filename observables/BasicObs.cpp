@@ -200,7 +200,7 @@ void BasicObs<T,U>::copy(void* p)
 template <class T, class U>
 Observable<T,U>* BasicObs<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	BasicObs<T,U>* newo = new BasicObs<T,U>(this->processId,this->procCount,ws,
+	BasicObs<T,U>* newo = new BasicObs<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Q.x = this->Q.x;
@@ -362,7 +362,8 @@ int BasicObs<T,U>::parallelReceive()
 	this->V2.y += lvy*lvy;
 	this->V2.z += lvz*lvz;
 
-	double temp = it*freeEnergy.logValue();
+	double offset = log(this->totalWalkers);
+	double temp = it*(freeEnergy.logValue()-offset);
 	this->fe += temp;
 	this->fe2 += temp*temp;
 
@@ -387,7 +388,7 @@ int BasicObs<T,U>::parallelReceive()
 	this->Va2.y += lvay*lvay;
 	this->Va2.z += lvaz*lvaz;
 
-	double temp1 = it*freeEnergya.logValue();
+	double temp1 = it*(freeEnergya.logValue()-offset);
 	this->fea += temp1;
 	this->fea2 += temp1*temp1;
 #endif
