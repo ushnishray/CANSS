@@ -90,7 +90,43 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 
 	wif<<" # "<<afE<<" "<<afE2;
 	wif<<" "<<setfill(' ')<<Qa.x<<" "<<Qxe<<" "<<setfill(' ')<<Qa.y<<" "<<Qye<<" "<<setfill(' ')<<Qa.z<<" "<<Qze
-			<<" "<<Va.x<<" "<<Vxe<<" "<<Va.y<<" "<<Vye<<" "<<Va.z<<" "<<Vze<<endl;
+			<<" "<<Va.x<<" "<<Vxe<<" "<<Va.y<<" "<<Vye<<" "<<Va.z<<" "<<Vze;
+
+
+	//Average Trajectories
+	double offset = log(this->totalWalkers);
+	int lsize = cavgF.size();
+	double avgqx = 0.0, avgqx2 = 0.0;
+	double avgqxe = 0.0, avgqx2e = 0.0;
+	double avgf = 0.0, avgfe = 0.0;
+	for(int i = 0;i<lsize;i++)
+	{
+		double lqx = (cavgQx[i]/cavgF[i]).value();
+
+		double lqx2 = ((cavgQx2[i]/cavgF[i]).value() - lqx*lqx)*it;
+		avgqx2 += lqx2;
+		avgqx2e += lqx2*lqx2;
+
+		lqx *= it;
+		avgqx += lqx;
+		avgqxe += lqx*lqx;
+
+		double laf = (cavgF[i].logValue() - offset)*it;
+		avgf += laf;
+		avgfe += laf*laf;
+	}
+
+	double norm = 1.0/lsize;
+	avgf *= norm;
+	avgfe = sqrt((avgfe*norm - avgf*avgf)/(lsize-1));
+
+	avgqx *= norm;
+	avgqxe = sqrt((avgqxe*norm - avgqx*avgqx)/(lsize-1));
+
+	avgqx2 *= norm;
+	avgqx2e = sqrt((avgqx2e*norm - avgqx2*avgqx2)/(lsize-1));
+
+	wif<<" # "<<t*lsize<<" "<<avgf<<" "<<avgfe<<" "<<avgqx<<" "<<avgqxe<<" "<<avgqx2<<" "<<avgqx2e<<endl;
 #else
 	wif<<endl;
 #endif
@@ -126,6 +162,11 @@ void BasicObs<T,U>::clear()
 	Qay2.resetValue();
 	Qaz2.resetValue();
 	fea = fea2 = 0.0;
+
+	cavgQ.clear();
+	cavgF.clear();
+	cavgQx.clear();
+	cavgQx2.clear();
 #endif
 }
 
@@ -150,8 +191,24 @@ void BasicObs<T,U>::branchGather(void* p)
 	obj->Qaz2.add(temp);
 
 	obj->freeEnergya.add(this->state.weight);
-
 	Q.x = Q.y = Q.z = 0;
+
+	//Averages
+	if(obj->cavgF.size()<cavgQ.size())
+	{
+		obj->cavgF.resize(cavgQ.size());
+		obj->cavgQx.resize(cavgQ.size());
+		obj->cavgQx2.resize(cavgQ.size());
+	}
+
+	for(int i = 0;i<cavgQ.size();i++)
+	{
+		Weight temp1 = cavgF[i]; temp1.multUpdate(cavgQ[i].x);
+		obj->cavgQx[i].add(temp1);
+		Weight temp2 = cavgF[i]; temp2.multUpdate(cavgQ[i].x*cavgQ[i].x);
+		obj->cavgQx2[i].add(temp2);
+		obj->cavgF[i].add(cavgF[i]);
+	}
 #endif
 }
 
@@ -183,6 +240,9 @@ void BasicObs<T,U>::gather(void* p)
 #ifdef NOBRANCH
 	//Reset walker observables for next gather event
 	Q.x = Q.y = Q.z = 0;
+#else
+	cavgQ.push_back(Q);
+	cavgF.push_back(this->state.weight);
 #endif
 }
 
@@ -195,6 +255,11 @@ void BasicObs<T,U>::copy(void* p)
 	this->Q.x = obj->Q.x;
 	this->Q.y = obj->Q.y;
 	this->Q.z = obj->Q.z;
+#ifndef NOBRANCH
+
+	this->cavgF = obj->cavgF;
+	this->cavgQ = obj->cavgQ;
+#endif
 }
 
 template <class T, class U>
@@ -206,6 +271,11 @@ Observable<T,U>* BasicObs<T,U>::duplicate(core::WalkerState<T,U>& ws)
 	newo->Q.x = this->Q.x;
 	newo->Q.y = this->Q.y;
 	newo->Q.z = this->Q.z;
+#ifndef NOBRANCH
+
+	newo->cavgF = this->cavgF;
+	newo->cavgQ = this->cavgQ;
+#endif
 	return newo;
 }
 
@@ -280,7 +350,21 @@ int BasicObs<T,U>::parallelSend()
 	Qay2.resetValue();
 	Qaz2.mpiSend(0);
 	Qaz2.resetValue();
+
+	int lsize = this->cavgF.size();
+	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+	for(int i = 0;i<lsize;i++)
+	{
+		cavgF[i].mpiSend(0);
+		cavgQx[i].mpiSend(0);
+		cavgQx2[i].mpiSend(0);
+	}
+
+	cavgF.clear();
+	cavgQx.clear();
+	cavgQx2.clear();
 #endif
+
 
 #if DEBUG >= 2
 	fprintf(this->log,"BasicObs Transfer Complete\n");
@@ -295,6 +379,10 @@ int BasicObs<T,U>::parallelReceive()
 {
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
+
+	cavgF.clear();
+	cavgQx.clear();
+	cavgQx2.clear();
 
 	//Wait for all processes to get here
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -331,6 +419,21 @@ int BasicObs<T,U>::parallelReceive()
 		this->Qax2.mpiReceive(procId);
 		this->Qay2.mpiReceive(procId);
 		this->Qaz2.mpiReceive(procId);
+
+		int lsize;
+		MPI_Recv(&lsize,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
+		if(this->cavgF.size()<lsize)
+		{
+			cavgF.resize(lsize);
+			cavgQx.resize(lsize);
+			cavgQx2.resize(lsize);
+		}
+		for(int i = 0;i<lsize;i++)
+		{
+			cavgF[i].mpiReceive(procId);
+			cavgQx[i].mpiReceive(procId);
+			cavgQx2[i].mpiReceive(procId);
+		}
 #endif
 
 #if DEBUG >= 2
@@ -391,6 +494,40 @@ int BasicObs<T,U>::parallelReceive()
 	double temp1 = it*(freeEnergya.logValue()-offset);
 	this->fea += temp1;
 	this->fea2 += temp1*temp1;
+
+
+	//Average Trajectory
+	int lsize = cavgF.size();
+	double ait = it/lsize;
+	double avgqx = 0.0, avgqx2 = 0.0;
+	double avgf = 0.0;
+
+#if 1
+	ofstream dif(this->baseFileName + "D",std::ofstream::app);
+#endif
+	for(int i = 0;i<lsize;i++)
+	{
+		double lqx = (cavgQx[i]/cavgF[i]).value();
+		avgqx += lqx;
+
+		double lqx2 = (cavgQx2[i]/cavgF[i]).value();
+		avgqx2 += (lqx2 - lqx*lqx);
+
+		double laf = (cavgF[i].logValue() - offset);
+		avgf += laf;
+#if 1
+		dif<<i<<" "<<laf*it<<" "<<lqx*it<<" "<<(lqx2-lqx*lqx)*it<<endl;
+#endif
+	}
+#if 1
+	dif<<"--------------------------\n";
+	dif.close();
+#endif
+
+	avgf *= ait;
+	avgqx2 *= ait;
+	avgqx *= ait;
+
 #endif
 
 #ifndef NOBRANCH
@@ -399,6 +536,10 @@ int BasicObs<T,U>::parallelReceive()
 	ofstream wif(this->baseFileName + "P",std::ofstream::app);
 	wif<<it<<" "<<temp<<" "<<temp1<<" "<<lqx<<" "<<lqax<<endl;
 	wif.close();
+
+	ofstream aif(this->baseFileName + "A",std::ofstream::app);
+	aif<<(this->ltime*this->dt)*lsize<<" "<<avgf<<" "<<avgqx<<" "<<avgqx2<<endl;
+	aif.close();
 #else
 	lqx*=it;
 	ofstream wif(this->baseFileName + "P",std::ofstream::app);
@@ -430,12 +571,20 @@ template <class T, class U>
 void BasicObs<T,U>::serialize(Serializer<U>& obj)
 {
 	obj<<dt<<Q;
+#ifndef NOBRANCH
+	obj<<cavgQ<<cavgF;
+#endif
 }
 
 template <class T, class U>
 void BasicObs<T,U>::unserialize(Serializer<U>& obj)
 {
 	obj>>dt>>Q;
+#ifndef NOBRANCH
+	cavgQ.clear();
+	cavgF.clear();
+	obj>>cavgQ>>cavgF;
+#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 

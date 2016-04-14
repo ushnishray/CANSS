@@ -112,12 +112,13 @@ void MPIBasicRunner<T,U>::branchLimited()
 		//Keep track of zero values
 		if(ni[i]==0)
 			zvals[zc++] = idx[i];
+		/*
 		else
 		{
 			//Re-weight
 			double norm = 1.0/ni[i];
 			(*walkers[idx[i]]).state.weight.multUpdate(norm);
-		}
+		}*/
 		ccount += ni[i++];
 	}
 

@@ -48,6 +48,12 @@ public:
 	vect<double> Va;
 	vect<double> Va2;
 	double fea, fea2;
+
+	//For averaging
+	vector<vect<double>> cavgQ;
+	vector<Weight> cavgF;
+	//Global gathering
+	vector<Weight> cavgQx, cavgQx2;
 #endif
 
 	BasicObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
@@ -103,6 +109,10 @@ public:
 
 	~BasicObs()
 	{
+		cavgQ.clear();
+		cavgF.clear();
+		cavgQx.clear();
+		cavgQx2.clear();
 	}
 
 	void display();

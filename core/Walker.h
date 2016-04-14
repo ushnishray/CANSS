@@ -58,7 +58,13 @@ namespace core
 
 		void reset()
 		{
-			state.reset();		
+			state.reset();
+		}
+
+		void clear()
+		{
+			for(int i = 0;i<observablesCollection.size();i++)
+				observablesCollection[i]->clear();
 		}
 		
 		bool operator() (Walker& a, Walker& b)

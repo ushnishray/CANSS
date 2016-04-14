@@ -26,6 +26,8 @@ public:
 	double dweight;
 	Weight weight;
 
+	vector<int> idhistory;
+
 	FILE* out;
 
 	WalkerState(int _dim, Weight& _w, FILE* ot)
@@ -40,6 +42,21 @@ public:
 		ltime = 0;
 		weight.copy(_w);
 		out = ot;
+	}
+
+	WalkerState(int _dim, Weight& _w, FILE* ot, int wid)
+	{
+		DIM = _dim;
+		particleCount = 0;
+		Rcurr = new PtclMap<T>;
+		dQ.x = (T) 0.0;
+		dQ.y = (T) 0.0;
+		dQ.z = (T) 0.0;
+		dweight = 0.0;
+		ltime = 0;
+		weight.copy(_w);
+		out = ot;
+		idhistory.push_back(wid);
 	}
 
 	WalkerState(int _dim,int _N,Weight& w, FILE* ot)
@@ -92,10 +109,13 @@ public:
 
 		ltime = ws.ltime;
 		weight.copy(ws.weight);
+
+		idhistory = ws.idhistory;
 	}
 
 	~WalkerState()
 	{
+		idhistory.clear();
 		Rcurr->clear();
 		delete Rcurr;
 	}
@@ -113,6 +133,8 @@ public:
 		dweight = w.dweight;
 		weight.copy(w.weight);
 		out = w.out;
+
+		idhistory = w.idhistory;
 	}
 
 	WalkerState* duplicate()
@@ -120,6 +142,7 @@ public:
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
 		a->dweight = this->dweight;
 		a->out = this->out;
+		a->idhistory = this->idhistory;
 		return a;
 	}
 
@@ -154,13 +177,14 @@ public:
 
 	virtual void serialize(Serializer<U>& obj)
 	{
-		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight;
+		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight<<idhistory;
 	}
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
 		Rcurr->clear();
-		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight;
+		idhistory.clear();
+		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight>>idhistory;
 	}
 };
 

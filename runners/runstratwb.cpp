@@ -169,13 +169,15 @@ void MPIBasicRunner<T,U>::runWB()
 
 		this->displayBranchStat(nbranches);
 		this->nclones = this->nelims = 0;
-		fprintf(this->log,"\nPerforming local gather\n");
-		fflush(this->log);
 
 		//Master needs to be notified that process has finished a bin
 		int tag, smsg = MPIBINDONE, rmsg = 0;
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Gather(&smsg,1,MPI_CHAR,&rmsg,1,MPI_CHAR,0,MPI_COMM_WORLD);
+
+		//Clear all observables for new bin.
+		for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+			it->second->clear();
 
 		fprintf(this->log,"Ending Bin: %d with %d walkers\n",m,walkers.walkerCount);
 		fflush(this->log);

@@ -163,10 +163,11 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			//////////////////////////////////////////////////////////////////////////////////////////
 			//Prepare Walker State Objects
 			//////////////////////////////////////////////////////////////////////////////////////////
+			int wid = (rank-1)*runParams.walkerCount + w;
 
 			//State File
 			Weight* wt = new Weight(initweight);
-			WalkerState<float,stringstream>* wstate = new WalkerState<float,stringstream>(runParams.dimension,*wt,log);
+			WalkerState<float,stringstream>* wstate = new WalkerState<float,stringstream>(runParams.dimension,*wt,log,wid);
 
 			//Observable Files
 			vector<Observable<float,stringstream>*>* localObs = new vector<Observable<float,stringstream>*>;
