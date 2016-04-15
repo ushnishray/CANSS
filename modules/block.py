@@ -76,6 +76,6 @@ def regular():
  		x2[i] /= ns
 		error = ((x2[i]-x[i]*x[i])/(ns-1))**0.5
 		unc = error/(2*(ns-1))**0.5	
-		print i,x[i],error,unc
+		print i,tsize/ns,x[i],error,unc
 
 regular()
