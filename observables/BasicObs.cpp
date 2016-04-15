@@ -263,8 +263,8 @@ int BasicObs<T,U>::parallelSend()
 #ifndef NOBRANCH
 	int lsize = this->cavgQ.size();
 	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->cavgQ.front(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_Send(&this->cavgQ2.front(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->cavgQ.data(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->cavgQ2.data(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 
 	cavgQ.clear();
 	cavgQ2.clear();
@@ -285,8 +285,10 @@ int BasicObs<T,U>::parallelReceive()
 	if(!this->MPIEnabled)
 		return NOTALLOWED;
 
+#ifndef NOBRANCH
 	cavgQ.clear();
 	cavgQ2.clear();
+#endif
 
 	//Wait for all processes to get here
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -316,14 +318,12 @@ int BasicObs<T,U>::parallelReceive()
 #ifndef NOBRANCH
 		int lsize;
 		MPI_Recv(&lsize,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
-		vector<vect<double>> tempcQ;
-		vector<vect<double>> tempcQ2;
+		vector<vect<double>> tempcQ(lsize);
+		vector<vect<double>> tempcQ2(lsize);
 		if(this->cavgQ.size()<lsize)
 		{
 			cavgQ.resize(lsize);
 			cavgQ2.resize(lsize);
-			tempcQ.resize(lsize);
-			tempcQ2.resize(lsize);
 		}
 		MPI_Recv(tempcQ.data(),lsize*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(tempcQ2.data(),lsize*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
