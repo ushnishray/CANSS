@@ -100,11 +100,6 @@ void Qhistogram<T,U>::branchGather(void* p)
 {
 #ifndef NOBRANCH
 	Qhistogram<T,U>* obj = (Qhistogram<T,U>*)p;
-	obj->ltime = ltime;
-	double it = 1.0/(ltime*dt);
-	Q.x *= it;
-	Q.y *= it;
-	Q.z *= it;
 	Qacollection.push_back(Q);
 
 	int lsize = Qacollection.size();
