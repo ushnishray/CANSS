@@ -1,5 +1,5 @@
 BASEPATH=../../../
-SSEPATH=-I $(BASEPATH)/include -I $(BASEPATH)/core -I $(BASEPATH)/movers -I $(BASEPATH)/observables -I $(BASEPATH)/drivers -I $(BASEPATH)/waveFunctions -I$(BASEPATH)/walkers -I$(BASEPATH)/runners
+SSEPATH=-I $(BASEPATH)/include -I $(BASEPATH)/core -I $(BASEPATH)/movers -I $(BASEPATH)/observables -I $(BASEPATH)/drivers -I $(BASEPATH)/waveFunctions -I$(BASEPATH)/walkers -I$(BASEPATH)/runners -I$(BASEPATH)/Serializer
 CPP=mpicxx 
 FORTRAN=
 FLAGS=
@@ -9,7 +9,7 @@ F_SOURCES=
 DEBUG= 
 CPP_SOURCES= ./*.cpp  
 OBJECTS=*.o
-EXECUTABLE =  DEX
+EXECUTABLE =  DEX.nobranch
 
 all: $(EXECUTABLE)
 
