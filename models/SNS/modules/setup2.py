@@ -6,7 +6,7 @@ betas = fin.read().split('\n')
 fin.close()
 
 w = ''
-bexec = '/home/ushnish/research/dmcsns/models/DBM/d1/DEX.nb' 
+bexec = '/home/ushnish/research/dmcsns/models/DBM/d1/DEX.b' 
 #bexec = '/home/ushnish/research/dmcsns/models/SNS/d1b/DEX.branch'
 i = 0
 

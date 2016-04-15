@@ -10,12 +10,12 @@ params = pfile.read().split('\n')
 pfile.close()
 
 w = ''
-#bexec = '/home/ushnish/research/Development/checkouts/DMCsns/cppmods/models/SNS/d1b/DEX.nb'
-bexec = '/home/ushnish/research/Development/checkouts/DMCsns/cppmods/models/DBM/d1/DEX.nb'
+#bexec = ' ~/research/dmcsns/models/DBM/d1/DEX.b' 
+bexec = ' ~/research/dmcsns/models/DBM/d1/DEX.nb' 
 i = 0
 
 nproc = 2
-tproc = 8
+tproc = 30
 for intt in ints:
 	try:
 		float(intt)
@@ -36,6 +36,7 @@ for intt in ints:
 		if((i*nproc)%tproc == 0):
 			w += 'wait\n'
 	except:
+		print 'Could not process',intt
 		pass		
 w += 'wait\n'
 print w

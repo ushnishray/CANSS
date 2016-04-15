@@ -1,8 +1,8 @@
 import os
 import sys
 
-#offset = 0
-offset = 15
+offset = 0
+#offset = 15
 
 fin = open(sys.argv[1])
 datf = sys.argv[2]
@@ -84,6 +84,7 @@ for beta in betas:
 		w += str(psi2) + '\t' + str(psie2) + '\t' + str(q2) + '\t' + str(qe2) + '\t' + str(v2) + '\t' + str(ve2) + '\n'
 		i += 1
 	except:
+		i += 1
 		pass		
 
 
