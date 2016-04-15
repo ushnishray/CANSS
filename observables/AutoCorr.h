@@ -37,7 +37,7 @@ public:
 		lsize = 0;
 	}
 
-	AutoCorr(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log)
+	AutoCorr(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
 		Zcount = 0;
 		allocated = false;

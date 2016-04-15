@@ -37,7 +37,7 @@ public:
 		ltime = 0;
 	}
 
-	Phistogram(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
+	Phistogram(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
 	{
 		dt = _dt;
 		ltime = 0;

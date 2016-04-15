@@ -23,6 +23,14 @@ public:
 			height[i] = 0;
 	}
 
+	RSOSWalkerState(int _dim, Weight& _w, FILE* ot, int _L, int wid):WalkerState<T,U>(_dim,_w,ot,wid)
+	{
+		L = _L;
+		height = new int[L];
+		for(int i = 0;i<L;i++)
+			height[i] = 0;
+	}
+
 	RSOSWalkerState(WalkerState<T,U>& a, int _L)
 	{
 		core::WalkerState<T,U>::copy(a);

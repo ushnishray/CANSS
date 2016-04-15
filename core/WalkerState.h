@@ -26,6 +26,9 @@ public:
 	double dweight;
 	Weight weight;
 
+	int owid;
+	vector<int> idhistory;
+
 	FILE* out;
 
 	WalkerState(int _dim, Weight& _w, FILE* ot)
@@ -40,25 +43,24 @@ public:
 		ltime = 0;
 		weight.copy(_w);
 		out = ot;
+		owid = 0;
+		idhistory.push_back(owid);
 	}
 
-	WalkerState(int _dim,int _N,Weight& w, FILE* ot)
+	WalkerState(int _dim, Weight& _w, FILE* ot, int wid)
 	{
 		DIM = _dim;
-		particleCount = _N;
-
+		particleCount = 0;
 		Rcurr = new PtclMap<T>;
-		for(int i=0;i<_N;i++)
-			(*Rcurr)[vect<T>(0.0,0.0,(T) i)] = i;
-
 		dQ.x = (T) 0.0;
 		dQ.y = (T) 0.0;
 		dQ.z = (T) 0.0;
 		dweight = 0.0;
 		ltime = 0;
-		weight.copy(w);
-
+		weight.copy(_w);
 		out = ot;
+		owid = wid;
+		idhistory.push_back(wid);
 	}
 
 //	WalkerState(int _dim,int _N, PtclMap<T>& Rcpy, vect<T> _dQ,vect<Weight> _Q, long _time, Weight& w)
@@ -76,6 +78,9 @@ public:
 
 		ltime = _time;
 		weight.copy(w);
+
+		owid = 0;
+		idhistory.push_back(owid);
 	}
 
 	WalkerState(const WalkerState& ws)
@@ -92,10 +97,14 @@ public:
 
 		ltime = ws.ltime;
 		weight.copy(ws.weight);
+
+		owid = ws.owid;
+		idhistory = ws.idhistory;
 	}
 
 	~WalkerState()
 	{
+		idhistory.clear();
 		Rcurr->clear();
 		delete Rcurr;
 	}
@@ -113,6 +122,9 @@ public:
 		dweight = w.dweight;
 		weight.copy(w.weight);
 		out = w.out;
+
+		owid = w.owid;
+		idhistory = w.idhistory;
 	}
 
 	WalkerState* duplicate()
@@ -120,6 +132,8 @@ public:
 		WalkerState* a = new WalkerState(DIM,particleCount,*Rcurr,dQ,ltime,weight);
 		a->dweight = this->dweight;
 		a->out = this->out;
+		a->owid = this->owid;
+		a->idhistory = this->idhistory;
 		return a;
 	}
 
@@ -152,15 +166,30 @@ public:
 		weight.resetValue();	
 	}
 
+	void clear()
+	{
+		ltime = 0;
+		weight.resetValue();
+		dweight = 0.0;
+		dQ.x = (T) 0.0;
+		dQ.y = (T) 0.0;
+		dQ.z = (T) 0.0;
+		particleCount = 0;
+		Rcurr->clear();
+		idhistory.clear();
+		idhistory.push_back(owid);
+	}
+
 	virtual void serialize(Serializer<U>& obj)
 	{
-		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight;
+		obj<<DIM<<dQ<<ltime<<particleCount<<Rcurr<<weight<<dweight<<idhistory;
 	}
 
 	virtual void unserialize(Serializer<U>& obj)
 	{
 		Rcurr->clear();
-		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight;
+		idhistory.clear();
+		obj>>DIM>>dQ>>ltime>>particleCount>>Rcurr>>weight>>dweight>>idhistory;
 	}
 };
 

@@ -51,18 +51,6 @@ void Whistogram<T,U>::writeViaIndex(int idx) {
 		wif<<Wcollection[i]<<endl;
 	wif.close();
 
-#ifndef NOBRANCH
-	fname = this->baseFileName + "E_" + s.str();
-	wif.open(fname);
-	wif.precision(FIELDPRECISION);
-	wif.width(FIELDWIDTH);
-	wif.setf(FIELDFORMAT);
-	wif.fill(' ');
-	for(int i=0;i<Wacollection.size();i++)
-		wif<<Wacollection[i]<<endl;
-	wif.close();
-#endif
-
 	//Reset for next bin
 	clear();
 }
@@ -73,9 +61,6 @@ void Whistogram<T,U>::clear()
 	ltime = 0;
 	localWeight.resetValue();
 	this->Wcollection.clear();
-#ifndef NOBRANCH
-	this->Wacollection.clear();
-#endif
 }
 
 template <class T,class U>
@@ -96,8 +81,6 @@ template <class T,class U>
 void Whistogram<T,U>::branchGather(void* p)
 {
 	Whistogram<T,U>* obj = (Whistogram<T,U>*)p;
-	obj->ltime = ltime;
-	obj->Wacollection.push_back(localWeight.value());
 
 	localWeight.resetValue();
 	ltime = 0;
@@ -106,14 +89,11 @@ void Whistogram<T,U>::branchGather(void* p)
 template <class T,class U>
 Observable<T,U>* Whistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Whistogram<T,U>* newo = new Whistogram<T,U>(this->processId,this->procCount,ws,
+	Whistogram<T,U>* newo = new Whistogram<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->localWeight.copy(this->localWeight);
 	newo->Wcollection = this->Wcollection;
-#ifndef NOBRANCH
-	newo->Wacollection = this->Wacollection;
-#endif
 	return newo;
 }
 
@@ -125,10 +105,6 @@ void Whistogram<T,U>::copy(void* p)
 	this->localWeight.copy(obj->localWeight);
 	this->Wcollection.clear();
 	this->Wcollection = obj->Wcollection;
-#ifndef NOBRANCH
-	this->Wacollection.clear();
-	this->Wacollection = obj->Wacollection;
-#endif
 }
 
 template <class T,class U>
@@ -157,16 +133,10 @@ int Whistogram<T,U>::parallelSend()
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
 	MPI_Send(&this->Wcollection.front(),this->Wcollection.size(),MPI_DOUBLE,0,tag,MPI_COMM_WORLD);	
 
-#ifndef NOBRANCH
-	MPI_Send(&this->Wacollection.front(),this->Wacollection.size(),MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-#endif
-
 	ltime = 0;
 	localWeight.resetValue();
 	Wcollection.clear();
-#ifndef NOBRANCH
-	Wacollection.clear();
-#endif
+
 	return SUCCESS;
 }
 
@@ -200,10 +170,6 @@ int Whistogram<T,U>::parallelReceive()
 	vector<double> lWcollection, lWacollection;
 	lWcollection.resize(tsize); //need to resize first
 	double* data = lWcollection.data();
-#ifndef NOBRANCH
-	lWacollection.resize(tsize); //need to resize first
-	double* data1 = lWacollection.data();
-#endif
 
 	for(int procId=1;procId<this->procCount;procId++)
 	{
@@ -217,43 +183,22 @@ int Whistogram<T,U>::parallelReceive()
 #endif
 		MPI_Recv(data,psizes[procId-1],MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		data += psizes[procId-1];
-
-#ifndef NOBRANCH
-		MPI_Recv(data1,psizes[procId-1],MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		data1 += psizes[procId-1];
-#endif
 	}
 	
 	delete[] psizes;
 
 	//Compute variance per observation
 	double x = 0.0, x2 = 0.0;
-#ifndef NOBRANCH
-	double y = 0.0, y2 = 0.0;
-#endif
 	for(int i = 0;i<tsize;i++)
 	{
 		x += lWcollection[i];
 		x2 += lWcollection[i]*lWcollection[i];
-#ifndef NOBRANCH
-		y += lWacollection[i];
-		y2 += lWacollection[i]*lWacollection[i];
-#endif
 	}
 	x /= tsize; x2 /= tsize; x2 = (x2 - x*x)/tsize;
-#ifndef NOBRANCH
-	y /= tsize; y2 /= tsize; y2 = (y2 - y*y)/tsize;
-#endif
 
-#ifdef NOBRANCH
 	ofstream wof(this->baseFileName + "_gather",std::ofstream::app);
 	wof<<x<<"\t"<<sqrt(x2)<<endl;
 	wof.close();
-#else
-	ofstream wof(this->baseFileName + "_gather",std::ofstream::app);
-	wof<<x<<"\t"<<sqrt(x2)<<"\t"<<y<<"\t"<<sqrt(y2)<<endl;
-	wof.close();
-#endif
 
 	//Local gathering done
 	//Now put into global collector
@@ -261,12 +206,6 @@ int Whistogram<T,U>::parallelReceive()
 	this->Wcollection.resize(osize+tsize);
 	data = Wcollection.data() + osize;
 	memcpy(data,lWcollection.data(),sizeof(double)*tsize);
-#ifndef NOBRANCH
-	osize = Wacollection.size();
-	this->Wacollection.resize(osize+tsize);
-	data1 = Wacollection.data() + osize;
-	memcpy(data1,lWacollection.data(),sizeof(double)*tsize);
-#endif
 
 	return SUCCESS;
 }
@@ -276,9 +215,6 @@ template <class T,class U>
 void Whistogram<T,U>::serialize(Serializer<U>& obj)
 {
 	obj<<dt<<localWeight<<ltime<<Wcollection;
-#ifndef NOBRANCH
-	obj<<Wacollection;
-#endif
 }
 
 template <class T,class U>
@@ -286,10 +222,6 @@ void Whistogram<T,U>::unserialize(Serializer<U>& obj)
 {
 	Wcollection.clear();
 	obj>>dt>>localWeight>>ltime>>Wcollection;
-#ifndef NOBRANCH
-	Wacollection.clear();
-	obj>>Wacollection;
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 

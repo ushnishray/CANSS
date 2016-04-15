@@ -20,6 +20,7 @@ protected:
 
 	int processId;
 	int procCount;
+	int totalWalkers;
 	bool MPIEnabled;
 
 public:
@@ -28,10 +29,11 @@ public:
 	{
 		processId = 0;
 		procCount = 0;
+		totalWalkers = 0;
 		MPIEnabled = false;
 	}
 
-	MPIObservable(int pid,int nprocs):processId(pid),procCount(nprocs) {MPIEnabled = true;}
+	MPIObservable(int pid,int nprocs, int twalkers):processId(pid),procCount(nprocs),totalWalkers(twalkers) {MPIEnabled = true;}
 
 	virtual int parallelSend() = 0; //To be called by slaves
 	virtual int parallelReceive() = 0; //To be called by master

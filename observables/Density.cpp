@@ -79,7 +79,7 @@ void Density<T,U>::gather(void* p)
 template <class T, class U>
 Observable<T,U>* Density<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Density<T,U>* newo = new Density<T,U>(this->processId,this->procCount,ws,this->baseFileName,this->log);
+	Density<T,U>* newo = new Density<T,U>(this->processId,this->procCount,this->totalWalkers,ws,this->baseFileName,this->log);
 	newo->Zcount = this->Zcount;
 
 	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin(); it!=this->state.Rcurr->end();++it)

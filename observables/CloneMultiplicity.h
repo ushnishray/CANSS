@@ -1,5 +1,5 @@
 /*
- * Whistogram.h
+ * CloneMultiplicity.h
  *
  *  Created on: Aug 20, 2014
  *      Author: ushnish
@@ -8,47 +8,32 @@
  All rights reserved.
  */
 
-#ifndef Whistogram_H_
-#define Whistogram_H_
+#ifndef CloneMultiplicity_H_
+#define CloneMultiplicity_H_
 
 #include "Observable.h"
 
 namespace measures {
 
 template <class T, class U>
-class Whistogram: public measures::Observable<T,U>, public measures::MPIObservable {
+class CloneMultiplicity: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
-	double dt;
-	Weight& localWeight; 
-	unsigned int ltime;
-
-	//For gathering
-	vector<double> Wcollection;
-
-	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
+	vector<set<int,gcmpr<int>>> idc;
+	
+	CloneMultiplicity(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
-		dt = 0.0;
-		ltime = 0;
 	}
 
-	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
+	CloneMultiplicity(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
-		dt = _dt;
-		ltime = 0;
 	}
 
-	Whistogram(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log),localWeight(*(new Weight(_state.weight)))
+	~CloneMultiplicity()
 	{
-		dt = _dt;
-		ltime = 0;
+		idc.clear();
 	}
 
-	~Whistogram()
-	{
-		Wcollection.clear();
-		delete &localWeight;	
-	}
-
+	void display();
 	void measure();
 	void writeViaIndex(int idx);
 	void gather(void*);
@@ -56,7 +41,6 @@ public:
 	void clear();
 	Observable<T,U>* duplicate(core::WalkerState<T,U>&);
 	void copy(void*);
-	void display();
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//MPI Comm
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +53,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////
 	virtual void serialize(Serializer<U>&);
 	virtual void unserialize(Serializer<U>&);
+
 };
 } /* namespace measures */
-#endif /* Whistogram_H_ */
+#endif /* CloneMultiplicity_H_ */

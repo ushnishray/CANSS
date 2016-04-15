@@ -98,20 +98,27 @@ void MPIBasicRunner<T,U>::branchLimited()
 	fflush(this->log);
 #endif
 
+
+
+
 	//Compute local redistribution
 	int ccount = 0, zc=0;
 	i = 0;
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
 	{
+#if 0
+		fprintf(this->log,"Before Walker weight: %10.6le f: %d\n",(double) it->second->state.weight.value(), ni[i]);
+#endif
 		//Keep track of zero values
 		if(ni[i]==0)
 			zvals[zc++] = idx[i];
+		/*
 		else
 		{
 			//Re-weight
 			double norm = 1.0/ni[i];
 			(*walkers[idx[i]]).state.weight.multUpdate(norm);
-		}
+		}*/
 		ccount += ni[i++];
 	}
 
@@ -356,6 +363,12 @@ void MPIBasicRunner<T,U>::branchLimited()
 	fprintf(this->log,"Branching done\n");
 	fprintf(this->log,"========================================================\n");
 	fflush(this->log);
+#endif
+
+#if 0
+	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+					fprintf(this->log,"After Walker weight: %10.6le\n",(double) it->second->state.weight.value());
+	fprintf(this->log,"-----------------------\n");
 #endif
 
 #if 0

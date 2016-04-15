@@ -49,6 +49,7 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	//COMM WORLD
 	int totalProcs;
 	MPI_Comm_size(MPI_COMM_WORLD,&totalProcs);
+	int totalWalkers = (totalProcs-1)*runParams.walkerCount;
 
 	//Time scaler
 	double dt = runParams.trans.dt;
@@ -70,31 +71,37 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	{
 		if(runParams.observableType[i].compare("Basic")==0)
 		{
-			BasicObs<int,stringstream>* oo = new BasicObs<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			BasicObs<int,stringstream>* oo = new BasicObs<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Density")==0)
 		{
-			Density<int,stringstream>* oo = new Density<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			Density<int,stringstream>* oo = new Density<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Qhistogram")==0)
 		{
-			Qhistogram<int,stringstream>* oo = new Qhistogram<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			Qhistogram<int,stringstream>* oo = new Qhistogram<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("Whistogram")==0)
 		{
-			Whistogram<int,stringstream>* oo = new Whistogram<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log,dt);
+			Whistogram<int,stringstream>* oo = new Whistogram<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
 		else if(runParams.observableType[i].compare("AutoCorr")==0)
 		{
-			AutoCorr<int,stringstream>* oo = new AutoCorr<int,stringstream>(rank,totalProcs,*gwstate,runParams.observableName[i],log);
+			AutoCorr<int,stringstream>* oo = new AutoCorr<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
+		else if(runParams.observableType[i].compare("CloneMult")==0)
+		{
+			CloneMultiplicity<int,stringstream>* oo = new CloneMultiplicity<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
@@ -152,8 +159,8 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			return FAIL;
 
 		//Total number of walkers
-		long totalnwalkers = (totalProcs-1)*runParams.walkerCount;
-		double initweight = 1.0/totalnwalkers;
+		//long totalnwalkers = (totalProcs-1)*runParams.walkerCount;
+		double initweight = 1.0;
 
 		//setup walker threads
 		for(int w=0;w<runParams.walkerCount;w++)
@@ -161,10 +168,11 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			//////////////////////////////////////////////////////////////////////////////////////////
 			//Prepare Walker State Objects
 			//////////////////////////////////////////////////////////////////////////////////////////
+			int wid = (rank-1)*runParams.walkerCount + w;
 
 			//State File
 			Weight* wt = new Weight(initweight);
-			RSOSWalkerState<int,stringstream>* wstate = new RSOSWalkerState<int,stringstream>(runParams.dimension,*wt,log,runParams.L);
+			RSOSWalkerState<int,stringstream>* wstate = new RSOSWalkerState<int,stringstream>(runParams.dimension,*wt,log,runParams.L,wid);
 
 			//Observable Files
 			vector<Observable<int,stringstream>*>* localObs = new vector<Observable<int,stringstream>*>;
@@ -180,6 +188,8 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 					localObs->push_back(new Whistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("AutoCorr")==0)
 					localObs->push_back(new AutoCorr<int,stringstream>(*wstate,runParams.observableName[i],log));
+				else if(runParams.observableType[i].compare("CloneMult")==0)
+					localObs->push_back(new CloneMultiplicity<int,stringstream>(*wstate,runParams.observableName[i],log));
 			}
 
 			Walker<int,stringstream>* lwalker = new Walker<int,stringstream>(rgenref,*wstate,*localObs);

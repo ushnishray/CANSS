@@ -29,13 +29,6 @@ public:
 	Weight Qx2,Qy2,Qz2;
 	Weight freeEnergy;
 
-#ifndef NOBRANCH
-	//Need collector also (for pavg)
-	Weight Qax,Qay,Qaz;
-	Weight Qax2,Qay2,Qaz2;
-	Weight freeEnergya;
-#endif
-
 	//For global collection into master
 	int Zcount;
 	vect<double> Q2;
@@ -43,11 +36,10 @@ public:
 	vect<double> V2;
 	double fe, fe2;
 #ifndef NOBRANCH
-	vect<double> Qa;
-	vect<double> Qa2;
-	vect<double> Va;
-	vect<double> Va2;
-	double fea, fea2;
+	//For averaging
+	vector<vect<double>> cavgQ;
+	//Global gathering
+	vector<vect<double>> cavgQ2;
 #endif
 
 	BasicObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
@@ -60,10 +52,6 @@ public:
 		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
-		Qa.x = 0.0; Qa2.x = 0.0;
-		Qa.y = 0.0; Qa2.y = 0.0;
-		Qa.z = 0.0; Qa2.z = 0.0;
-		fea = fea2 = 0.0;
 #endif
 	}
 
@@ -77,14 +65,10 @@ public:
 		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
-		Qa.x = 0.0; Qa2.x = 0.0;
-		Qa.y = 0.0; Qa2.y = 0.0;
-		Qa.z = 0.0; Qa2.z = 0.0;
-		fea = fea2 = 0.0;
 #endif
 	}
 
-	BasicObs(int pId,int nprocs, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs),Observable<T,U>(_state,bsf,log)
+	BasicObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
 		dt = _dt;
 		Zcount = 0;
@@ -94,15 +78,13 @@ public:
 		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
-		Qa.x = 0.0; Qa2.x = 0.0;
-		Qa.y = 0.0; Qa2.y = 0.0;
-		Qa.z = 0.0; Qa2.z = 0.0;
-		fea = fea2 = 0.0;
 #endif
 	}
 
 	~BasicObs()
 	{
+		cavgQ.clear();
+		cavgQ2.clear();
 	}
 
 	void display();

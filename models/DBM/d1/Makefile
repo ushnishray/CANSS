@@ -9,7 +9,7 @@ F_SOURCES=
 DEBUG= 
 CPP_SOURCES= ./*.cpp  
 OBJECTS=*.o
-EXECUTABLE =  DEX.nb
+EXECUTABLE =  DEX.b
 
 all: $(EXECUTABLE)
 

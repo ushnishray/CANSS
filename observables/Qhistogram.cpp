@@ -100,12 +100,12 @@ void Qhistogram<T,U>::branchGather(void* p)
 {
 #ifndef NOBRANCH
 	Qhistogram<T,U>* obj = (Qhistogram<T,U>*)p;
-	obj->ltime = ltime;
-	double it = 1.0/(ltime*dt);
-	Q.x *= it;
-	Q.y *= it;
-	Q.z *= it;
-	obj->Qacollection.push_back(Q);
+	Qacollection.push_back(Q);
+
+	int lsize = Qacollection.size();
+	int osize = obj->Qacollection.size();
+	obj->Qacollection.resize(osize+lsize);
+	memcpy(obj->Qacollection.data()+osize,Qacollection.data(),sizeof(double)*lsize*3);
 
 	Q.x = Q.y = Q.z = 0;
 	ltime = 0;
@@ -115,7 +115,7 @@ void Qhistogram<T,U>::branchGather(void* p)
 template <class T,class U>
 Observable<T,U>* Qhistogram<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	Qhistogram<T,U>* newo = new Qhistogram<T,U>(this->processId,this->procCount,ws,
+	Qhistogram<T,U>* newo = new Qhistogram<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log,this->dt);
 	newo->ltime = this->ltime;
 	newo->Q.x = this->Q.x;
@@ -167,6 +167,10 @@ int Qhistogram<T,U>::parallelSend()
 	//First send size	
 	int lsize = this->Qcollection.size();
 	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+#ifndef NOBRANCH
+	lsize = Qacollection.size();
+	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
+#endif
 
 	//Then wait for notification to send data
 	MPI_Recv(&recv,1,MPI_INT,0,tag,MPI_COMM_WORLD,&stat);
@@ -195,6 +199,11 @@ int Qhistogram<T,U>::parallelReceive()
 
 	long tsize = 0;
 	int* psizes = new int[procCount-1];
+#ifndef NOBRANCH
+	int* pasizes = new int[procCount-1];
+	long tasize = 0;
+#endif
+
 	for(int procId=1;procId<this->procCount;procId++)
 	{
 		int tag,recv;
@@ -209,15 +218,21 @@ int Qhistogram<T,U>::parallelReceive()
 		MPI_Recv(&lsize,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
 		tsize += lsize;
 		psizes[procId-1] = lsize;
+
+#ifndef NOBRANCH
+		MPI_Recv(&lsize,1,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
+		tasize += lsize;
+		pasizes[procId-1] = lsize;
+#endif
 	}
 
 	vector<vect<double>> lQcollection;
 	lQcollection.resize(tsize); //need to resize first
 	vect<double>* data = lQcollection.data();
 #ifndef NOBRANCH
-	vector<vect<double>> lQacollection;
-	lQacollection.resize(tsize); //need to resize first
-	vect<double>* data1 = lQacollection.data();
+	Qacollection.clear();
+	Qacollection.resize(tasize); //need to resize first
+	vect<double>* data1 = Qacollection.data();
 #endif
 
 	for(int procId=1;procId<this->procCount;procId++)
@@ -233,12 +248,13 @@ int Qhistogram<T,U>::parallelReceive()
 		MPI_Recv(data,psizes[procId-1]*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		data += psizes[procId-1];
 #ifndef NOBRANCH
-		MPI_Recv(data1,psizes[procId-1]*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		data1 += psizes[procId-1];
+		MPI_Recv(data1,pasizes[procId-1]*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
+		data1 += pasizes[procId-1];
 #endif
 	}
 	
 	delete[] psizes;
+	delete[] pasizes;
 
 	//Local gathering done
 	//Now put into global collector
@@ -248,20 +264,13 @@ int Qhistogram<T,U>::parallelReceive()
 	memcpy(data,lQcollection.data(),sizeof(double)*tsize*3);
 	lQcollection.clear();
 
-#ifndef NOBRANCH
-	this->Qacollection.resize(osize+tsize);
-	data1 = Qacollection.data() + osize;
-	memcpy(data1,lQacollection.data(),sizeof(double)*tsize*3);
-	lQacollection.clear();
-#endif
-
 	return SUCCESS;
 }
 
 template <class T,class U>
 void Qhistogram<T,U>::serialize(Serializer<U>& obj)
 {
-	obj<<dt<<ltime<<Q<<Qcollection;
+	obj<<dt<<ltime<<Q;
 #ifndef NOBRANCH
 	obj<<Qacollection;
 #endif
@@ -271,8 +280,9 @@ template <class T,class U>
 void Qhistogram<T,U>::unserialize(Serializer<U>& obj)
 {
 	Qcollection.clear();
-	obj>>dt>>ltime>>Q>>Qcollection;
+	obj>>dt>>ltime>>Q;
 #ifndef NOBRANCH
+	Qacollection.clear();
 	obj>>Qacollection;
 #endif
 }

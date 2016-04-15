@@ -126,7 +126,7 @@ void AutoCorrI<T,U>::gather(void* p)
 template <class T,class U>
 Observable<T,U>* AutoCorrI<T,U>::duplicate(core::WalkerState<T,U>& ws)
 {
-	AutoCorrI<T,U>* newo = new AutoCorrI<T,U>(this->processId,this->procCount,ws,
+	AutoCorrI<T,U>* newo = new AutoCorrI<T,U>(this->processId,this->procCount,this->totalWalkers,ws,
 			this->baseFileName,this->log);
 	newo->lg = this->lg;
 	return newo;

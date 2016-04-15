@@ -24,7 +24,7 @@
 #include "AutoCorr.h"
 #include "AutoCorrFull.h"
 #include "AutoCorrI.h"
-
+#include "CloneMultiplicity.h"
 using namespace measures;
 
 #endif /* MEASURABLES_H_ */
