@@ -115,6 +115,12 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
+		else if(runParams.observableType[i].compare("CloneMult")==0)
+		{
+			CloneMultiplicity<int,stringstream>* oo = new CloneMultiplicity<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log);
+			globalObs.push_back(oo);
+			mpiGlobalObs.push_back(oo);
+		}
 	}
 
 	fprintf(log,"Observables setup.\n");
@@ -201,6 +207,8 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 					localObs->push_back(new AutoCorrI<int,stringstream>(*wstate,runParams.observableName[i],log));
 				else if(runParams.observableType[i].compare("Phistogram")==0)
 					localObs->push_back(new Phistogram<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
+				else if(runParams.observableType[i].compare("CloneMult")==0)
+					localObs->push_back(new CloneMultiplicity<int,stringstream>(*wstate,runParams.observableName[i],log));
 			}
 
 			Walker<int,stringstream>* lwalker = new Walker<int,stringstream>(rgenref,*wstate,*localObs);

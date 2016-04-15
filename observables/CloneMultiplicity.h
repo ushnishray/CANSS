@@ -18,23 +18,19 @@ namespace measures {
 template <class T, class U>
 class CloneMultiplicity: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
-	double dt;
+	vector<set<int,gcmpr<int>>> idc;
 	
-
 	CloneMultiplicity(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
 	}
 
-	CloneMultiplicity(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
-	{
-	}
-
-	CloneMultiplicity(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
+	CloneMultiplicity(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
 	}
 
 	~CloneMultiplicity()
 	{
+		idc.clear();
 	}
 
 	void display();

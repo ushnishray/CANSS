@@ -63,6 +63,7 @@ namespace core
 
 		void clear()
 		{
+			state.clear();
 			for(int i = 0;i<observablesCollection.size();i++)
 				observablesCollection[i]->clear();
 		}

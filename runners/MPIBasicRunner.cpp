@@ -110,7 +110,10 @@ void MPIBasicRunner<T,U>::branch(int step)
 	//Relabel all walkers for current branch step
 	int i = 0;
 	for(typename NumMap<Walker<T,U>>::iterator it = walkers.walkerCollection->begin();it!=walkers.walkerCollection->end();++it)
+	{
 		it->second->state.idhistory.push_back((rank-1)*walkers.walkerCount+i);
+		i++;
+	}
 	branchLimited();
 
 #else

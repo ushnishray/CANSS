@@ -75,6 +75,7 @@ struct Walkers {
 
 	void resetWalkers()
 	{
+#if 0
 #ifndef REINDEX
 		//Not re-indexing: Faster but for very large walker populations lastIndex will be an issue
 		//Need to do this if branching happened
@@ -109,6 +110,7 @@ struct Walkers {
 		for(int i=0;i<initWalkerCount;i++)
 			(*walkerCollection)[i] = wadd->duplicate();
 		delete wadd;
+#endif
 #endif
 		walkerCount = initWalkerCount;
 	}

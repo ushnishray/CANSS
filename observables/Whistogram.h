@@ -24,7 +24,6 @@ public:
 
 	//For gathering
 	vector<double> Wcollection;
-	vector<double> Wacollection;
 
 	Whistogram(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log), localWeight(*(new Weight(_state.weight)))
 	{
@@ -47,7 +46,6 @@ public:
 	~Whistogram()
 	{
 		Wcollection.clear();
-		Wacollection.clear();
 		delete &localWeight;	
 	}
 
