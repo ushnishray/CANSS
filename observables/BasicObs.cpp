@@ -70,26 +70,63 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	int lsize = cavgQ.size();
 	double avgqx = 0.0, avgqx2 = 0.0;
 	double avgqxe = 0.0, avgqx2e = 0.0;
+	double avgqy = 0.0, avgqy2 = 0.0;
+	double avgqye = 0.0, avgqy2e = 0.0;
+	double avgqz = 0.0, avgqz2 = 0.0;
+	double avgqze = 0.0, avgqz2e = 0.0;
+
 	for(int i = 0;i<lsize;i++)
 	{
 		double lqx = cavgQ[i].x/totalWalkers;
 		double lqx2 = (cavgQ2[i].x/totalWalkers - lqx*lqx)*it;
 		avgqx2 += lqx2;
 		avgqx2e += lqx2*lqx2;
-
 		lqx *= it;
 		avgqx += lqx;
 		avgqxe += lqx*lqx;
+
+		double lqy = cavgQ[i].y/totalWalkers;
+		double lqy2 = (cavgQ2[i].y/totalWalkers - lqy*lqy)*it;
+		avgqy2 += lqy2;
+		avgqy2e += lqy2*lqy2;
+		lqy *= it;
+		avgqy += lqy;
+		avgqye += lqy*lqy;
+
+		double lqz = cavgQ[i].z/totalWalkers;
+		double lqz2 = (cavgQ2[i].z/totalWalkers - lqz*lqz)*it;
+		avgqz2 += lqz2;
+		avgqz2e += lqz2*lqz2;
+		lqz *= it;
+		avgqz += lqz;
+		avgqze += lqz*lqz;
 	}
 
 	double norm = 1.0/lsize;
+
 	avgqx *= norm;
 	avgqxe = sqrt((avgqxe*norm - avgqx*avgqx)/(lsize-1));
-
 	avgqx2 *= norm;
 	avgqx2e = sqrt((avgqx2e*norm - avgqx2*avgqx2)/(lsize-1));
 
-	wif<<" # "<<t*lsize<<" "<<avgqx<<" "<<avgqxe<<" "<<avgqx2<<" "<<avgqx2e<<endl;
+	avgqy *= norm;
+	avgqye = sqrt((avgqye*norm - avgqy*avgqy)/(lsize-1));
+	avgqy2 *= norm;
+	avgqy2e = sqrt((avgqy2e*norm - avgqy2*avgqy2)/(lsize-1));
+
+	avgqz *= norm;
+	avgqze = sqrt((avgqze*norm - avgqz*avgqz)/(lsize-1));
+	avgqz2 *= norm;
+	avgqz2e = sqrt((avgqz2e*norm - avgqz2*avgqz2)/(lsize-1));
+
+
+	wif<<" # "<<t*lsize<<" "<<avgqx<<" "<<avgqxe
+			<<" "<<avgqy<<" "<<avgqye
+			<<" "<<avgqz<<" "<<avgqze
+			<<" "<<avgqx2<<" "<<avgqx2e
+			<<" "<<avgqy2<<" "<<avgqy2e
+			<<" "<<avgqz2<<" "<<avgqz2e
+			<<endl;
 #else
 	wif<<endl;
 #endif
@@ -373,6 +410,8 @@ int BasicObs<T,U>::parallelReceive()
 	int lsize = cavgQ.size();
 	double ait = it/lsize;
 	double avgqx = 0.0, avgqx2 = 0.0;
+	double avgqy = 0.0, avgqy2 = 0.0;
+	double avgqz = 0.0, avgqz2 = 0.0;
 
 #if 1
 	ofstream dif(this->baseFileName + "D",std::ofstream::app);
@@ -385,8 +424,20 @@ int BasicObs<T,U>::parallelReceive()
 		double lqx2 = (cavgQ2[i].x/totalWalkers - lqx*lqx);
 		avgqx2 += lqx2;
 
+		double lqy = cavgQ[i].y/this->totalWalkers;
+		avgqy += lqy;
+
+		double lqy2 = (cavgQ2[i].y/totalWalkers - lqy*lqy);
+		avgqy2 += lqy2;
+
+		double lqz = cavgQ[i].z/this->totalWalkers;
+		avgqx += lqz;
+
+		double lqz2 = (cavgQ2[i].z/totalWalkers - lqx*lqx);
+		avgqz2 += lqz2;
+
 #if 1
-		dif<<i<<" "<<lqx*it<<" "<<lqx2*it<<endl;
+		dif<<i<<" "<<lqx*it<<" "<<lqx2*it<<" "<<lqy*it<<" "<<lqy2*it<<" "<<lqz*it<<" "<<lqz2*it<<endl;
 #endif
 	}
 #if 1
@@ -396,16 +447,22 @@ int BasicObs<T,U>::parallelReceive()
 
 	avgqx2 *= ait;
 	avgqx *= ait;
+	avgqy2 *= ait;
+	avgqy *= ait;
+	avgqz2 *= ait;
+	avgqz *= ait;
 
 #endif
 
 	lqx*=it;
+	lqy*=it;
+	lqz*=it;
 	ofstream wif(this->baseFileName + "P",std::ofstream::app);
-	wif<<it<<" "<<temp<<" "<<lqx<<endl;
+	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lqy<<" "<<lqz<<endl;
 	wif.close();
 #ifndef NOBRANCH
 	ofstream aif(this->baseFileName + "A",std::ofstream::app);
-	aif<<(this->ltime*this->dt)*lsize<<" "<<avgqx<<" "<<avgqx2<<endl;
+	aif<<(this->ltime*this->dt)*lsize<<" "<<avgqx<<" "<<avgqx2<<" "<<avgqy<<" "<<avgqy2<<" "<<avgqz<<" "<<avgqz2<<endl;
 	aif.close();
 #endif
 

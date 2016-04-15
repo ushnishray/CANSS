@@ -3,6 +3,10 @@ import sys
 import numpy as np
 import re
 
+if(len(sys.argv)<2):
+	print "Usage is: <no. of files> <base file name> <no. of bins> [<field no.>]"
+	sys.exit()
+
 nf = int(sys.argv[1])
 bf = sys.argv[2]
 nbins = int(sys.argv[3])
