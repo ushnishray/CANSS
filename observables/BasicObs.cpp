@@ -120,7 +120,7 @@ void BasicObs<T,U>::writeViaIndex(int idx) {
 	avgqz2e = sqrt((avgqz2e*norm - avgqz2*avgqz2)/(lsize-1));
 
 
-	wif<<" # "<<t*lsize<<" "<<avgqx<<" "<<avgqxe
+	wif<<" # "<<avgqx<<" "<<avgqxe
 			<<" "<<avgqy<<" "<<avgqye
 			<<" "<<avgqz<<" "<<avgqze
 			<<" "<<avgqx2<<" "<<avgqx2e
@@ -414,7 +414,7 @@ int BasicObs<T,U>::parallelReceive()
 	double avgqz = 0.0, avgqz2 = 0.0;
 
 #if 1
-	ofstream dif(this->baseFileName + "D",std::ofstream::app);
+	ofstream dif(this->baseFileName + "A",std::ofstream::out);
 #endif
 	for(int i = 0;i<lsize;i++)
 	{
@@ -433,7 +433,7 @@ int BasicObs<T,U>::parallelReceive()
 		double lqz = cavgQ[i].z/this->totalWalkers;
 		avgqx += lqz;
 
-		double lqz2 = (cavgQ2[i].z/totalWalkers - lqx*lqx);
+		double lqz2 = (cavgQ2[i].z/totalWalkers - lqz*lqz);
 		avgqz2 += lqz2;
 
 #if 1
@@ -457,11 +457,11 @@ int BasicObs<T,U>::parallelReceive()
 	lqx*=it;
 	lqy*=it;
 	lqz*=it;
-	ofstream wif(this->baseFileName + "P",std::ofstream::app);
-	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lqy<<" "<<lqz<<endl;
+	ofstream wif(this->baseFileName + "E",std::ofstream::app);
+	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx<<" "<<lqy<<" "<<lvy<<" "<<lqz<<" "<<lvz<<endl;
 	wif.close();
 #ifndef NOBRANCH
-	ofstream aif(this->baseFileName + "A",std::ofstream::app);
+	ofstream aif(this->baseFileName + "D",std::ofstream::app);
 	aif<<(this->ltime*this->dt)*lsize<<" "<<avgqx<<" "<<avgqx2<<" "<<avgqy<<" "<<avgqy2<<" "<<avgqz<<" "<<avgqz2<<endl;
 	aif.close();
 #endif
