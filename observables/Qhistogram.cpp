@@ -252,10 +252,11 @@ int Qhistogram<T,U>::parallelReceive()
 		data1 += pasizes[procId-1];
 #endif
 	}
-	
+
+#ifndef NOBRANCH	
 	delete[] psizes;
 	delete[] pasizes;
-
+#endif
 	//Local gathering done
 	//Now put into global collector
 	int osize = Qcollection.size();
