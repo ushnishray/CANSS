@@ -83,8 +83,10 @@ public:
 
 	~BasicObs()
 	{
+#ifndef NOBRANCH
 		cavgQ.clear();
 		cavgQ2.clear();
+#endif
 	}
 
 	void display();

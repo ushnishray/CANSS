@@ -253,8 +253,10 @@ int Qhistogram<T,U>::parallelReceive()
 #endif
 	}
 	
+#ifndef NOBRANCH
 	delete[] psizes;
 	delete[] pasizes;
+#endif
 
 	//Local gathering done
 	//Now put into global collector
