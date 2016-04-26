@@ -444,18 +444,20 @@ int RSOSObs<T,U>::parallelReceive()
 			cavgQ.resize(lsize);
 			cavgQ2.resize(lsize);
 			avgH.resize(lsize);
+			avgH2.resize(lsize);
 			avgN.resize(lsize);
+			avgN2.resize(lsize);
 		}
 
 		MPI_Recv(tempcQ.data(),lsize*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(tempcQ2.data(),lsize*3,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
-		vector<double> tempH, tempH2;
-		vector<int> tempN, tempN2;
+
+		vector<double> tempH(lsize), tempH2(lsize);
+		vector<int> tempN(lsize), tempN2(lsize);
 		MPI_Recv(tempH.data(),lsize,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(tempH2.data(),lsize,MPI_DOUBLE,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(tempN.data(),lsize,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
 		MPI_Recv(tempN2.data(),lsize,MPI_INT,procId,tag,MPI_COMM_WORLD,&stat);
-
 
 		for(int i = 0;i<lsize;i++)
 		{
