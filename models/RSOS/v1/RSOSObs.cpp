@@ -246,8 +246,9 @@ void RSOSObs<T,U>::gather(void* p)
 	//Calculate avg height
 	int lth = 0;
 	for(int i=0;i<ws.L;i++)
-		lth += ws.height[i];
+		lth += ws.height[i] - h0[i];
 	double avgth = lth*1.0/ws.L;
+	memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 
 	//Global gather
 	obj->ltime = this->state.ltime;
@@ -618,7 +619,7 @@ int RSOSObs<T,U>::parallelReceive()
 template <class T, class U>
 void RSOSObs<T,U>::serialize(Serializer<U>& obj)
 {
-	obj<<dt<<Q;
+	obj<<dt<<Q<<h0;
 #ifndef NOBRANCH
 	obj<<cavgQ<<avgH<<avgN;
 #endif
@@ -627,7 +628,7 @@ void RSOSObs<T,U>::serialize(Serializer<U>& obj)
 template <class T, class U>
 void RSOSObs<T,U>::unserialize(Serializer<U>& obj)
 {
-	obj>>dt>>Q;
+	obj>>dt>>Q>>h0;
 #ifndef NOBRANCH
 	cavgQ.clear();
 	obj>>cavgQ>>avgH>>avgN;

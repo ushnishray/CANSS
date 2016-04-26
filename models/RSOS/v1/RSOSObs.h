@@ -22,6 +22,9 @@ public:
 	vect<double> Q;
 	int N;
 
+	//History
+	vector<int> h0;
+
 	//For global collection into processes
 	unsigned int ltime;
 
@@ -54,6 +57,11 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
+		h0.resize(ws.L);
+		for(int i = 0;i<ws.L;i++)
+			h0[i] = 0;
+
 		dt = 0.0;
 		Zcount = 0;
 		ltime = 0;
@@ -67,6 +75,11 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
 	{
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
+		h0.resize(ws.L);
+		for(int i = 0;i<ws.L;i++)
+			h0[i] = 0;
+
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
@@ -80,6 +93,11 @@ public:
 
 	RSOSObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
+		h0.resize(ws.L);
+		for(int i = 0;i<ws.L;i++)
+			h0[i] = 0;
+
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
@@ -93,6 +111,7 @@ public:
 
 	~RSOSObs()
 	{
+		h0.clear();
 #ifndef NOBRANCH
 		cavgQ.clear();
 		cavgQ2.clear();
