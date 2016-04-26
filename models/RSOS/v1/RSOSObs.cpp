@@ -415,6 +415,10 @@ int RSOSObs<T,U>::parallelReceive()
 #ifndef NOBRANCH
 	cavgQ.clear();
 	cavgQ2.clear();
+	avgH.clear();
+	avgH2.clear();
+	avgN.clear();
+	avgN2.clear();
 #endif
 
 	//Wait for all processes to get here
@@ -591,7 +595,8 @@ int RSOSObs<T,U>::parallelReceive()
 	lqy*=it;
 	lqz*=it;
 	ofstream wif(this->baseFileName + "E",std::ofstream::app);
-	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx<<" "<<lqy<<" "<<lvy<<" "<<lqz<<" "<<lvz<<endl;
+	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx<<" "<<lqy<<" "<<lvy<<" "<<lqz<<" "<<lvz
+			<<" "<<lqN<<" "<<lqH<<endl;
 	wif.close();
 #ifndef NOBRANCH
 	ofstream aif(this->baseFileName + "D",std::ofstream::app);
