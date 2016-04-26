@@ -9,6 +9,7 @@
  */
 
 #include "dmc.h"
+#include "RSOSWalkerState.h"
 #include "RSOSObs.h"
 
 namespace measures {
@@ -372,10 +373,10 @@ int RSOSObs<T,U>::parallelSend()
 	MPI_Send(&lsize,1,MPI_INT,0,tag,MPI_COMM_WORLD);
 	MPI_Send(this->cavgQ.data(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
 	MPI_Send(this->cavgQ2.data(),lsize*3,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_send(this->avgH.data(),lsize,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_send(this->avgH2.data(),lsize,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
-	MPI_send(this->avgN.data(),lsize,MPI_INT,0,tag,MPI_COMM_WORLD);
-	MPI_send(this->avgN2.data(),lsize,MPI_INT,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->avgH.data(),lsize,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->avgH2.data(),lsize,MPI_DOUBLE,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->avgN.data(),lsize,MPI_INT,0,tag,MPI_COMM_WORLD);
+	MPI_Send(this->avgN2.data(),lsize,MPI_INT,0,tag,MPI_COMM_WORLD);
 
 	cavgQ.clear();
 	cavgQ2.clear();
