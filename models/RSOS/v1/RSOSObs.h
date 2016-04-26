@@ -23,6 +23,7 @@ public:
 	int N;
 
 	//History
+	bool hset;
 	vector<int> h0;
 
 	//For global collection into processes
@@ -57,6 +58,7 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
+		hset = false;
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)
@@ -75,6 +77,7 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
 	{
+		hset = false;
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)
@@ -93,6 +96,7 @@ public:
 
 	RSOSObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
+		hset = false;
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)

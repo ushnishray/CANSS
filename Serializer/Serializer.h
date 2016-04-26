@@ -136,6 +136,8 @@ public:
 		return (*this);
 	}
 */
+	virtual This& operator<<(bool x) { XStream& bs = *this; bs << x; return (*this);}
+	virtual This& operator>>(bool& x) { XStream& bs = *this; bs >> x; return (*this);}
 
 	virtual This& operator<<(int8_t x) { XStream& bs = *this; bs << x; return (*this);}
 	virtual This& operator>>(int8_t& x) { XStream& bs = *this; bs >> x; return (*this);}

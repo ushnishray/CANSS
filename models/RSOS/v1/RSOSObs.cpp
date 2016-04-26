@@ -20,6 +20,12 @@ void RSOSObs<T,U>::measure() {
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
 	N += this->state.Rcurr->size();
+	if(!hset)
+	{
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
+		hset = true;
+		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
+	}
 }
 
 template <class T, class U>
@@ -244,11 +250,11 @@ void RSOSObs<T,U>::gather(void* p)
 	RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 
 	//Calculate avg height
+	hset = false;
 	int lth = 0;
 	for(int i=0;i<ws.L;i++)
 		lth += ws.height[i] - h0[i];
 	double avgth = lth*1.0/ws.L;
-	memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 
 	//Global gather
 	obj->ltime = this->state.ltime;
