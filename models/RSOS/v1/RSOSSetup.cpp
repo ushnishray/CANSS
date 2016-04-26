@@ -13,6 +13,7 @@
 #include "RunParameters.h"
 #include "RSOSMover.h"
 #include "RSOSWalkerState.h"
+#include "RSOSObs.h"
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -71,7 +72,7 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 	{
 		if(runParams.observableType[i].compare("Basic")==0)
 		{
-			BasicObs<int,stringstream>* oo = new BasicObs<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log,dt);
+			RSOSObs<int,stringstream>* oo = new RSOSObs<int,stringstream>(rank,totalProcs,totalWalkers,*gwstate,runParams.observableName[i],log,dt);
 			globalObs.push_back(oo);
 			mpiGlobalObs.push_back(oo);
 		}
@@ -179,7 +180,7 @@ int setup(int rank, string baseSpecFile, int argc, char* argv[])
 			for(int i=0;i<runParams.observableCount;i++)
 			{
 				if(runParams.observableType[i].compare("Basic")==0)
-					localObs->push_back(new BasicObs<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
+					localObs->push_back(new RSOSObs<int,stringstream>(*wstate,runParams.observableName[i],log,dt));
 				else if(runParams.observableType[i].compare("Density")==0)
 					localObs->push_back(new Density<int,stringstream>(*wstate,runParams.observableName[i],log));
 				else if(runParams.observableType[i].compare("Qhistogram")==0)
