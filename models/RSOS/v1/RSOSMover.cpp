@@ -129,8 +129,8 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 		}
 	}
 
-	fprintf(w->state.out,"Moved\n");
-	fflush(w->state.out);
+//	fprintf(w->state.out,"Moved\n");
+//	fflush(w->state.out);
 }
 
 /////////////////////////////////////////////////

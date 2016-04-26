@@ -236,7 +236,7 @@ void RSOSObs<T,U>::gather(void* p)
 	//Calculate avg height
 	int lth = 0;
 	for(int i=0;i<ws.L;i++)
-		th += ws.height[i];
+		lth += ws.height[i];
 	double avgth = lth*1.0/ws.L;
 
 	//Global gather
@@ -520,7 +520,7 @@ int RSOSObs<T,U>::parallelReceive()
 	double avgqz = 0.0, avgqz2 = 0.0;
 
 	double avgh = 0.0, avgh2 = 0.0;
-	doublw avgn = 0.0, avgn2 = 0.0;
+	double avgn = 0.0, avgn2 = 0.0;
 
 #if 1
 	ofstream dif(this->baseFileName + "A",std::ofstream::out);
