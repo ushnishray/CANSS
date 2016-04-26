@@ -172,6 +172,11 @@ void RSOSObs<T,U>::clear()
 	Q.x = 0.0; Q2.x = 0.0;
 	Q.y = 0.0; Q2.y = 0.0;
 	Q.z = 0.0; Q2.z = 0.0;
+
+	V.x = 0.0; V2.x = 0.0;
+	V.y = 0.0; V2.y = 0.0;
+	V.z = 0.0; V2.z = 0.0;
+
 	ltime = 0;
 
 	freeEnergy.resetValue();
@@ -182,6 +187,11 @@ void RSOSObs<T,U>::clear()
 	Qy2.resetValue();
 	Qz2.resetValue();
 	fe = fe2 = 0.0;
+
+	H = H2 = 0.0;
+	N = N2 = 0.0;
+	eH.resetValue();
+	eN.resetValue();
 
 #ifndef NOBRANCH
 	cavgQ.clear();
