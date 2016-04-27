@@ -54,7 +54,7 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 		//Attempt to add
 		{
 			//nearest neighbors
-			vect<int> s1((site-1)%rp.L,ht,0);
+			vect<int> s1((site-1+rp.L)%rp.L,ht,0);
 			PtclMap<int>::iterator it1 = w->state.Rcurr->find(s1);
 			char s1v = 0;
 			if(it1 != w->state.Rcurr->end())
@@ -72,9 +72,9 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 			if(it1 != w->state.Rcurr->end())
 				s3v = it1->second;
 
-			double cost = (-rp.trans.J*(s1v*species + s2v*species + s3v*species) + rp.trans.mu);
-			double wt = exp(cost);
-			if(gsl_rng_uniform(w->rgenref) < wt && abs(ws.height[(site-1)%rp.L]-(ht))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht))<= 1)
+			double cost = (-rp.trans.J*(s1v*species + s2v*species + s3v*species)) - rp.trans.mu;
+			double wt = exp(-cost);
+			if(gsl_rng_uniform(w->rgenref) < wt && abs(ws.height[(site-1+rp.L)%rp.L]-(ht))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht))<= 1)
 			{
 				(*w->state.Rcurr)[siteloc] = species;
 				ws.height[site]++;
@@ -97,7 +97,7 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 			int species = it->second; //Get species
 
 			//nearest neighbors
-			vect<int> s1((site-1)%rp.L,ht,0);
+			vect<int> s1((site-1+rp.L)%rp.L,ht,0);
 			PtclMap<int>::iterator it1 = w->state.Rcurr->find(s1);
 			char s1v = 0;
 			if(it1 != w->state.Rcurr->end())
@@ -115,9 +115,9 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 			if(it1 != w->state.Rcurr->end())
 				s3v = it1->second;
 
-			double cost = -(-rp.trans.J*(s1v*species + s2v*species + s3v*species) + rp.trans.mu);
-			double wt = exp(cost);
-			if(gsl_rng_uniform(w->rgenref) < wt  && abs(ws.height[(site-1)%rp.L]-(ht-1))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht-1))<= 1)
+			double cost = rp.trans.J*(s1v*species + s2v*species + s3v*species) + rp.trans.mu;
+			double wt = exp(-cost);
+			if(gsl_rng_uniform(w->rgenref) < wt  && abs(ws.height[(site-1+rp.L)%rp.L]-(ht-1))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht-1))<= 1)
 			{
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;

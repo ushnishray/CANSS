@@ -63,13 +63,13 @@ public:
 
 	void reset()
 	{
-		dQ.x = (T) 0.0;
-		dQ.y = (T) 0.0;
-		dQ.z = (T) 0.0;
+		this->dQ.x = (T) 0.0;
+		this->dQ.y = (T) 0.0;
+		this->dQ.z = (T) 0.0;
 
-		ltime = 0;
-		dweight = 0.0;
-		weight.resetValue();
+		//ltime = 0;
+		this->dweight = 0.0;
+		this->weight.resetValue();
 	}
 
 	virtual void serialize(Serializer<U>& obj)

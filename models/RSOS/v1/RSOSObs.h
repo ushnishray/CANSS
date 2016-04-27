@@ -22,17 +22,12 @@ public:
 	vect<double> Q;
 	int N;
 
-	//History
-	bool hset;
-	vector<int> h0;
-	int N0;
-
 	//For global collection into processes
 	unsigned int ltime;
 
 	//for pend
-	Weight Qx,Qy,Qz;
-	Weight Qx2,Qy2,Qz2;
+	Weight Qx;
+	Weight Qx2;
 	Weight freeEnergy;
 	Weight eH,eN;
 
@@ -59,19 +54,11 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
-		hset = false;
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
-		h0.resize(ws.L);
-		for(int i = 0;i<ws.L;i++)
-			h0[i] = 0;
-		N0 = 0;
 
 		dt = 0.0;
 		Zcount = 0;
 		ltime = 0;
 		Q.x = 0.0; Q2.x = 0.0;
-		Q.y = 0.0; Q2.y = 0.0;
-		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
 #endif
@@ -79,19 +66,10 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
 	{
-		hset = false;
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
-		h0.resize(ws.L);
-		for(int i = 0;i<ws.L;i++)
-			h0[i] = 0;
-		N0 = 0;
-
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
 		Q.x = 0.0; Q2.x = 0.0;
-		Q.y = 0.0; Q2.y = 0.0;
-		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
 #endif
@@ -99,19 +77,10 @@ public:
 
 	RSOSObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
-		hset = false;
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
-		h0.resize(ws.L);
-		for(int i = 0;i<ws.L;i++)
-			h0[i] = 0;
-		N0 = 0;
-
 		dt = _dt;
 		Zcount = 0;
 		ltime = 0;
 		Q.x = 0.0; Q2.x = 0.0;
-		Q.y = 0.0; Q2.y = 0.0;
-		Q.z = 0.0; Q2.z = 0.0;
 		fe = fe2 = 0.0;
 #ifndef NOBRANCH
 #endif
@@ -119,7 +88,6 @@ public:
 
 	~RSOSObs()
 	{
-		h0.clear();
 #ifndef NOBRANCH
 		cavgQ.clear();
 		cavgQ2.clear();

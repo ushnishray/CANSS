@@ -16,10 +16,13 @@ namespace measures {
 
 template <class T,class U>
 void RSOSObs<T,U>::measure() {
+	/*
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
+	*/
 
+	/*
 	if(!hset)
 	{
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
@@ -27,6 +30,7 @@ void RSOSObs<T,U>::measure() {
 		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 		N0 = this->state.particleCount;
 	}
+	*/
 }
 
 template <class T, class U>
@@ -188,11 +192,7 @@ void RSOSObs<T,U>::clear()
 
 	freeEnergy.resetValue();
 	Qx.resetValue();
-	Qy.resetValue();
-	Qz.resetValue();
 	Qx2.resetValue();
-	Qy2.resetValue();
-	Qz2.resetValue();
 	fe = fe2 = 0.0;
 
 	H = H2 = 0.0;
@@ -250,30 +250,26 @@ void RSOSObs<T,U>::gather(void* p)
 
 	RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 
+	//Calculate magnetization
+	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin();it!=this->state.Rcurr->end();++it)
+		this->Q.x += it->second;
+	Q.x/=this->state.particleCount;
+
 	//Calculate avg height
-	hset = false;
 	int lth = 0;
 	for(int i=0;i<ws.L;i++)
-		lth += ws.height[i] - h0[i];
+		lth += ws.height[i];
 	double avgth = lth*1.0/ws.L;
-	N = this->state.particleCount-N0;
+	N = this->state.particleCount;
 
 	//Global gather
 	obj->ltime = this->state.ltime;
 
 	Weight temp = this->state.weight; temp.multUpdate(Q.x);
 	obj->Qx.add(temp);
-	temp = this->state.weight; temp.multUpdate(Q.y);
-	obj->Qy.add(temp);
-	temp = this->state.weight; temp.multUpdate(Q.z);
-	obj->Qz.add(temp);
 
 	temp = this->state.weight; temp.multUpdate(Q.x*Q.x);
 	obj->Qx2.add(temp);
-	temp = this->state.weight; temp.multUpdate(Q.y*Q.y);
-	obj->Qy2.add(temp);
-	temp = this->state.weight; temp.multUpdate(Q.z*Q.z);
-	obj->Qz2.add(temp);
 
 	obj->freeEnergy.add(this->state.weight);
 
@@ -370,17 +366,9 @@ int RSOSObs<T,U>::parallelSend()
 
 	Qx.mpiSend(0);
 	Qx.resetValue();
-	Qy.mpiSend(0);
-	Qy.resetValue();
-	Qz.mpiSend(0);
-	Qz.resetValue();
 
 	Qx2.mpiSend(0);
 	Qx2.resetValue();
-	Qy2.mpiSend(0);
-	Qy2.resetValue();
-	Qz2.mpiSend(0);
-	Qz2.resetValue();
 
 	eH.mpiSend(0);
 	eH.resetValue();
@@ -447,12 +435,7 @@ int RSOSObs<T,U>::parallelReceive()
 		this->freeEnergy.mpiReceive(procId);
 
 		this->Qx.mpiReceive(procId);
-		this->Qy.mpiReceive(procId);
-		this->Qz.mpiReceive(procId);
-
 		this->Qx2.mpiReceive(procId);
-		this->Qy2.mpiReceive(procId);
-		this->Qz2.mpiReceive(procId);
 
 		this->eH.mpiReceive(procId);
 		this->eN.mpiReceive(procId);
@@ -505,24 +488,12 @@ int RSOSObs<T,U>::parallelReceive()
 	this->Zcount++;
 	double it = 1.0/(this->ltime*this->dt);
 	double lqx = (Qx/freeEnergy).value();
-	double lqy = (Qy/freeEnergy).value();
-	double lqz = (Qz/freeEnergy).value();
 	this->Q.x += it*lqx;
-	this->Q.y += it*lqy;
-	this->Q.z += it*lqz;
 	this->Q2.x += it*it*lqx*lqx;
-	this->Q2.y += it*it*lqy*lqy;
-	this->Q2.z += it*it*lqz*lqz;
 
 	double lvx = it*((Qx2/freeEnergy).value() - lqx*lqx);
-	double lvy = it*((Qy2/freeEnergy).value() - lqy*lqy);
-	double lvz = it*((Qz2/freeEnergy).value() - lqz*lqz);
 	this->V.x += lvx;
-	this->V.y += lvy;
-	this->V.z += lvz;
 	this->V2.x += lvx*lvx;
-	this->V2.y += lvy*lvy;
-	this->V2.z += lvz*lvz;
 
 	double offset = log(this->totalWalkers);
 	double temp = it*(freeEnergy.logValue()-offset);
@@ -541,8 +512,6 @@ int RSOSObs<T,U>::parallelReceive()
 	int lsize = cavgQ.size();
 	double ait = it/lsize;
 	double avgqx = 0.0, avgqx2 = 0.0;
-	double avgqy = 0.0, avgqy2 = 0.0;
-	double avgqz = 0.0, avgqz2 = 0.0;
 
 	double avgh = 0.0, avgh2 = 0.0;
 	double avgn = 0.0, avgn2 = 0.0;
@@ -557,16 +526,6 @@ int RSOSObs<T,U>::parallelReceive()
 		double lqx2 = (cavgQ2[i].x/totalWalkers - lqx*lqx);
 		avgqx2 += lqx2;
 
-		double lqy = cavgQ[i].y/this->totalWalkers;
-		avgqy += lqy;
-		double lqy2 = (cavgQ2[i].y/totalWalkers - lqy*lqy);
-		avgqy2 += lqy2;
-
-		double lqz = cavgQ[i].z/this->totalWalkers;
-		avgqx += lqz;
-		double lqz2 = (cavgQ2[i].z/totalWalkers - lqz*lqz);
-		avgqz2 += lqz2;
-
 		double lh = (avgH[i]/totalWalkers);
 		avgh += lh;
 		double lh2 = (avgH2[i]/totalWalkers - lh*lh);
@@ -577,7 +536,7 @@ int RSOSObs<T,U>::parallelReceive()
 		double ln2 = (avgN2[i]/totalWalkers - ln*ln);
 		avgn2 += ln2;
 #if 1
-		dif<<i<<" "<<lqx*it<<" "<<lqx2*it<<" "<<lqy*it<<" "<<lqy2*it<<" "<<lqz*it<<" "<<lqz2*it<<
+		dif<<i<<" "<<lqx*it<<" "<<lqx2*it<<
 				" "<<lh*it<<" "<<ln*it<<endl;
 #endif
 	}
@@ -588,11 +547,6 @@ int RSOSObs<T,U>::parallelReceive()
 
 	avgqx2 *= ait;
 	avgqx *= ait;
-	avgqy2 *= ait;
-	avgqy *= ait;
-	avgqz2 *= ait;
-	avgqz *= ait;
-	avgh2 *= ait;
 	avgh *= ait;
 	avgn2 *= ait;
 	avgn *= ait;
@@ -600,15 +554,13 @@ int RSOSObs<T,U>::parallelReceive()
 #endif
 
 	lqx*=it;
-	lqy*=it;
-	lqz*=it;
 	ofstream wif(this->baseFileName + "E",std::ofstream::app);
-	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx<<" "<<lqy<<" "<<lvy<<" "<<lqz<<" "<<lvz
+	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx
 			<<" "<<lqN<<" "<<lqH<<endl;
 	wif.close();
 #ifndef NOBRANCH
 	ofstream aif(this->baseFileName + "D",std::ofstream::app);
-	aif<<(this->ltime*this->dt)*lsize<<" "<<avgqx<<" "<<avgqx2<<" "<<avgqy<<" "<<avgqy2<<" "<<avgqz<<" "<<avgqz2
+	aif<<(this->ltime*this->dt)*lsize<<" "<<avgqx<<" "<<avgqx2
 			<<" "<<avgh<<" "<<avgh2<<" "<<avgn<<" "<<avgn2<<endl;
 	aif.close();
 #endif
@@ -616,11 +568,7 @@ int RSOSObs<T,U>::parallelReceive()
 	//Reset for next collection
 	freeEnergy.resetValue();
 	Qx.resetValue();
-	Qy.resetValue();
-	Qz.resetValue();
 	Qx2.resetValue();
-	Qy2.resetValue();
-	Qz2.resetValue();
 	eH.resetValue();
 	eN.resetValue();
 
@@ -632,7 +580,7 @@ int RSOSObs<T,U>::parallelReceive()
 template <class T, class U>
 void RSOSObs<T,U>::serialize(Serializer<U>& obj)
 {
-	obj<<dt<<Q<<h0;
+	obj<<dt<<Q;
 #ifndef NOBRANCH
 	obj<<cavgQ<<avgH<<avgN;
 #endif
@@ -641,7 +589,7 @@ void RSOSObs<T,U>::serialize(Serializer<U>& obj)
 template <class T, class U>
 void RSOSObs<T,U>::unserialize(Serializer<U>& obj)
 {
-	obj>>dt>>Q>>h0;
+	obj>>dt>>Q;
 #ifndef NOBRANCH
 	cavgQ.clear();
 	obj>>cavgQ>>avgH>>avgN;
