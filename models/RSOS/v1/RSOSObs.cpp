@@ -16,13 +16,8 @@ namespace measures {
 
 template <class T,class U>
 void RSOSObs<T,U>::measure() {
-	/*
 	Q.x += this->state.dQ.x;
-	Q.y += this->state.dQ.y;
-	Q.z += this->state.dQ.z;
-	*/
 
-	/*
 	if(!hset)
 	{
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
@@ -30,7 +25,7 @@ void RSOSObs<T,U>::measure() {
 		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 		N0 = this->state.particleCount;
 	}
-	*/
+
 }
 
 template <class T, class U>
@@ -51,24 +46,12 @@ void RSOSObs<T,U>::writeViaIndex(int idx) {
 	wif.fill(' ');
 
 	Q.x *= iZ;
-	Q.y *= iZ;
-	Q.z *= iZ;
 	Q2.x *= iZ;
-	Q2.y *= iZ;
-	Q2.z *= iZ;
 	double Qxe = sqrt((Q2.x - Q.x*Q.x)*iZ);
-	double Qye = sqrt((Q2.y - Q.y*Q.y)*iZ);
-	double Qze = sqrt((Q2.z - Q.z*Q.z)*iZ);
 
 	V.x *= iZ;
-	V.y *= iZ;
-	V.z *= iZ;
 	V2.x *= iZ;
-	V2.y *= iZ;
-	V2.z *= iZ;
 	double Vxe = sqrt((V2.x - V.x*V.x)*iZ);
-	double Vye = sqrt((V2.y - V.y*V.y)*iZ);
-	double Vze = sqrt((V2.z - V.z*V.z)*iZ);
 
 	double afE = fe*iZ;
 	double afE2 = sqrt((this->fe2*iZ - afE*afE)*iZ);
@@ -250,17 +233,14 @@ void RSOSObs<T,U>::gather(void* p)
 
 	RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 
-	//Calculate magnetization
-	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin();it!=this->state.Rcurr->end();++it)
-		this->Q.x += it->second;
-	Q.x/=this->state.particleCount;
 
 	//Calculate avg height
+	hset = false;
 	int lth = 0;
 	for(int i=0;i<ws.L;i++)
-		lth += ws.height[i];
+		lth += ws.height[i] - h0[i];
 	double avgth = lth*1.0/ws.L;
-	N = this->state.particleCount;
+	N = this->state.particleCount - N0;
 
 	//Global gather
 	obj->ltime = this->state.ltime;
