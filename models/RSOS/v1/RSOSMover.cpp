@@ -122,8 +122,8 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;
 				ws.height[site]--;
-				w->state.dQ.x = -species; //Since we are removing total spin reduces by current spin
-				w->state.dweight = (species == -1) ? rp.trans.rmc : rp.trans.lmc;
+				w->state.dQ.x = species; //Since we are removing total spin reduces by current spin
+				w->state.dweight = (species == 1) ? rp.trans.rmc : rp.trans.lmc;
 				w->state.weight.multUpdate(w->state.dweight);
 			}
 		}

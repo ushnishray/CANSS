@@ -48,7 +48,7 @@ void RSOSObs<T,U>::writeViaIndex(int idx) {
 	Q.x *= iZ;
 	Q2.x *= iZ;
 	double Qxe = sqrt((Q2.x - Q.x*Q.x)*iZ);
-
+	
 	V.x *= iZ;
 	V2.x *= iZ;
 	double Vxe = sqrt((V2.x - V.x*V.x)*iZ);
@@ -66,6 +66,7 @@ void RSOSObs<T,U>::writeViaIndex(int idx) {
 
 	wif<<t*Zcount<<" "<<afE<<" "<<afE2;
 
+	double Qye = 0, Qze = 0, Vye = 0, Vze = 0;
 	wif<<" "<<setfill(' ')<<Q.x<<" "<<Qxe<<" "<<setfill(' ')<<Q.y<<" "<<Qye<<" "<<setfill(' ')<<Q.z<<" "<<Qze
 			<<" "<<V.x<<" "<<Vxe<<" "<<V.y<<" "<<Vye<<" "<<V.z<<" "<<Vze<<" "<<H<<" "<<He<<" "<<gN<<" "<<Ne;
 
