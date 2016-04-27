@@ -19,12 +19,13 @@ void RSOSObs<T,U>::measure() {
 	Q.x += this->state.dQ.x;
 	Q.y += this->state.dQ.y;
 	Q.z += this->state.dQ.z;
-	N += this->state.Rcurr->size();
+
 	if(!hset)
 	{
 		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		hset = true;
 		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
+		N0 = this->state.particleCount;
 	}
 }
 
@@ -121,7 +122,7 @@ void RSOSObs<T,U>::writeViaIndex(int idx) {
 		avgqz += lqz;
 		avgqze += lqz*lqz;
 
-		double lqn = avgN[i]/totalWalkers;
+		double lqn = 1.0*avgN[i]/totalWalkers;
 		avgn += lqn;
 		avgne += lqn*lqn;
 
@@ -255,6 +256,7 @@ void RSOSObs<T,U>::gather(void* p)
 	for(int i=0;i<ws.L;i++)
 		lth += ws.height[i] - h0[i];
 	double avgth = lth*1.0/ws.L;
+	N = this->state.particleCount-N0;
 
 	//Global gather
 	obj->ltime = this->state.ltime;

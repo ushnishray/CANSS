@@ -136,6 +136,7 @@ struct RunParameters
 		trans.load(bf);
 		trans.dt = 1.0/L;
 
+		eSteps = temp/trans.dt*eSteps;
 		branchStep = temp/trans.dt;
 
 		trans.lmc = exp(beta);

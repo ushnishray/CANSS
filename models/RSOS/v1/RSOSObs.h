@@ -25,6 +25,7 @@ public:
 	//History
 	bool hset;
 	vector<int> h0;
+	int N0;
 
 	//For global collection into processes
 	unsigned int ltime;
@@ -63,6 +64,7 @@ public:
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)
 			h0[i] = 0;
+		N0 = 0;
 
 		dt = 0.0;
 		Zcount = 0;
@@ -82,6 +84,7 @@ public:
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)
 			h0[i] = 0;
+		N0 = 0;
 
 		dt = _dt;
 		Zcount = 0;
@@ -101,6 +104,7 @@ public:
 		h0.resize(ws.L);
 		for(int i = 0;i<ws.L;i++)
 			h0[i] = 0;
+		N0 = 0;
 
 		dt = _dt;
 		Zcount = 0;

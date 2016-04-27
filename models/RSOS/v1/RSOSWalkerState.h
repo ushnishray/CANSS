@@ -63,9 +63,13 @@ public:
 
 	void reset()
 	{
-		core::WalkerState<T,U>::reset();
-//		for(int i = 0;i<L;i++)
-//			height[i] = 0;
+		dQ.x = (T) 0.0;
+		dQ.y = (T) 0.0;
+		dQ.z = (T) 0.0;
+
+		ltime = 0;
+		dweight = 0.0;
+		weight.resetValue();
 	}
 
 	virtual void serialize(Serializer<U>& obj)
