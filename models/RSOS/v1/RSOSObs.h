@@ -18,6 +18,7 @@ namespace measures {
 template <class T, class U>
 class RSOSObs: public measures::Observable<T,U>, public measures::MPIObservable {
 public:
+	unsigned int ltime;
 	double dt;
 	vect<double> Q;
 	int N;
@@ -57,7 +58,7 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log) : Observable<T,U>(_state,bsf,log)
 	{
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w->state));
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		hset = false;
 		h0.resize(ws.L);
 		N0 = 0;
@@ -73,7 +74,7 @@ public:
 
 	RSOSObs(core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : Observable<T,U>(_state,bsf,log)
 	{
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w->state));
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		hset = false;
 		h0.resize(ws.L);
 		N0 = 0;
@@ -89,7 +90,7 @@ public:
 
 	RSOSObs(int pId,int nprocs,int tw, core::WalkerState<T,U>& _state, string bsf, FILE* log, double _dt) : MPIObservable(pId,nprocs,tw),Observable<T,U>(_state,bsf,log)
 	{
-		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w->state));
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(this->state));
 		hset = false;
 		h0.resize(ws.L);
 		N0 = 0;
