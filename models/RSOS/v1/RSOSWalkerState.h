@@ -67,7 +67,7 @@ public:
 		this->dQ.y = (T) 0.0;
 		this->dQ.z = (T) 0.0;
 
-		ltime = 0;
+		this->ltime = 0;
 		this->dweight = 0.0;
 		this->weight.resetValue();
 	}
