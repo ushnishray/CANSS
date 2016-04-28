@@ -72,7 +72,7 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 			if(it1 != w->state.Rcurr->end())
 				s3v = it1->second;
 
-			double cost = (-rp.trans.J*(s1v*species + s2v*species + s3v*species)) - rp.trans.mu;
+			double cost = (-rp.trans.J*species*(s1v + s2v + s3v)) - rp.trans.mu;
 			double wt = exp(-cost);
 			if(gsl_rng_uniform(w->rgenref) < wt && abs(ws.height[(site-1+rp.L)%rp.L]-(ht))<= 1 && abs(ws.height[(site+1)%rp.L]-(ht))<= 1)
 			{
@@ -122,8 +122,8 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 				w->state.Rcurr->erase(it);
 				w->state.particleCount--;
 				ws.height[site]--;
-				w->state.dQ.x = species; //Since we are removing total spin reduces by current spin
-				w->state.dweight = (species == 1) ? rp.trans.rmc : rp.trans.lmc;
+				w->state.dQ.x = -species; //Since we are removing total spin reduces by current spin
+				w->state.dweight = (species == -1) ? rp.trans.rmc : rp.trans.lmc;
 				w->state.weight.multUpdate(w->state.dweight);
 			}
 		}

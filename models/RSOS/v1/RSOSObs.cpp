@@ -16,7 +16,7 @@ namespace measures {
 
 template <class T,class U>
 void RSOSObs<T,U>::measure() {
-	Q.x += this->state.dQ.x;
+//	Q.x += this->state.dQ.x;
 
 	if(!hset)
 	{
@@ -24,6 +24,10 @@ void RSOSObs<T,U>::measure() {
 		hset = true;
 		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 		N0 = this->state.particleCount;
+
+		m0 = 0;
+		for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin();it!=this->state.Rcurr->end();++it)
+			m0 += it->second;
 	}
 
 }
@@ -180,7 +184,7 @@ void RSOSObs<T,U>::clear()
 	fe = fe2 = 0.0;
 
 	H = H2 = 0.0;
-	N = N2 = 0.0;
+	gN = N2 = 0.0;
 	eH.resetValue();
 	eN.resetValue();
 
@@ -242,6 +246,11 @@ void RSOSObs<T,U>::gather(void* p)
 		lth += ws.height[i] - h0[i];
 	double avgth = lth*1.0/ws.L;
 	N = this->state.particleCount - N0;
+
+	Q.x = 0;
+	for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin();it!=this->state.Rcurr->end();++it)
+		Q.x += it->second;
+	Q.x -= m0;
 
 	//Global gather
 	obj->ltime = this->state.ltime;
