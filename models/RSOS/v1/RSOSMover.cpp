@@ -44,6 +44,10 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 	float rd = gsl_rng_uniform(w->rgenref);
 
 	w->state.ltime++;
+	//Must do this for zero-move!
+	w->state.dweight = 1.0;	
+	w->state.dQ.x = 0;
+
 	if(rd<0.5)
 	{
 		int ht = ws.height[site]+1;

@@ -27,7 +27,6 @@ public:
 	bool hset;
 	vector<int> h0;
 	int N0;
-	int m0;
 
 	//For global collection into processes
 	//for pend
