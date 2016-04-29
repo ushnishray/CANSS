@@ -89,7 +89,7 @@ void RSOSMover<T,U>::move(Walker<T,U>* w)
 			}
 		}
 	}
-	else
+	else if(ws.height[site] > 1)
 	{
 		int ht = ws.height[site];
 		vect<int> siteloc(site,ht,0);

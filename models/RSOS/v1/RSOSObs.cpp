@@ -24,6 +24,14 @@ void RSOSObs<T,U>::measure() {
 		hset = true;
 		memcpy(h0.data(),ws.height,sizeof(int)*ws.L);
 		N0 = this->state.particleCount;
+
+/*		
+		int m0 = 0;
+		for(typename PtclMap<T>::iterator it = this->state.Rcurr->begin();it!=this->state.Rcurr->end();++it)
+			m0 += it->second;
+
+		fprintf(this->log,"%d %d\n",N0,m0);
+*/
 	}
 }
 
@@ -535,7 +543,7 @@ int RSOSObs<T,U>::parallelReceive()
 
 	lqx*=it;
 	ofstream wif(this->baseFileName + "E",std::ofstream::app);
-	wif<<it<<" "<<temp<<" "<<lqx<<" "<<lvx
+	wif<<ltime*dt<<" "<<temp<<" "<<lqx<<" "<<lvx
 			<<" "<<lqN<<" "<<lqH<<endl;
 	wif.close();
 #ifndef NOBRANCH
