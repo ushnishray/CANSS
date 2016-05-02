@@ -580,6 +580,8 @@ void RSOSObs<T,U>::unserialize(Serializer<U>& obj)
 	obj>>dt>>Q;
 #ifndef NOBRANCH
 	cavgQ.clear();
+	avgH.clear();
+	avgN.clear();
 	obj>>cavgQ>>avgH>>avgN;
 #endif
 }

@@ -39,6 +39,7 @@ void MPIBasicRunner<T,U>::masterRunWB()
 				msg &= rmsg[i];
 #if DEBUG >= 3
 				fprintf(this->log,"Received %d from %d\n",rmsg[i],i);
+				fflush(this->log);
 #endif
 			}
 #if DEBUG >= 3
@@ -53,6 +54,7 @@ void MPIBasicRunner<T,U>::masterRunWB()
 				for(int o=0;o<this->MPIobservablesCollection.size();o++)
 					this->MPIobservablesCollection[o]->parallelReceive();
 				fprintf(this->log,"Parallel gather done.\n");
+				fflush(this->log);
 			}
 		}while(msg != MPIBINDONE);
 

@@ -109,7 +109,7 @@ public:
 		delete Rcurr;
 	}
 
-	void copy(WalkerState<T,U>& w)
+	virtual void copy(WalkerState<T,U>& w)
 	{
 		DIM = w.DIM;
 		particleCount = w.particleCount;

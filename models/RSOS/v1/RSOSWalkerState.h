@@ -45,13 +45,14 @@ public:
 		delete[] height;
 	}
 
-	void copy(RSOSWalkerState<T,U>& w)
+	void copy(WalkerState<T,U>& w)
 	{
-		core::WalkerState<T,U>::copy((WalkerState<T,U>) w);
+		RSOSWalkerState<T,U>& ws = (dynamic_cast<RSOSWalkerState<T,U>&>(w));
+		core::WalkerState<T,U>::copy(w);
 		//this->L = w.L;
 		//delete[] height;
 		//height = new int[L];
-		memcpy(height,w.height,sizeof(int)*L);
+		memcpy(height,ws.height,sizeof(int)*L);
 	}
 
 	RSOSWalkerState* duplicate()
