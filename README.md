@@ -1,4 +1,6 @@
-# cans
+# CANS
+---
+
 Cloning Algorithm for Non-equilibrium Systems (CANS)
 
 Send ushnish.qmc@gmail.com an email for instructions on setup and use. 
