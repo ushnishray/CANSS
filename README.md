@@ -1,6 +1,6 @@
-# CANS
+# CANSS
 ---
-Cloning Algorithm for Non-equilibrium Systems
+Cloning Algorithm for Non-equilibrium Stationary States
 
 Send ushnish.qmc@gmail.com an email for instructions on setup and use. 
 
