@@ -4,7 +4,7 @@ Cloning Algorithm for Non-equilibrium Stationary States
 
 Send ushnish.qmc@gmail.com an email for instructions on setup and use. 
 
-This version of the code is for academic use only. It does not contain many optimzations that are needed for large scale calculations. Please contact Ushnish Ray for optimized libraries in the email specified above.
+This version of the code is for academic use only. It does not contain many optimzations that are needed for large scale calculations. Please contact Ushnish Ray for optimized libraries at the email address specified above.
 
 Minimum System Requirements:
 ===============================
